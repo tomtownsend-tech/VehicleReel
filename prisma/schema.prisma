@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  OWNER
+  PRODUCTION
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  SUSPENDED
+  BANNED
+}
+
+enum DocumentType {
+  SA_ID
+  DRIVERS_LICENSE
+  VEHICLE_REGISTRATION
+  COMPANY_REGISTRATION
+}
+
+enum DocumentStatus {
+  PENDING_REVIEW
+  APPROVED
+  FLAGGED
+  EXPIRED
+}
+
+enum ReviewStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum VehicleType {
+  CAR
+  BIKE
+  BOAT
+  PLANE
+  JET_SKI
+  SCOOTER
+  MOTORBIKE
+  RACING_CAR
+}
+
+enum VehicleCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+}
+
+enum VehicleStatus {
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum OptionStatus {
+  PENDING_RESPONSE
+  ACCEPTED
+  CONFIRMED
+  DECLINED_BY_OWNER
+  EXPIRED_RESPONSE
+  EXPIRED_CONFIRMATION
+  DECLINED_OVERLAP
+  DECLINED_BLOCKED
+  DECLINED_ADMIN
+}
+
+enum RateType {
+  PER_DAY
+  PACKAGE
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum LogisticsType {
+  VEHICLE_COLLECTION
+  OWNER_DELIVERY
+}
+
+enum NotificationType {
+  OPTION_PLACED
+  OPTION_ACCEPTED
+  OPTION_DECLINED
+  OPTION_EXPIRED
+  OPTION_PROMOTED
+  BOOKING_CONFIRMED
+  BOOKING_COMPLETED
+  MESSAGE_RECEIVED
+  DOCUMENT_APPROVED
+  DOCUMENT_FLAGGED
+  DOCUMENT_EXPIRING
+  DOCUMENT_EXPIRED
+  LISTING_SUSPENDED
+  LISTING_ACTIVATED
+  USER_BANNED
+  DATES_BLOCKED
+}
+
+model User {
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  passwordHash          String
+  name                  String
+  phone                 String?
+  role                  UserRole
+  status                UserStatus     @default(PENDING_VERIFICATION)
+  companyName           String?
+  emailNotifications    Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  documents             Document[]
+  vehicles              Vehicle[]
+  optionsAsProduction   Option[]       @relation("ProductionOptions")
+  bookingsAsProduction  Booking[]      @relation("ProductionBookings")
+  sentMessages          Message[]      @relation("SentMessages")
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+
+  @@map("users")
+}
+
+model Document {
+  id            String         @id @default(cuid())
+  userId        String
+  vehicleId     String?
+  type          DocumentType
+  status        DocumentStatus @default(PENDING_REVIEW)
+  fileUrl       String
+  fileName      String
+  expiryDate    DateTime?
+  extractedData Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  reviews       DocumentReview[]
+  reviewQueue   DocumentReviewQueue[]
+
+  @@map("documents")
+}
+
+model DocumentReview {
+  id              String       @id @default(cuid())
+  documentId      String
+  status          ReviewStatus @default(PENDING)
+  result          Json?
+  confidenceScore Float?
+  errorMessage    String?
+  createdAt       DateTime     @default(now())
+  completedAt     DateTime?
+
+  document        Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_reviews")
+}
+
+model DocumentReviewQueue {
+  id            String       @id @default(cuid())
+  documentId    String
+  status        ReviewStatus @default(PENDING)
+  retryCount    Int          @default(0)
+  maxRetries    Int          @default(3)
+  nextRetryAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  document      Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_review_queue")
+}
+
+model Vehicle {
+  id              String           @id @default(cuid())
+  ownerId         String
+  type            VehicleType
+  make            String
+  model           String
+  color           String
+  year            Int
+  mileage         Int?
+  condition       VehicleCondition
+  specialFeatures String[]
+  location        String
+  status          VehicleStatus    @default(PENDING_REVIEW)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  photos          VehiclePhoto[]
+  documents       Document[]
+  availability    AvailabilityBlock[]
+  options         Option[]
+
+  @@map("vehicles")
+}
+
+model VehiclePhoto {
+  id        String   @id @default(cuid())
+  vehicleId String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_photos")
+}
+
+model AvailabilityBlock {
+  id        String   @id @default(cuid())
+  vehicleId String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  reason    String?
+  createdAt DateTime @default(now())
+
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("availability_blocks")
+}
+
+model Option {
+  id                      String       @id @default(cuid())
+  vehicleId               String
+  productionUserId        String
+  status                  OptionStatus @default(PENDING_RESPONSE)
+  rateType                RateType
+  rateCents               Int
+  startDate               DateTime     @db.Date
+  endDate                 DateTime     @db.Date
+  responseDeadlineHours   Int
+  confirmationWindowHours Int
+  responseDeadlineAt      DateTime
+  confirmationDeadlineAt  DateTime?
+  queuePosition           Int
+  acceptedAt              DateTime?
+  promotedAt              DateTime?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  vehicle                 Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  productionUser          User         @relation("ProductionOptions", fields: [productionUserId], references: [id], onDelete: Cascade)
+  booking                 Booking?
+
+  @@map("options")
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  optionId         String        @unique
+  vehicleId        String
+  ownerId          String
+  productionUserId String
+  rateType         RateType
+  rateCents        Int
+  startDate        DateTime      @db.Date
+  endDate          DateTime      @db.Date
+  logistics        LogisticsType
+  status           BookingStatus @default(CONFIRMED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  option           Option        @relation(fields: [optionId], references: [id])
+  productionUser   User          @relation("ProductionBookings", fields: [productionUserId], references: [id])
+  messages         Message[]
+
+  @@map("bookings")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

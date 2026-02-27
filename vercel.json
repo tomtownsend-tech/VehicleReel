@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expire-options",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/expire-documents",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/review-queue",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

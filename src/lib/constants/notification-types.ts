@@ -1,0 +1,18 @@
+export const NOTIFICATION_TYPE_CONFIG: Record<string, { title: string; icon: string }> = {
+  OPTION_PLACED: { title: 'New Option', icon: 'Plus' },
+  OPTION_ACCEPTED: { title: 'Option Accepted', icon: 'Check' },
+  OPTION_DECLINED: { title: 'Option Declined', icon: 'X' },
+  OPTION_EXPIRED: { title: 'Option Expired', icon: 'Clock' },
+  OPTION_PROMOTED: { title: 'Option Promoted', icon: 'ArrowUp' },
+  BOOKING_CONFIRMED: { title: 'Booking Confirmed', icon: 'CheckCircle' },
+  BOOKING_COMPLETED: { title: 'Booking Completed', icon: 'Calendar' },
+  MESSAGE_RECEIVED: { title: 'New Message', icon: 'MessageSquare' },
+  DOCUMENT_APPROVED: { title: 'Document Approved', icon: 'FileCheck' },
+  DOCUMENT_FLAGGED: { title: 'Document Flagged', icon: 'AlertTriangle' },
+  DOCUMENT_EXPIRING: { title: 'Document Expiring', icon: 'AlertCircle' },
+  DOCUMENT_EXPIRED: { title: 'Document Expired', icon: 'FileX' },
+  LISTING_SUSPENDED: { title: 'Listing Suspended', icon: 'Pause' },
+  LISTING_ACTIVATED: { title: 'Listing Activated', icon: 'Play' },
+  USER_BANNED: { title: 'Account Banned', icon: 'Ban' },
+  DATES_BLOCKED: { title: 'Dates Blocked', icon: 'CalendarOff' },
+};
