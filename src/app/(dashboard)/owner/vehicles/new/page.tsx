@@ -167,11 +167,25 @@ export default function NewVehiclePage() {
   }
 
   async function handleFinish() {
-    // Upload any remaining documents
-    for (let i = 0; i < documents.length; i++) {
-      if (documents[i].file && !documents[i].uploaded) {
-        await uploadDocument(i);
-      }
+    setLoading(true);
+    setError('');
+    try {
+      // Upload all pending documents
+      const pending = documents.filter((d) => d.file && !d.uploaded);
+      await Promise.all(
+        pending.map(async (doc) => {
+          if (!doc.file || !vehicleId) return;
+          const formData = new FormData();
+          formData.append('file', doc.file);
+          formData.append('type', doc.type);
+          formData.append('vehicleId', vehicleId);
+          await fetch('/api/documents', { method: 'POST', body: formData });
+        })
+      );
+    } catch {
+      // Continue to redirect even if some uploads fail
+    } finally {
+      setLoading(false);
     }
     router.push('/owner/vehicles');
     router.refresh();
