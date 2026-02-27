@@ -120,13 +120,13 @@ export default function NewVehiclePage() {
       });
 
       if (!res.ok) {
-        setError('Failed to upload photos');
-        return;
+        setError('Failed to upload photos. You can try again later from the vehicle detail page.');
       }
 
       setStep('documents');
     } catch {
-      setError('Something went wrong');
+      setError('Photo upload failed. You can try again later from the vehicle detail page.');
+      setStep('documents');
     } finally {
       setLoading(false);
     }
