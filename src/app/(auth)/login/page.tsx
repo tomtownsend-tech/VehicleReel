@@ -16,7 +16,7 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const callbackUrl = searchParams.get('callbackUrl');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +33,18 @@ function LoginForm() {
       if (result?.error) {
         setError('Invalid email or password');
       } else {
-        router.push(callbackUrl);
+        if (callbackUrl) {
+          router.push(callbackUrl);
+        } else {
+          // Fetch session to get role for redirect
+          const res = await fetch('/api/auth/session');
+          const session = await res.json();
+          const role = session?.user?.role;
+          if (role === 'ADMIN') router.push('/admin/analytics');
+          else if (role === 'OWNER') router.push('/owner/vehicles');
+          else if (role === 'PRODUCTION') router.push('/production/search');
+          else router.push('/');
+        }
         router.refresh();
       }
     } catch {
