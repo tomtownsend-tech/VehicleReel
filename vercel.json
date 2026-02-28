@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/expire-options",
-      "schedule": "* * * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/expire-documents",
@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/review-queue",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 */6 * * *"
     }
   ]
 }
