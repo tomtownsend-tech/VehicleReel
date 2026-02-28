@@ -6,8 +6,18 @@ export default async function QRLandingPage() {
   const session = await getServerSession(authOptions);
 
   if (session) {
-    // Existing user - route to add vehicle
-    redirect('/owner/vehicles/new');
+    // Existing owner - route to add vehicle
+    if (session.user.role === 'OWNER') {
+      redirect('/owner/vehicles/new');
+    }
+    // Production users go to their dashboard
+    if (session.user.role === 'PRODUCTION') {
+      redirect('/production/search');
+    }
+    // Admins go to admin dashboard
+    if (session.user.role === 'ADMIN') {
+      redirect('/admin/analytics');
+    }
   }
 
   // New user - route to register as owner

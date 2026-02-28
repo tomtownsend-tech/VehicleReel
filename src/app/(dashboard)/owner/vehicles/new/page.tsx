@@ -138,34 +138,6 @@ export default function NewVehiclePage() {
     );
   }
 
-  async function uploadDocument(index: number) {
-    const doc = documents[index];
-    if (!doc.file || !vehicleId) return;
-
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', doc.file);
-      formData.append('type', doc.type);
-      formData.append('vehicleId', vehicleId);
-
-      const res = await fetch('/api/documents', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (res.ok) {
-        setDocuments((prev) =>
-          prev.map((d, i) => (i === index ? { ...d, uploaded: true } : d))
-        );
-      }
-    } catch {
-      setError('Failed to upload document');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleFinish() {
     setLoading(true);
     setError('');

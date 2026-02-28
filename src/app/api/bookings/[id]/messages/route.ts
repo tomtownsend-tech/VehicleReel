@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/services/notification';
+import { messageReceivedEmail } from '@/lib/services/email';
 
 export async function GET(
   _request: NextRequest,
@@ -37,11 +39,19 @@ export async function POST(
 
   const booking = await prisma.booking.findUnique({
     where: { id: params.id },
+    include: {
+      option: { include: { vehicle: { select: { make: true, model: true } } } },
+    },
   });
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
   if (booking.ownerId !== session.user.id && booking.productionUserId !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Only allow messages on confirmed bookings
+  if (booking.status === 'CANCELLED') {
+    return NextResponse.json({ error: 'Cannot send messages on a cancelled booking.' }, { status: 403 });
   }
 
   // Check if booking dates have passed (read-only)
@@ -63,6 +73,23 @@ export async function POST(
       content: content.trim(),
     },
     include: { sender: { select: { id: true, name: true } } },
+  });
+
+  // Notify the other party
+  const recipientId = session.user.id === booking.ownerId ? booking.productionUserId : booking.ownerId;
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+
+  await createNotification({
+    userId: recipientId,
+    type: 'MESSAGE_RECEIVED',
+    title: 'New Message',
+    message: `${session.user.name} sent a message about your ${vehicleName} booking.`,
+    data: { bookingId: params.id },
+    emailContent: messageReceivedEmail(
+      recipientId === booking.ownerId ? 'there' : 'there',
+      session.user.name || 'Someone',
+      vehicleName,
+    ),
   });
 
   return NextResponse.json(message, { status: 201 });

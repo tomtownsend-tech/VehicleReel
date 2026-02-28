@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { format } from 'date-fns';
+import { createNotification } from './notification';
 
 export async function blockDatesAndDeclineOptions(
   vehicleId: string,
@@ -37,6 +39,18 @@ export async function blockDatesAndDeclineOptions(
       data: { status: 'DECLINED_BLOCKED' },
     });
     declinedOptions.push(option);
+
+    // Notify the production user
+    const vehicleName = `${option.vehicle.year} ${option.vehicle.make} ${option.vehicle.model}`;
+    const datesDisplay = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
+
+    await createNotification({
+      userId: option.productionUser.id,
+      type: 'DATES_BLOCKED',
+      title: 'Option Declined - Dates Blocked',
+      message: `Your option on the ${vehicleName} has been declined because the owner blocked dates ${datesDisplay}.`,
+      data: { optionId: option.id, vehicleId },
+    });
   }
 
   return { block, declinedOptions };

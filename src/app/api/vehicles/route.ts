@@ -9,9 +9,18 @@ export async function GET(request: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = request.nextUrl;
-  const ownerId = searchParams.get('ownerId');
+  const requestedOwnerId = searchParams.get('ownerId');
 
-  const where = ownerId ? { ownerId } : session.user.role === 'OWNER' ? { ownerId: session.user.id } : {};
+  // Owners see their own vehicles; admins can query any; others see only ACTIVE vehicles
+  let where: Record<string, unknown>;
+  if (session.user.role === 'ADMIN') {
+    where = requestedOwnerId ? { ownerId: requestedOwnerId } : {};
+  } else if (session.user.role === 'OWNER') {
+    where = { ownerId: session.user.id };
+  } else {
+    // Production users can only see active vehicles
+    where = requestedOwnerId ? { ownerId: requestedOwnerId, status: 'ACTIVE' } : { status: 'ACTIVE' };
+  }
 
   const vehicles = await prisma.vehicle.findMany({
     where,

@@ -8,6 +8,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const vehicle = await prisma.vehicle.findUnique({
     where: { id: params.id },
     include: {
@@ -24,6 +27,11 @@ export async function GET(
   });
 
   if (!vehicle) {
+    return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+  }
+
+  // Non-admin, non-owner users should only see active vehicles
+  if (session.user.role !== 'ADMIN' && vehicle.ownerId !== session.user.id && vehicle.status !== 'ACTIVE') {
     return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
   }
 

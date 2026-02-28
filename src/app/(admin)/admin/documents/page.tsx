@@ -64,7 +64,7 @@ export default function AdminDocumentsPage() {
               filter === f ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {f.replace('_', ' ')}
+            {f.replace(/_/g, ' ')}
           </button>
         ))}
       </div>

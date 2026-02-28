@@ -10,10 +10,13 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface OptionDetail {
   id: string;
+  status: string;
+  queuePosition: number;
   rateType: string;
   rateCents: number;
   startDate: string;
   endDate: string;
+  confirmationDeadlineAt: string | null;
   vehicle: { make: string; model: string; year: number; location: string; owner: { name: string } };
 }
 
@@ -62,6 +65,37 @@ export default function ConfirmOptionPage() {
 
   if (!option) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
 
+  // Pre-validate option eligibility
+  if (option.status !== 'ACCEPTED') {
+    return (
+      <div className="max-w-lg mx-auto text-center py-16">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Option Not Eligible</h1>
+        <p className="text-gray-500 mb-4">This option is no longer in an accepted state (current status: {option.status.replace(/_/g, ' ')}).</p>
+        <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
+      </div>
+    );
+  }
+
+  if (option.queuePosition !== 1) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-16">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Not First in Queue</h1>
+        <p className="text-gray-500 mb-4">Your option is at position #{option.queuePosition}. Only the first-position option can be confirmed.</p>
+        <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
+      </div>
+    );
+  }
+
+  if (option.confirmationDeadlineAt && new Date() > new Date(option.confirmationDeadlineAt)) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-16">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirmation Window Expired</h1>
+        <p className="text-gray-500 mb-4">The confirmation window for this option has passed.</p>
+        <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
+      </div>
+    );
+  }
+
   if (confirmed) {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
@@ -89,6 +123,9 @@ export default function ConfirmOptionPage() {
             <div className="flex justify-between"><dt className="text-gray-500">Owner</dt><dd className="font-medium">{option.vehicle.owner.name}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(option.startDate)} — {formatDate(option.endDate)}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            {option.rateType === 'PER_DAY' && (
+              <div className="flex justify-between"><dt className="text-gray-500">Estimated Total</dt><dd className="font-medium">{formatCurrency(option.rateCents * Math.max(1, Math.ceil((new Date(option.endDate).getTime() - new Date(option.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1))}</dd></div>
+            )}
           </dl>
         </CardContent>
       </Card>

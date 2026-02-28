@@ -33,7 +33,8 @@ function LoginForm() {
       if (result?.error) {
         setError('Invalid email or password');
       } else {
-        if (callbackUrl) {
+        // Sanitize callbackUrl to prevent open redirect
+        if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('//')) {
           router.push(callbackUrl);
         } else {
           // Fetch session to get role for redirect

@@ -39,7 +39,7 @@ export default function OwnerOptionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/options?role=OWNER')
+    fetch('/api/options')
       .then((r) => r.json())
       .then(setOptions)
       .finally(() => setLoading(false));
@@ -53,7 +53,7 @@ export default function OwnerOptionsPage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setOptions((prev) => prev.map((o) => (o.id === optionId ? { ...o, status: updated.status } : o)));
+      setOptions((prev) => prev.map((o) => (o.id === optionId ? { ...o, ...updated } : o)));
     }
   }
 

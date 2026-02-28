@@ -7,6 +7,9 @@ import { Prisma } from '@prisma/client';
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.user.status !== 'VERIFIED' && session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Account must be verified to search vehicles' }, { status: 403 });
+  }
 
   const { searchParams } = request.nextUrl;
   const type = searchParams.get('type');
@@ -40,6 +43,11 @@ export async function GET(request: NextRequest) {
   if (startDate && endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
+
+    // Validate end date is not before start date
+    if (end < start) {
+      return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 });
+    }
 
     // Exclude vehicles with blocked dates overlapping the requested range
     where.NOT = {

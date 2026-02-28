@@ -10,16 +10,17 @@ export async function GET(request: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = request.nextUrl;
-  const role = searchParams.get('role') || session.user.role;
   const status = searchParams.get('status');
 
+  // Use the actual session role, not a query parameter
   const where: Record<string, unknown> = {};
 
-  if (role === 'OWNER') {
+  if (session.user.role === 'OWNER') {
     where.vehicle = { ownerId: session.user.id };
-  } else if (role === 'PRODUCTION') {
+  } else if (session.user.role === 'PRODUCTION') {
     where.productionUserId = session.user.id;
   }
+  // ADMIN sees all options (no filter)
 
   if (status) {
     where.status = status;
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
         },
       },
       productionUser: { select: { id: true, name: true, email: true, companyName: true } },
+      booking: { select: { id: true, status: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -47,6 +49,9 @@ export async function POST(request: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.user.role !== 'PRODUCTION') {
     return NextResponse.json({ error: 'Only production users can place options' }, { status: 403 });
+  }
+  if (session.user.status !== 'VERIFIED') {
+    return NextResponse.json({ error: 'Account must be verified to place options' }, { status: 403 });
   }
 
   const body = await request.json();

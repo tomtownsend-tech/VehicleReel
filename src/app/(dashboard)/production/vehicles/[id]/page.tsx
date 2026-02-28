@@ -85,7 +85,7 @@ export default function ProductionVehicleDetailPage() {
         <CardHeader><h2 className="text-lg font-semibold">Details</h2></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div><dt className="text-gray-500">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
+            <div><dt className="text-gray-500">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace(/_/g, ' ')}</dd></div>
             <div><dt className="text-gray-500">Color</dt><dd className="font-medium">{vehicle.color}</dd></div>
             <div><dt className="text-gray-500">Condition</dt><dd className="font-medium capitalize">{vehicle.condition.toLowerCase()}</dd></div>
             {vehicle.mileage && <div><dt className="text-gray-500">Mileage</dt><dd className="font-medium">{vehicle.mileage.toLocaleString()} km</dd></div>}
@@ -119,7 +119,7 @@ export default function ProductionVehicleDetailPage() {
                     </span>
                   </div>
                   <Badge variant={opt.status === 'ACCEPTED' ? 'success' : 'warning'}>
-                    #{opt.queuePosition} — {opt.status.replace('_', ' ')}
+                    #{opt.queuePosition} — {opt.status.replace(/_/g, ' ')}
                   </Badge>
                 </div>
               ))}

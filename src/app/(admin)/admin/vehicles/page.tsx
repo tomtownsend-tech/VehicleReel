@@ -39,15 +39,16 @@ export default function AdminVehiclesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleRemove(vehicleId: string) {
-    if (!confirm('Remove this listing? This will decline all pending options.')) return;
+  async function handleAction(vehicleId: string, action: 'REMOVE' | 'ACTIVATE') {
+    if (action === 'REMOVE' && !confirm('Remove this listing? This will decline all pending options.')) return;
     const res = await fetch('/api/admin/vehicles', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vehicleId, action: 'REMOVE' }),
+      body: JSON.stringify({ vehicleId, action }),
     });
     if (res.ok) {
-      setVehicles((prev) => prev.map((v) => (v.id === vehicleId ? { ...v, status: 'REMOVED' } : v)));
+      const newStatus = action === 'REMOVE' ? 'REMOVED' : 'ACTIVE';
+      setVehicles((prev) => prev.map((v) => (v.id === vehicleId ? { ...v, status: newStatus } : v)));
     }
   }
 
@@ -79,9 +80,14 @@ export default function AdminVehiclesPage() {
                     <p className="text-sm text-gray-500">{v.owner.name} · {v.location} · {v._count.options} options</p>
                   </div>
                 </div>
-                {v.status !== 'REMOVED' && (
-                  <Button size="sm" variant="danger" onClick={() => handleRemove(v.id)}>Remove</Button>
-                )}
+                <div className="flex gap-2">
+                  {['PENDING_REVIEW', 'SUSPENDED', 'REMOVED'].includes(v.status) && (
+                    <Button size="sm" onClick={() => handleAction(v.id, 'ACTIVATE')}>Activate</Button>
+                  )}
+                  {v.status !== 'REMOVED' && (
+                    <Button size="sm" variant="danger" onClick={() => handleAction(v.id, 'REMOVE')}>Remove</Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

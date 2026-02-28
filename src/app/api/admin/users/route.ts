@@ -38,7 +38,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  const newStatus = action === 'BAN' ? 'BANNED' : 'VERIFIED';
+  let newStatus: 'BANNED' | 'VERIFIED' | 'PENDING_VERIFICATION';
+  if (action === 'UNBAN') {
+    // Check if user's documents are all approved before restoring to VERIFIED
+    const docs = await prisma.document.findMany({
+      where: { userId },
+      select: { type: true, status: true },
+    });
+    const personalDocs = docs.filter((d) => ['SA_ID', 'DRIVERS_LICENSE'].includes(d.type));
+    const allApproved = personalDocs.length > 0 && personalDocs.every((d) => d.status === 'APPROVED');
+    newStatus = allApproved ? 'VERIFIED' : 'PENDING_VERIFICATION';
+  } else {
+    newStatus = 'BANNED';
+  }
 
   const user = await prisma.user.update({
     where: { id: userId },

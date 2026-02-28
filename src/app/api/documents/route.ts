@@ -9,7 +9,9 @@ export async function GET(request: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = request.nextUrl;
-  const userId = searchParams.get('userId') || session.user.id;
+  // Only admins can query other users' documents
+  const requestedUserId = searchParams.get('userId');
+  const userId = (session.user.role === 'ADMIN' && requestedUserId) ? requestedUserId : session.user.id;
   const vehicleId = searchParams.get('vehicleId');
 
   const where: Record<string, string> = { userId };

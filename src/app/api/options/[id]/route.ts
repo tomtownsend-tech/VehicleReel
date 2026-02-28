@@ -8,6 +8,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const option = await prisma.option.findUnique({
     where: { id: params.id },
     include: {
@@ -23,6 +26,16 @@ export async function GET(
   });
 
   if (!option) return NextResponse.json({ error: 'Option not found' }, { status: 404 });
+
+  // Only allow the involved parties or admins to view
+  if (
+    session.user.role !== 'ADMIN' &&
+    option.vehicle.owner.id !== session.user.id &&
+    option.productionUserId !== session.user.id
+  ) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   return NextResponse.json(option);
 }
 

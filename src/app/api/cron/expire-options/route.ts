@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { promoteQueue } from '@/lib/services/option';
+import { createNotification } from '@/lib/services/notification';
+import { optionExpiredEmail } from '@/lib/services/email';
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -17,6 +19,10 @@ export async function POST(request: NextRequest) {
       status: 'PENDING_RESPONSE',
       responseDeadlineAt: { lte: now },
     },
+    include: {
+      productionUser: { select: { id: true, name: true, email: true } },
+      vehicle: { include: { owner: { select: { id: true, name: true } }, } },
+    },
   });
 
   for (const option of expiredResponse) {
@@ -26,6 +32,27 @@ export async function POST(request: NextRequest) {
     });
     await promoteQueue(option.vehicleId, option.startDate, option.endDate);
     results.expiredResponse++;
+
+    const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
+
+    // Notify production user their option expired
+    await createNotification({
+      userId: option.productionUser.id,
+      type: 'OPTION_EXPIRED',
+      title: 'Option Expired',
+      message: `Your option on ${vehicleName} expired because the owner did not respond in time.`,
+      data: { optionId: option.id, vehicleId: option.vehicleId },
+      emailContent: optionExpiredEmail(option.productionUser.name, vehicleName, 'The owner did not respond within the deadline.'),
+    });
+
+    // Notify owner the option expired
+    await createNotification({
+      userId: option.vehicle.owner.id,
+      type: 'OPTION_EXPIRED',
+      title: 'Option Expired',
+      message: `An option on your ${vehicleName} expired because you did not respond in time.`,
+      data: { optionId: option.id, vehicleId: option.vehicleId },
+    });
   }
 
   // Expire confirmation windows
@@ -33,6 +60,10 @@ export async function POST(request: NextRequest) {
     where: {
       status: 'ACCEPTED',
       confirmationDeadlineAt: { lte: now },
+    },
+    include: {
+      productionUser: { select: { id: true, name: true, email: true } },
+      vehicle: { include: { owner: { select: { id: true, name: true } }, } },
     },
   });
 
@@ -43,6 +74,27 @@ export async function POST(request: NextRequest) {
     });
     await promoteQueue(option.vehicleId, option.startDate, option.endDate);
     results.expiredConfirmation++;
+
+    const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
+
+    // Notify production user their confirmation window expired
+    await createNotification({
+      userId: option.productionUser.id,
+      type: 'OPTION_EXPIRED',
+      title: 'Confirmation Window Expired',
+      message: `Your option on ${vehicleName} expired because you did not confirm in time.`,
+      data: { optionId: option.id, vehicleId: option.vehicleId },
+      emailContent: optionExpiredEmail(option.productionUser.name, vehicleName, 'You did not confirm within the confirmation window.'),
+    });
+
+    // Notify owner the confirmation expired
+    await createNotification({
+      userId: option.vehicle.owner.id,
+      type: 'OPTION_EXPIRED',
+      title: 'Confirmation Window Expired',
+      message: `A booking for your ${vehicleName} was not confirmed in time by the production user.`,
+      data: { optionId: option.id, vehicleId: option.vehicleId },
+    });
   }
 
   return NextResponse.json(results);

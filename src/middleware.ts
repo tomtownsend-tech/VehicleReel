@@ -10,19 +10,43 @@ export default withAuth(
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
+    // Block banned and suspended users from all protected routes
+    if (token.status === 'BANNED' || token.status === 'SUSPENDED') {
+      const url = new URL('/login', req.url);
+      url.searchParams.set('error', 'account_restricted');
+      return NextResponse.redirect(url);
+    }
+
     // Admin routes
     if (pathname.startsWith('/admin') && token.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    // Owner routes
-    if (pathname.startsWith('/owner') && token.role !== 'OWNER') {
-      return NextResponse.redirect(new URL('/login', req.url));
+    // Owner routes - allow unverified owners to access vehicle creation (onboarding)
+    if (pathname.startsWith('/owner')) {
+      if (token.role !== 'OWNER') {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+      // Unverified owners can only access vehicle creation and settings
+      if (token.status === 'PENDING_VERIFICATION') {
+        const allowed = ['/owner/vehicles/new', '/owner/settings'];
+        if (!allowed.some((p) => pathname.startsWith(p))) {
+          return NextResponse.redirect(new URL('/owner/vehicles/new', req.url));
+        }
+      }
     }
 
     // Production routes
-    if (pathname.startsWith('/production') && token.role !== 'PRODUCTION') {
-      return NextResponse.redirect(new URL('/login', req.url));
+    if (pathname.startsWith('/production')) {
+      if (token.role !== 'PRODUCTION') {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+      // Unverified production users can only access settings
+      if (token.status === 'PENDING_VERIFICATION') {
+        if (!pathname.startsWith('/production/settings')) {
+          return NextResponse.redirect(new URL('/production/settings', req.url));
+        }
+      }
     }
 
     return NextResponse.next();

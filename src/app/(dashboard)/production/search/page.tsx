@@ -67,6 +67,7 @@ export default function ProductionSearchPage() {
 
   useEffect(() => {
     handleSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function getOptionBadge(vehicle: Vehicle) {
@@ -168,7 +169,10 @@ export default function ProductionSearchPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                setFilters({ type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '' });
+                const cleared = { type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '' };
+                setFilters(cleared);
+                // Trigger search with cleared filters
+                setTimeout(() => handleSearch(), 0);
               }}
             >
               <X className="h-4 w-4 mr-1" />
@@ -231,7 +235,7 @@ export default function ProductionSearchPage() {
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs text-gray-500 capitalize">
-                    {vehicle.type.toLowerCase().replace('_', ' ')}
+                    {vehicle.type.toLowerCase().replace(/_/g, ' ')}
                   </span>
                   <span className="text-xs text-gray-300">|</span>
                   <span className="text-xs text-gray-500">{vehicle.color}</span>

@@ -39,7 +39,7 @@ export default function ProductionOptionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/options?role=PRODUCTION')
+    fetch('/api/options')
       .then((r) => r.json())
       .then(setOptions)
       .finally(() => setLoading(false));
