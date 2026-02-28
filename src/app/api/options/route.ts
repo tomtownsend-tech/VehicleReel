@@ -26,22 +26,33 @@ export async function GET(request: NextRequest) {
     where.status = status;
   }
 
-  const options = await prisma.option.findMany({
-    where,
-    include: {
-      vehicle: {
-        include: {
-          photos: { take: 1, orderBy: { order: 'asc' } },
-          owner: { select: { id: true, name: true, email: true } },
-        },
-      },
-      productionUser: { select: { id: true, name: true, email: true, companyName: true } },
-      booking: { select: { id: true, status: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
 
-  return NextResponse.json(options);
+  const [options, total] = await Promise.all([
+    prisma.option.findMany({
+      where,
+      include: {
+        vehicle: {
+          include: {
+            photos: { take: 1, orderBy: { order: 'asc' } },
+            owner: { select: { id: true, name: true, email: true } },
+          },
+        },
+        productionUser: { select: { id: true, name: true, email: true, companyName: true } },
+        booking: { select: { id: true, status: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.option.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    data: options,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
 }
 
 export async function POST(request: NextRequest) {

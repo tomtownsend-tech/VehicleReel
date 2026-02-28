@@ -2,24 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createNotification } from '@/lib/services/notification';
+import { safeNotify } from '@/lib/services/notification';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const vehicles = await prisma.vehicle.findMany({
-    include: {
-      owner: { select: { id: true, name: true, email: true } },
-      photos: { take: 1, orderBy: { order: 'asc' } },
-      _count: { select: { options: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const { searchParams } = request.nextUrl;
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
 
-  return NextResponse.json(vehicles);
+  const [vehicles, total] = await Promise.all([
+    prisma.vehicle.findMany({
+      include: {
+        owner: { select: { id: true, name: true, email: true } },
+        photos: { take: 1, orderBy: { order: 'asc' } },
+        _count: { select: { options: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.vehicle.count(),
+  ]);
+
+  return NextResponse.json({
+    data: vehicles,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -68,7 +80,7 @@ export async function PATCH(request: NextRequest) {
     const vehicleName = `${vehicle.make} ${vehicle.model}`;
 
     // Notify vehicle owner
-    await createNotification({
+    await safeNotify({
       userId: vehicle.owner.id,
       type: 'LISTING_SUSPENDED',
       title: 'Vehicle Listing Removed',
@@ -78,7 +90,7 @@ export async function PATCH(request: NextRequest) {
 
     // Notify affected production users
     for (const opt of pendingOptions) {
-      await createNotification({
+      await safeNotify({
         userId: opt.productionUser.id,
         type: 'OPTION_DECLINED',
         title: 'Option Declined - Listing Removed',
@@ -104,7 +116,7 @@ export async function PATCH(request: NextRequest) {
 
     const vehicleName = `${vehicle.make} ${vehicle.model}`;
 
-    await createNotification({
+    await safeNotify({
       userId: vehicle.owner.id,
       type: 'LISTING_ACTIVATED',
       title: 'Vehicle Listing Activated',

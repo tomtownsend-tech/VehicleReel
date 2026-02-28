@@ -13,61 +13,68 @@ export async function GET() {
     totalUsers,
     totalVehicles,
     totalBookings,
-    bookings,
     usersByRole,
     vehiclesByStatus,
+    // Database-level aggregations instead of loading all bookings into memory
+    makeStats,
+    colorStats,
+    modelStats,
+    yearStats,
+    totalDaysResult,
+    monthlyStats,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.vehicle.count(),
     prisma.booking.count(),
-    prisma.booking.findMany({
-      include: {
-        option: {
-          include: {
-            vehicle: { select: { make: true, model: true, color: true, year: true } },
-          },
-        },
-      },
-    }),
     prisma.user.groupBy({ by: ['role'], _count: true }),
     prisma.vehicle.groupBy({ by: ['status'], _count: true }),
+    // Top makes by booking count
+    prisma.$queryRaw<{ make: string; count: bigint }[]>`
+      SELECT v.make, COUNT(*)::bigint as count
+      FROM bookings b
+      JOIN options o ON b."optionId" = o.id
+      JOIN vehicles v ON o."vehicleId" = v.id
+      GROUP BY v.make ORDER BY count DESC LIMIT 10
+    `,
+    // Top colors
+    prisma.$queryRaw<{ color: string; count: bigint }[]>`
+      SELECT v.color, COUNT(*)::bigint as count
+      FROM bookings b
+      JOIN options o ON b."optionId" = o.id
+      JOIN vehicles v ON o."vehicleId" = v.id
+      GROUP BY v.color ORDER BY count DESC LIMIT 10
+    `,
+    // Top models
+    prisma.$queryRaw<{ model: string; count: bigint }[]>`
+      SELECT CONCAT(v.make, ' ', v.model) as model, COUNT(*)::bigint as count
+      FROM bookings b
+      JOIN options o ON b."optionId" = o.id
+      JOIN vehicles v ON o."vehicleId" = v.id
+      GROUP BY v.make, v.model ORDER BY count DESC LIMIT 10
+    `,
+    // Top years
+    prisma.$queryRaw<{ year: number; count: bigint }[]>`
+      SELECT v.year, COUNT(*)::bigint as count
+      FROM bookings b
+      JOIN options o ON b."optionId" = o.id
+      JOIN vehicles v ON o."vehicleId" = v.id
+      GROUP BY v.year ORDER BY count DESC LIMIT 10
+    `,
+    // Total days booked (computed in DB)
+    prisma.$queryRaw<{ total_days: bigint }[]>`
+      SELECT COALESCE(SUM(("endDate" - "startDate") + 1), 0)::bigint as total_days
+      FROM bookings
+    `,
+    // Monthly trends
+    prisma.$queryRaw<{ month: string; days: bigint }[]>`
+      SELECT TO_CHAR("startDate", 'YYYY-MM') as month,
+             SUM(("endDate" - "startDate") + 1)::bigint as days
+      FROM bookings
+      GROUP BY month ORDER BY month
+    `,
   ]);
 
-  // Calculate analytics from bookings
-  let totalDaysBooked = 0;
-  const makeCount: Record<string, number> = {};
-  const colorCount: Record<string, number> = {};
-  const modelCount: Record<string, number> = {};
-  const yearCount: Record<string, number> = {};
-  const monthlyData: Record<string, { make: Record<string, number>; color: Record<string, number>; model: Record<string, number>; year: Record<string, number>; days: number }> = {};
-
-  for (const booking of bookings) {
-    const start = new Date(booking.startDate);
-    const end = new Date(booking.endDate);
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    totalDaysBooked += days;
-
-    const vehicle = booking.option.vehicle;
-    makeCount[vehicle.make] = (makeCount[vehicle.make] || 0) + 1;
-    colorCount[vehicle.color] = (colorCount[vehicle.color] || 0) + 1;
-    modelCount[`${vehicle.make} ${vehicle.model}`] = (modelCount[`${vehicle.make} ${vehicle.model}`] || 0) + 1;
-    yearCount[vehicle.year.toString()] = (yearCount[vehicle.year.toString()] || 0) + 1;
-
-    // Monthly trends
-    const monthKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-    if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { make: {}, color: {}, model: {}, year: {}, days: 0 };
-    }
-    monthlyData[monthKey].days += days;
-    monthlyData[monthKey].make[vehicle.make] = (monthlyData[monthKey].make[vehicle.make] || 0) + days;
-    monthlyData[monthKey].color[vehicle.color] = (monthlyData[monthKey].color[vehicle.color] || 0) + days;
-    monthlyData[monthKey].model[`${vehicle.make} ${vehicle.model}`] = (monthlyData[monthKey].model[`${vehicle.make} ${vehicle.model}`] || 0) + days;
-    monthlyData[monthKey].year[vehicle.year.toString()] = (monthlyData[monthKey].year[vehicle.year.toString()] || 0) + days;
-  }
-
-  // Sort by count
-  const sortByCount = (obj: Record<string, number>) =>
-    Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const totalDaysBooked = Number(totalDaysResult[0]?.total_days ?? 0);
 
   return NextResponse.json({
     summary: {
@@ -79,18 +86,14 @@ export async function GET() {
     usersByRole: usersByRole.map((r) => ({ role: r.role, count: r._count })),
     vehiclesByStatus: vehiclesByStatus.map((v) => ({ status: v.status, count: v._count })),
     preferences: {
-      make: sortByCount(makeCount),
-      color: sortByCount(colorCount),
-      model: sortByCount(modelCount),
-      year: sortByCount(yearCount),
+      make: makeStats.map((r) => [r.make, Number(r.count)]),
+      color: colorStats.map((r) => [r.color, Number(r.count)]),
+      model: modelStats.map((r) => [r.model, Number(r.count)]),
+      year: yearStats.map((r) => [r.year.toString(), Number(r.count)]),
     },
-    monthlyTrends: Object.entries(monthlyData)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([month, data]) => ({
-        month,
-        days: data.days,
-        topMake: Object.entries(data.make).sort((a, b) => b[1] - a[1])[0]?.[0] || '',
-        topColor: Object.entries(data.color).sort((a, b) => b[1] - a[1])[0]?.[0] || '',
-      })),
+    monthlyTrends: monthlyStats.map((r) => ({
+      month: r.month,
+      days: Number(r.days),
+    })),
   });
 }

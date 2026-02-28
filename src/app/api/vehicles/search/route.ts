@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { toUTCDate } from '@/lib/utils/date';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -41,8 +42,8 @@ export async function GET(request: NextRequest) {
 
   // Filter out vehicles with blocked dates or confirmed bookings on requested dates
   if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = toUTCDate(startDate);
+    const end = toUTCDate(endDate);
 
     // Validate end date is not before start date
     if (end < start) {

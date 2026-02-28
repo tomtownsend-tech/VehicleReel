@@ -18,13 +18,23 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchNotifications();
+    fetchUserRole();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  async function fetchUserRole() {
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      setUserRole(data?.user?.role || null);
+    } catch {}
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -60,9 +70,10 @@ export function NotificationBell() {
   function getNotificationLink(n: Notification): string | null {
     const data = n.data as Record<string, string> | undefined;
     if (!data) return null;
-    if (data.bookingId) return `/owner/bookings/${data.bookingId}`;
-    if (data.optionId) return `/owner/options`;
-    if (data.vehicleId) return `/owner/vehicles/${data.vehicleId}`;
+    const prefix = userRole === 'PRODUCTION' ? '/production' : '/owner';
+    if (data.bookingId) return `${prefix}/bookings/${data.bookingId}`;
+    if (data.optionId) return `${prefix}/options`;
+    if (data.vehicleId) return `${prefix}/vehicles/${data.vehicleId}`;
     return null;
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { addDays } from 'date-fns';
+import { todayUTC } from '@/lib/utils/date';
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const now = new Date();
+  const now = todayUTC();
   const thirtyDaysFromNow = addDays(now, 30);
   const results = { reminders: 0, expired: 0, suspended: 0 };
 

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
-import { createNotification } from './notification';
+import { safeNotify } from './notification';
 import { bookingConfirmedEmail, optionDeclinedEmail } from './email';
 
 export async function confirmBooking(optionId: string, productionUserId: string, logistics: 'VEHICLE_COLLECTION' | 'OWNER_DELIVERY') {
@@ -91,7 +91,7 @@ export async function confirmBooking(optionId: string, productionUserId: string,
   const logisticsDisplay = logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection';
 
   // Notify owner
-  await createNotification({
+  await safeNotify({
     userId: vehicle.owner.id,
     type: 'BOOKING_CONFIRMED',
     title: 'Booking Confirmed',
@@ -104,7 +104,7 @@ export async function confirmBooking(optionId: string, productionUserId: string,
   });
 
   // Notify production user
-  await createNotification({
+  await safeNotify({
     userId: productionUserId,
     type: 'BOOKING_CONFIRMED',
     title: 'Booking Confirmed',
@@ -118,7 +118,7 @@ export async function confirmBooking(optionId: string, productionUserId: string,
 
   // Notify declined overlapping option holders
   for (const opt of overlapping) {
-    await createNotification({
+    await safeNotify({
       userId: opt.productionUser.id,
       type: 'OPTION_DECLINED',
       title: 'Option Declined - Dates Booked',

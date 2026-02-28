@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { addHours, format } from 'date-fns';
-import { createNotification } from './notification';
+import { safeNotify } from './notification';
 import { optionPlacedEmail, optionAcceptedEmail, optionDeclinedEmail } from './email';
+import { toUTCDate } from '@/lib/utils/date';
 
 export async function placeOption({
   vehicleId,
@@ -22,8 +23,8 @@ export async function placeOption({
   responseDeadlineHours: number;
   confirmationWindowHours: number;
 }) {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = toUTCDate(startDate);
+  const end = toUTCDate(endDate);
 
   // Use a transaction to prevent race conditions
   const option = await prisma.$transaction(async (tx) => {
@@ -107,7 +108,7 @@ export async function placeOption({
   const datesDisplay = `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`;
   const deadlineDisplay = `${responseDeadlineHours} hours`;
 
-  await createNotification({
+  await safeNotify({
     userId: option.vehicle.owner.id,
     type: 'OPTION_PLACED',
     title: 'New Option on Your Vehicle',
@@ -120,37 +121,39 @@ export async function placeOption({
 }
 
 export async function acceptOption(optionId: string, ownerId: string) {
-  const option = await prisma.option.findUnique({
-    where: { id: optionId },
-    include: { vehicle: true },
+  const updated = await prisma.$transaction(async (tx) => {
+    const option = await tx.option.findUnique({
+      where: { id: optionId },
+      include: { vehicle: true },
+    });
+
+    if (!option) throw new Error('Option not found');
+    if (option.vehicle.ownerId !== ownerId) throw new Error('Not authorized');
+    if (option.status !== 'PENDING_RESPONSE') throw new Error('Option cannot be accepted');
+    if (new Date() > option.responseDeadlineAt) throw new Error('Response deadline has passed');
+
+    const now = new Date();
+    const confirmationDeadlineAt = addHours(now, option.confirmationWindowHours);
+
+    return tx.option.update({
+      where: { id: optionId },
+      data: {
+        status: 'ACCEPTED',
+        acceptedAt: now,
+        confirmationDeadlineAt,
+      },
+      include: {
+        vehicle: true,
+        productionUser: { select: { id: true, name: true, email: true } },
+      },
+    });
   });
 
-  if (!option) throw new Error('Option not found');
-  if (option.vehicle.ownerId !== ownerId) throw new Error('Not authorized');
-  if (option.status !== 'PENDING_RESPONSE') throw new Error('Option cannot be accepted');
-  if (new Date() > option.responseDeadlineAt) throw new Error('Response deadline has passed');
-
-  const now = new Date();
-  const confirmationDeadlineAt = addHours(now, option.confirmationWindowHours);
-
-  const updated = await prisma.option.update({
-    where: { id: optionId },
-    data: {
-      status: 'ACCEPTED',
-      acceptedAt: now,
-      confirmationDeadlineAt,
-    },
-    include: {
-      vehicle: true,
-      productionUser: { select: { id: true, name: true, email: true } },
-    },
-  });
-
-  // Notify the production user
+  // Notify the production user (outside transaction)
   const vehicleName = `${updated.vehicle.make} ${updated.vehicle.model}`;
-  const confirmDeadline = format(confirmationDeadlineAt, 'MMM d, yyyy h:mm a');
+  const confirmDeadline = format(updated.confirmationDeadlineAt!, 'MMM d, yyyy h:mm a');
 
-  await createNotification({
+  await safeNotify({
     userId: updated.productionUser.id,
     type: 'OPTION_ACCEPTED',
     title: 'Option Accepted',
@@ -163,28 +166,30 @@ export async function acceptOption(optionId: string, ownerId: string) {
 }
 
 export async function declineOption(optionId: string, ownerId: string) {
-  const option = await prisma.option.findUnique({
-    where: { id: optionId },
-    include: { vehicle: true },
+  const updated = await prisma.$transaction(async (tx) => {
+    const option = await tx.option.findUnique({
+      where: { id: optionId },
+      include: { vehicle: true },
+    });
+
+    if (!option) throw new Error('Option not found');
+    if (option.vehicle.ownerId !== ownerId) throw new Error('Not authorized');
+    if (!['PENDING_RESPONSE', 'ACCEPTED'].includes(option.status)) throw new Error('Option cannot be declined');
+
+    return tx.option.update({
+      where: { id: optionId },
+      data: { status: 'DECLINED_BY_OWNER' },
+      include: {
+        vehicle: true,
+        productionUser: { select: { id: true, name: true, email: true } },
+      },
+    });
   });
 
-  if (!option) throw new Error('Option not found');
-  if (option.vehicle.ownerId !== ownerId) throw new Error('Not authorized');
-  if (!['PENDING_RESPONSE', 'ACCEPTED'].includes(option.status)) throw new Error('Option cannot be declined');
-
-  const updated = await prisma.option.update({
-    where: { id: optionId },
-    data: { status: 'DECLINED_BY_OWNER' },
-    include: {
-      vehicle: true,
-      productionUser: { select: { id: true, name: true, email: true } },
-    },
-  });
-
-  // Notify the production user
+  // Notify the production user (outside transaction)
   const vehicleName = `${updated.vehicle.make} ${updated.vehicle.model}`;
 
-  await createNotification({
+  await safeNotify({
     userId: updated.productionUser.id,
     type: 'OPTION_DECLINED',
     title: 'Option Declined',
@@ -193,8 +198,8 @@ export async function declineOption(optionId: string, ownerId: string) {
     emailContent: optionDeclinedEmail(updated.productionUser.name, vehicleName),
   });
 
-  // Promote queue
-  await promoteQueue(option.vehicleId, option.startDate, option.endDate);
+  // Promote queue (after transaction)
+  await promoteQueue(updated.vehicleId, updated.startDate, updated.endDate);
 
   return updated;
 }
@@ -233,7 +238,7 @@ export async function promoteQueue(vehicleId: string, startDate: Date, endDate: 
 
       // Notify production user about promotion
       const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
-      await createNotification({
+      await safeNotify({
         userId: option.productionUser.id,
         type: 'OPTION_PROMOTED',
         title: 'Option Promoted',

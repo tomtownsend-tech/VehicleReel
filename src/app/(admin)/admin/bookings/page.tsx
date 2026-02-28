@@ -25,7 +25,7 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     fetch('/api/admin/bookings')
       .then((r) => r.json())
-      .then(setBookings)
+      .then((res) => setBookings(res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

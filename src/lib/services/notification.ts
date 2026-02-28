@@ -11,6 +11,14 @@ interface CreateNotificationParams {
   emailContent?: { subject: string; html: string };
 }
 
+export async function safeNotify(params: CreateNotificationParams) {
+  try {
+    await createNotification(params);
+  } catch (e) {
+    console.error('Notification failed:', e);
+  }
+}
+
 export async function createNotification({
   userId,
   type,

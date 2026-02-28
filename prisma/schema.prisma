@@ -156,6 +156,9 @@ model Document {
   reviews       DocumentReview[]
   reviewQueue   DocumentReviewQueue[]
 
+  @@index([userId])
+  @@index([vehicleId])
+  @@index([status, expiryDate])
   @@map("documents")
 }
 
@@ -187,6 +190,7 @@ model DocumentReviewQueue {
 
   document      Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
+  @@index([status, nextRetryAt])
   @@map("document_review_queue")
 }
 
@@ -212,6 +216,8 @@ model Vehicle {
   availability    AvailabilityBlock[]
   options         Option[]
 
+  @@index([ownerId])
+  @@index([status])
   @@map("vehicles")
 }
 
@@ -237,6 +243,7 @@ model AvailabilityBlock {
 
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
+  @@index([vehicleId, startDate, endDate])
   @@map("availability_blocks")
 }
 
@@ -263,6 +270,10 @@ model Option {
   productionUser          User         @relation("ProductionOptions", fields: [productionUserId], references: [id], onDelete: Cascade)
   booking                 Booking?
 
+  @@index([vehicleId, status])
+  @@index([productionUserId, status])
+  @@index([status, responseDeadlineAt])
+  @@index([status, confirmationDeadlineAt])
   @@map("options")
 }
 
@@ -285,6 +296,9 @@ model Booking {
   productionUser   User          @relation("ProductionBookings", fields: [productionUserId], references: [id])
   messages         Message[]
 
+  @@index([vehicleId, status])
+  @@index([ownerId])
+  @@index([productionUserId])
   @@map("bookings")
 }
 
@@ -298,6 +312,7 @@ model Message {
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   sender    User     @relation("SentMessages", fields: [senderId], references: [id])
 
+  @@index([bookingId, createdAt])
   @@map("messages")
 }
 
@@ -313,6 +328,7 @@ model Notification {
 
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, read, createdAt])
   @@map("notifications")
 }
 
@@ -327,5 +343,7 @@ model AuditLog {
 
   user       User     @relation(fields: [userId], references: [id])
 
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
   @@map("audit_logs")
 }

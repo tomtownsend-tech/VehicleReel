@@ -25,12 +25,34 @@ export async function POST(
     return NextResponse.json({ error: 'No files provided' }, { status: 400 });
   }
 
+  // Validate all files before processing any
+  const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+  const ALLOWED_PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+  const MIME_TO_EXT: Record<string, string[]> = {
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/png': ['png'],
+    'image/webp': ['webp'],
+  };
+
+  for (const file of files) {
+    if (file.size > MAX_PHOTO_SIZE) {
+      return NextResponse.json({ error: `File "${file.name}" too large. Maximum size is 5MB per photo.` }, { status: 400 });
+    }
+    if (!ALLOWED_PHOTO_MIMES.includes(file.type)) {
+      return NextResponse.json({ error: `File "${file.name}" has invalid type. Allowed: JPEG, PNG, WebP.` }, { status: 400 });
+    }
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!ext || !MIME_TO_EXT[file.type]?.includes(ext)) {
+      return NextResponse.json({ error: `File "${file.name}" extension does not match file type.` }, { status: 400 });
+    }
+  }
+
   const existingCount = await prisma.vehiclePhoto.count({ where: { vehicleId: params.id } });
 
   const photos = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const ext = file.name.split('.').pop();
+    const ext = file.name.split('.').pop()?.toLowerCase();
     const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());

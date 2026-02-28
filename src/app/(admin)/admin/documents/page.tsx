@@ -25,7 +25,7 @@ export default function AdminDocumentsPage() {
   useEffect(() => {
     fetch('/api/admin/documents')
       .then((r) => r.json())
-      .then(setDocuments)
+      .then((res) => setDocuments(res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

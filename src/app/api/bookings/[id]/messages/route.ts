@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createNotification } from '@/lib/services/notification';
+import { safeNotify } from '@/lib/services/notification';
 import { messageReceivedEmail } from '@/lib/services/email';
 
 export async function GET(
@@ -25,6 +25,7 @@ export async function GET(
     where: { bookingId: params.id },
     include: { sender: { select: { id: true, name: true } } },
     orderBy: { createdAt: 'asc' },
+    take: 100,
   });
 
   return NextResponse.json(messages);
@@ -79,7 +80,7 @@ export async function POST(
   const recipientId = session.user.id === booking.ownerId ? booking.productionUserId : booking.ownerId;
   const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
 
-  await createNotification({
+  await safeNotify({
     userId: recipientId,
     type: 'MESSAGE_RECEIVED',
     title: 'New Message',

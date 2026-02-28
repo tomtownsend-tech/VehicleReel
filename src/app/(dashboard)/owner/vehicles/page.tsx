@@ -31,7 +31,7 @@ export default function OwnerVehiclesPage() {
   useEffect(() => {
     fetch('/api/vehicles')
       .then((r) => r.json())
-      .then(setVehicles)
+      .then((res) => setVehicles(res.data || []))
       .finally(() => setLoading(false));
   }, []);
 

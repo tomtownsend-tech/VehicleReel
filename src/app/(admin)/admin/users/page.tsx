@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     fetch('/api/admin/users')
       .then((r) => r.json())
-      .then(setUsers)
+      .then((res) => setUsers(res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

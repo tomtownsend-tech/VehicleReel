@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createNotification } from '@/lib/services/notification';
+import { safeNotify } from '@/lib/services/notification';
 import { documentStatusEmail } from '@/lib/services/email';
 
 export async function PATCH(
@@ -63,7 +63,7 @@ export async function PATCH(
         });
 
         // Notify owner their listing is activated
-        await createNotification({
+        await safeNotify({
           userId: document.userId,
           type: 'LISTING_ACTIVATED',
           title: 'Vehicle Listing Activated',
@@ -74,7 +74,7 @@ export async function PATCH(
     }
 
     // Notify user about document approval
-    await createNotification({
+    await safeNotify({
       userId: document.userId,
       type: 'DOCUMENT_APPROVED',
       title: 'Document Approved',
@@ -84,7 +84,7 @@ export async function PATCH(
     });
   } else {
     // Notify user about document being flagged
-    await createNotification({
+    await safeNotify({
       userId: document.userId,
       type: 'DOCUMENT_FLAGGED',
       title: 'Document Under Review',

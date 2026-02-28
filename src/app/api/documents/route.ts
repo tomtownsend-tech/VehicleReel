@@ -17,12 +17,23 @@ export async function GET(request: NextRequest) {
   const where: Record<string, string> = { userId };
   if (vehicleId) where.vehicleId = vehicleId;
 
-  const documents = await prisma.document.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-  });
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
 
-  return NextResponse.json(documents);
+  const [documents, total] = await Promise.all([
+    prisma.document.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.document.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    data: documents,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +55,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
   }
 
-  const ext = file.name.split('.').pop();
+  // Validate file size (10MB max for documents)
+  const MAX_DOC_SIZE = 10 * 1024 * 1024;
+  if (file.size > MAX_DOC_SIZE) {
+    return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
+  }
+
+  // Validate MIME type
+  const ALLOWED_DOC_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+  if (!ALLOWED_DOC_MIMES.includes(file.type)) {
+    return NextResponse.json({ error: 'Invalid file type. Allowed: PDF, JPEG, PNG, WebP.' }, { status: 400 });
+  }
+
+  // Validate file extension matches MIME type
+  const MIME_TO_EXT: Record<string, string[]> = {
+    'application/pdf': ['pdf'],
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/png': ['png'],
+    'image/webp': ['webp'],
+  };
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (!ext || !MIME_TO_EXT[file.type]?.includes(ext)) {
+    return NextResponse.json({ error: 'File extension does not match file type.' }, { status: 400 });
+  }
+
   const path = `documents/${session.user.id}/${Date.now()}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());

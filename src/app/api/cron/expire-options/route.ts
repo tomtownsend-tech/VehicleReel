@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { promoteQueue } from '@/lib/services/option';
-import { createNotification } from '@/lib/services/notification';
+import { safeNotify } from '@/lib/services/notification';
 import { optionExpiredEmail } from '@/lib/services/email';
 
 export async function POST(request: NextRequest) {
@@ -26,17 +26,20 @@ export async function POST(request: NextRequest) {
   });
 
   for (const option of expiredResponse) {
-    await prisma.option.update({
-      where: { id: option.id },
+    // Idempotency guard: only update if status hasn't changed since findMany
+    const result = await prisma.option.updateMany({
+      where: { id: option.id, status: 'PENDING_RESPONSE' },
       data: { status: 'EXPIRED_RESPONSE' },
     });
+    if (result.count === 0) continue; // Status changed concurrently, skip
+
     await promoteQueue(option.vehicleId, option.startDate, option.endDate);
     results.expiredResponse++;
 
     const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
 
     // Notify production user their option expired
-    await createNotification({
+    await safeNotify({
       userId: option.productionUser.id,
       type: 'OPTION_EXPIRED',
       title: 'Option Expired',
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Notify owner the option expired
-    await createNotification({
+    await safeNotify({
       userId: option.vehicle.owner.id,
       type: 'OPTION_EXPIRED',
       title: 'Option Expired',
@@ -68,17 +71,20 @@ export async function POST(request: NextRequest) {
   });
 
   for (const option of expiredConfirmation) {
-    await prisma.option.update({
-      where: { id: option.id },
+    // Idempotency guard: only update if status hasn't changed since findMany
+    const result = await prisma.option.updateMany({
+      where: { id: option.id, status: 'ACCEPTED' },
       data: { status: 'EXPIRED_CONFIRMATION' },
     });
+    if (result.count === 0) continue; // Status changed concurrently, skip
+
     await promoteQueue(option.vehicleId, option.startDate, option.endDate);
     results.expiredConfirmation++;
 
     const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
 
     // Notify production user their confirmation window expired
-    await createNotification({
+    await safeNotify({
       userId: option.productionUser.id,
       type: 'OPTION_EXPIRED',
       title: 'Confirmation Window Expired',
@@ -88,7 +94,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Notify owner the confirmation expired
-    await createNotification({
+    await safeNotify({
       userId: option.vehicle.owner.id,
       type: 'OPTION_EXPIRED',
       title: 'Confirmation Window Expired',

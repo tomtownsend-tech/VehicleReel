@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { toUTCDate, todayUTC } from '@/lib/utils/date';
 
 export const createOptionSchema = z.object({
   vehicleId: z.string().min(1),
@@ -9,14 +10,13 @@ export const createOptionSchema = z.object({
   responseDeadlineHours: z.number().int().min(12).max(72),
   confirmationWindowHours: z.number().int().min(12).max(48),
 }).refine((data) => {
-  const start = new Date(data.startDate);
-  const end = new Date(data.endDate);
+  const start = toUTCDate(data.startDate);
+  const end = toUTCDate(data.endDate);
   return end >= start;
 }, { message: 'End date must be on or after start date', path: ['endDate'] })
 .refine((data) => {
-  const start = new Date(data.startDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const start = toUTCDate(data.startDate);
+  const today = todayUTC();
   return start >= today;
 }, { message: 'Start date must not be in the past', path: ['startDate'] });
 

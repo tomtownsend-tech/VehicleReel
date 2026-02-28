@@ -41,7 +41,7 @@ export default function ProductionOptionsPage() {
   useEffect(() => {
     fetch('/api/options')
       .then((r) => r.json())
-      .then(setOptions)
+      .then((res) => setOptions(res.data || []))
       .finally(() => setLoading(false));
   }, []);
 
