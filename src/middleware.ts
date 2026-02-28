@@ -1,23 +1,10 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
-import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
-
-    // Rate limit login attempts: 10 per 15 minutes per IP
-    if (pathname === '/api/auth/callback/credentials') {
-      const ip = getClientIp(req);
-      const { success } = rateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
-      if (!success) {
-        return NextResponse.json(
-          { error: 'Too many login attempts. Please try again later.' },
-          { status: 429 }
-        );
-      }
-    }
 
     if (!token) {
       return NextResponse.redirect(new URL('/login', req.url));
@@ -76,6 +63,5 @@ export const config = {
     '/owner/:path*',
     '/production/:path*',
     '/admin/:path*',
-    '/api/auth/callback/credentials',
   ],
 };
