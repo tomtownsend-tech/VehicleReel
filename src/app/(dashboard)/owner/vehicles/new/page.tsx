@@ -85,10 +85,42 @@ export default function NewVehiclePage() {
     }
   }
 
-  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || []);
-    setPhotoFiles((prev) => [...prev, ...files]);
-    files.forEach((file) => {
+  function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFiles = Array.from(e.target.files || []);
+    const compressed = await Promise.all(rawFiles.map((f) => compressImage(f)));
+    setPhotoFiles((prev) => [...prev, ...compressed]);
+    compressed.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         setPhotoPreviews((prev) => [...prev, ev.target?.result as string]);
@@ -111,19 +143,20 @@ export default function NewVehiclePage() {
     setError('');
     setLoading(true);
     try {
-      const formData = new FormData();
-      photoFiles.forEach((file) => formData.append('photos', file));
-
-      const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setError(data?.error || 'Failed to upload photos. You can try again later from the vehicle detail page.');
+      // Upload photos one at a time to stay within Vercel body size limits
+      let failures = 0;
+      for (const file of photoFiles) {
+        const formData = new FormData();
+        formData.append('photos', file);
+        const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) failures++;
       }
-
+      if (failures > 0) {
+        setError(`${failures} photo(s) failed to upload. You can try again later from the vehicle detail page.`);
+      }
       setStep('documents');
     } catch {
       setError('Photo upload failed. You can try again later from the vehicle detail page.');
