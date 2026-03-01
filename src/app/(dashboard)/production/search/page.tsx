@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { VEHICLE_TYPES, COLORS, LOCATIONS } from '@/lib/constants';
+import { VEHICLE_TYPES, COLORS, LOCATIONS, DRIVE_SIDES } from '@/lib/constants';
 
 interface Vehicle {
   id: string;
@@ -40,6 +40,7 @@ export default function ProductionSearchPage() {
     yearMax: '',
     startDate: '',
     endDate: '',
+    driveSide: '',
   });
 
   function updateFilter(field: string, value: string) {
@@ -104,6 +105,15 @@ export default function ProductionSearchPage() {
               onChange={(e) => updateFilter('type', e.target.value)}
               placeholder="Vehicle type"
             />
+            {(filters.type === 'CAR' || filters.type === 'RACING_CAR') && (
+              <Select
+                id="driveSide"
+                options={DRIVE_SIDES.map((d) => ({ value: d.value, label: d.label }))}
+                value={filters.driveSide}
+                onChange={(e) => updateFilter('driveSide', e.target.value)}
+                placeholder="Drive side"
+              />
+            )}
             <Input
               id="make"
               value={filters.make}
@@ -169,7 +179,7 @@ export default function ProductionSearchPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                const cleared = { type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '' };
+                const cleared = { type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '', driveSide: '' };
                 setFilters(cleared);
                 // Trigger search with cleared filters
                 setTimeout(() => handleSearch(), 0);

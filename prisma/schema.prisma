@@ -67,6 +67,11 @@ enum VehicleStatus {
   REMOVED
 }
 
+enum DriveSide {
+  LEFT
+  RIGHT
+}
+
 enum OptionStatus {
   PENDING_RESPONSE
   ACCEPTED
@@ -198,6 +203,7 @@ model Vehicle {
   id              String           @id @default(cuid())
   ownerId         String
   type            VehicleType
+  driveSide       DriveSide?
   make            String
   model           String
   color           String

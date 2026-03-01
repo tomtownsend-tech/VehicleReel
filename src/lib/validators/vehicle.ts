@@ -10,6 +10,7 @@ export const createVehicleSchema = z.object({
   condition: z.enum(['EXCELLENT', 'GOOD', 'FAIR', 'POOR']),
   specialFeatures: z.array(z.string()).default([]),
   location: z.string().min(1, 'Location is required'),
+  driveSide: z.enum(['LEFT', 'RIGHT']).optional(),
 });
 
 export const updateVehicleSchema = createVehicleSchema.partial();

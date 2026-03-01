@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   const yearMin = searchParams.get('yearMin');
   const yearMax = searchParams.get('yearMax');
   const location = searchParams.get('location');
+  const driveSide = searchParams.get('driveSide');
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
   const page = parseInt(searchParams.get('page') || '1');
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
   if (model) where.model = { contains: model, mode: 'insensitive' };
   if (color) where.color = { contains: color, mode: 'insensitive' };
   if (location) where.location = location;
+  if (driveSide) where.driveSide = driveSide as 'LEFT' | 'RIGHT';
   if (yearMin || yearMax) {
     where.year = {};
     if (yearMin) (where.year as Prisma.IntFilter).gte = parseInt(yearMin);

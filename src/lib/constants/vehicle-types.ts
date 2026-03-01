@@ -21,3 +21,8 @@ export const COLORS = [
   'Orange', 'Brown', 'Beige', 'Gold', 'Bronze', 'Maroon', 'Navy',
   'Teal', 'Purple', 'Pink', 'Other',
 ] as const;
+
+export const DRIVE_SIDES = [
+  { value: 'LEFT', label: 'Left-Hand Drive (LHD)' },
+  { value: 'RIGHT', label: 'Right-Hand Drive (RHD)' },
+] as const;

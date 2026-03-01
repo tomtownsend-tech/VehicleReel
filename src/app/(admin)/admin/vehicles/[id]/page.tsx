@@ -10,6 +10,7 @@ import { ArrowLeft, Car, MapPin, Calendar, User } from 'lucide-react';
 interface Vehicle {
   id: string;
   type: string;
+  driveSide: string | null;
   make: string;
   model: string;
   color: string;
@@ -147,6 +148,9 @@ export default function AdminVehicleDetailPage() {
         <CardContent>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div><dt className="text-gray-500">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
+            {vehicle.driveSide && (
+              <div><dt className="text-gray-500">Drive</dt><dd className="font-medium">{vehicle.driveSide === 'LEFT' ? 'Left-Hand Drive' : 'Right-Hand Drive'}</dd></div>
+            )}
             <div><dt className="text-gray-500">Color</dt><dd className="font-medium">{vehicle.color}</dd></div>
             <div><dt className="text-gray-500">Condition</dt><dd className="font-medium capitalize">{vehicle.condition.toLowerCase()}</dd></div>
             {vehicle.mileage && <div><dt className="text-gray-500">Mileage</dt><dd className="font-medium">{vehicle.mileage.toLocaleString()} km</dd></div>}

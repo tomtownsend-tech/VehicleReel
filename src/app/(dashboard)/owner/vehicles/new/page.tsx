@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { VEHICLE_TYPES, VEHICLE_CONDITIONS, COLORS, LOCATIONS } from '@/lib/constants';
+import { VEHICLE_TYPES, VEHICLE_CONDITIONS, COLORS, LOCATIONS, DRIVE_SIDES } from '@/lib/constants';
 import { Upload, X, Check } from 'lucide-react';
 import { compressImage } from '@/lib/utils/compress-image';
 
@@ -36,6 +36,7 @@ export default function NewVehiclePage() {
     condition: '',
     location: '',
     specialFeatures: '',
+    driveSide: '',
   });
 
   // Photos
@@ -64,6 +65,7 @@ export default function NewVehiclePage() {
           ...details,
           year: parseInt(details.year),
           mileage: details.mileage ? parseInt(details.mileage) : undefined,
+          driveSide: details.driveSide || undefined,
           specialFeatures: details.specialFeatures
             ? details.specialFeatures.split(',').map((s: string) => s.trim()).filter(Boolean)
             : [],
@@ -225,6 +227,16 @@ export default function NewVehiclePage() {
               onChange={(e) => updateDetail('type', e.target.value)}
               placeholder="Select type..."
             />
+            {(details.type === 'CAR' || details.type === 'RACING_CAR') && (
+              <Select
+                id="driveSide"
+                label="Drive Side"
+                options={DRIVE_SIDES.map((d) => ({ value: d.value, label: d.label }))}
+                value={details.driveSide}
+                onChange={(e) => updateDetail('driveSide', e.target.value)}
+                placeholder="Select drive side..."
+              />
+            )}
             <div className="grid grid-cols-2 gap-4">
               <Input
                 id="make"
