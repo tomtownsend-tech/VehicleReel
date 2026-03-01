@@ -61,7 +61,15 @@ function PlaceOptionForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Failed to place option');
+        // Show specific validation errors when available
+        if (data.details?.fieldErrors) {
+          const msgs = Object.values(data.details.fieldErrors).flat() as string[];
+          setError(msgs.join('. ') || data.error || 'Failed to place option');
+        } else if (data.details?.formErrors?.length) {
+          setError(data.details.formErrors.join('. '));
+        } else {
+          setError(data.error || 'Failed to place option');
+        }
         return;
       }
 

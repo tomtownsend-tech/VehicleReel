@@ -139,11 +139,12 @@ function RegisterForm() {
 
           <Input
             id="phone"
-            label="Phone (optional)"
+            label="Phone"
             type="tel"
             value={form.phone}
             onChange={(e) => updateField('phone', e.target.value)}
             placeholder="+27 82 123 4567"
+            required
           />
 
           {form.role === 'PRODUCTION' && (

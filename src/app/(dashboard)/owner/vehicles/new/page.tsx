@@ -120,7 +120,8 @@ export default function NewVehiclePage() {
       });
 
       if (!res.ok) {
-        setError('Failed to upload photos. You can try again later from the vehicle detail page.');
+        const data = await res.json().catch(() => null);
+        setError(data?.error || 'Failed to upload photos. You can try again later from the vehicle detail page.');
       }
 
       setStep('documents');
@@ -302,6 +303,9 @@ export default function NewVehiclePage() {
           <CardContent className="pt-6 space-y-4">
             <p className="text-sm text-gray-600">
               Upload photos of your vehicle. More photos help production teams make decisions.
+            </p>
+            <p className="text-xs text-gray-400">
+              Suggested: Front, Back, Left Side, Right Side, Interior Forward, Interior Backward, Engine Bay, Boot/Trunk
             </p>
             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
               <Upload className="h-8 w-8 text-gray-400 mb-2" />
