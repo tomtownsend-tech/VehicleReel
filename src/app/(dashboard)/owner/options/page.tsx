@@ -13,6 +13,7 @@ interface OptionItem {
   status: string;
   rateType: string;
   rateCents: number;
+  ownerPayoutCents: number;
   startDate: string;
   endDate: string;
   queuePosition: number;
@@ -93,7 +94,7 @@ export default function OwnerOptionsPage() {
                     <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                       <span>{formatDate(opt.startDate)} — {formatDate(opt.endDate)}</span>
                       <span>
-                        {formatCurrency(opt.rateCents)}
+                        {formatCurrency(opt.ownerPayoutCents)}
                         {opt.rateType === 'PER_DAY' ? '/day' : ' package'}
                       </span>
                       <span>Queue #{opt.queuePosition}</span>

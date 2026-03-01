@@ -38,6 +38,7 @@ export async function confirmBooking(optionId: string, productionUserId: string,
         productionUserId,
         rateType: option.rateType,
         rateCents: option.rateCents,
+        ownerPayoutCents: option.ownerPayoutCents,
         startDate: option.startDate,
         endDate: option.endDate,
         logistics,
@@ -88,22 +89,23 @@ export async function confirmBooking(optionId: string, productionUserId: string,
   const vehicleName = `${vehicle.make} ${vehicle.model}`;
   const datesDisplay = `${format(booking.startDate, 'MMM d, yyyy')} - ${format(booking.endDate, 'MMM d, yyyy')}`;
   const rateDisplay = booking.rateType === 'PER_DAY' ? `R${(booking.rateCents / 100).toFixed(0)}/day` : `R${(booking.rateCents / 100).toFixed(0)} package`;
+  const ownerPayoutDisplay = booking.rateType === 'PER_DAY' ? `R${(booking.ownerPayoutCents / 100).toFixed(0)}/day` : `R${(booking.ownerPayoutCents / 100).toFixed(0)} package`;
   const logisticsDisplay = logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection';
 
-  // Notify owner
+  // Notify owner (show payout amount, not full rate)
   await safeNotify({
     userId: vehicle.owner.id,
     type: 'BOOKING_CONFIRMED',
     title: 'Booking Confirmed',
-    message: `Your ${vehicleName} has been booked for ${datesDisplay} at ${rateDisplay}.`,
+    message: `Your ${vehicleName} has been booked for ${datesDisplay} at ${ownerPayoutDisplay}.`,
     data: { bookingId: booking.id, vehicleId: vehicle.id },
     emailContent: bookingConfirmedEmail(
-      vehicle.owner.name, vehicleName, datesDisplay, rateDisplay, logisticsDisplay,
+      vehicle.owner.name, vehicleName, datesDisplay, ownerPayoutDisplay, logisticsDisplay,
       booking.productionUser.name, booking.productionUser.email, booking.productionUser.phone,
     ),
   });
 
-  // Notify production user
+  // Notify production user (show full rate)
   await safeNotify({
     userId: productionUserId,
     type: 'BOOKING_CONFIRMED',

@@ -13,6 +13,7 @@ interface Booking {
   id: string;
   rateType: string;
   rateCents: number;
+  ownerPayoutCents: number;
   startDate: string;
   endDate: string;
   logistics: string;
@@ -95,7 +96,7 @@ export default function OwnerBookingDetailPage() {
             <div><dt className="text-gray-500">Vehicle</dt><dd className="font-medium">{booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}</dd></div>
             <div><dt className="text-gray-500">Production User</dt><dd className="font-medium">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
             <div><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
-            <div><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(booking.ownerPayoutCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-gray-500">Contact</dt><dd className="font-medium">{booking.productionUser.email}{booking.productionUser.phone && ` | ${booking.productionUser.phone}`}</dd></div>
           </dl>

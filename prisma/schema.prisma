@@ -254,6 +254,7 @@ model Option {
   status                  OptionStatus @default(PENDING_RESPONSE)
   rateType                RateType
   rateCents               Int
+  ownerPayoutCents        Int          @default(0)
   startDate               DateTime     @db.Date
   endDate                 DateTime     @db.Date
   responseDeadlineHours   Int
@@ -285,6 +286,7 @@ model Booking {
   productionUserId String
   rateType         RateType
   rateCents        Int
+  ownerPayoutCents Int           @default(0)
   startDate        DateTime      @db.Date
   endDate          DateTime      @db.Date
   logistics        LogisticsType

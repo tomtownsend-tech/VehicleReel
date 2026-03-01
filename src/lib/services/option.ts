@@ -85,6 +85,7 @@ export async function placeOption({
         productionUserId,
         rateType,
         rateCents,
+        ownerPayoutCents: Math.round(rateCents * 0.7),
         startDate: start,
         endDate: end,
         responseDeadlineHours,
@@ -104,7 +105,8 @@ export async function placeOption({
 
   // Send notification to vehicle owner (outside transaction for non-blocking)
   const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
-  const rateDisplay = rateType === 'PER_DAY' ? `R${(rateCents / 100).toFixed(0)}/day` : `R${(rateCents / 100).toFixed(0)} package`;
+  const ownerPayoutCents = option.ownerPayoutCents;
+  const payoutDisplay = rateType === 'PER_DAY' ? `R${(ownerPayoutCents / 100).toFixed(0)}/day` : `R${(ownerPayoutCents / 100).toFixed(0)} package`;
   const datesDisplay = `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`;
   const deadlineDisplay = `${responseDeadlineHours} hours`;
 
@@ -112,9 +114,9 @@ export async function placeOption({
     userId: option.vehicle.owner.id,
     type: 'OPTION_PLACED',
     title: 'New Option on Your Vehicle',
-    message: `${option.productionUser.companyName || option.productionUser.name} placed an option on your ${vehicleName} for ${datesDisplay} at ${rateDisplay}.`,
+    message: `${option.productionUser.companyName || option.productionUser.name} placed an option on your ${vehicleName} for ${datesDisplay} at ${payoutDisplay}.`,
     data: { optionId: option.id, vehicleId: option.vehicleId },
-    emailContent: optionPlacedEmail(option.vehicle.owner.name, vehicleName, option.productionUser.companyName || option.productionUser.name, rateDisplay, datesDisplay, deadlineDisplay),
+    emailContent: optionPlacedEmail(option.vehicle.owner.name, vehicleName, option.productionUser.companyName || option.productionUser.name, payoutDisplay, datesDisplay, deadlineDisplay),
   });
 
   return option;
