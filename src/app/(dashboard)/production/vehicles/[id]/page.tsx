@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ArrowLeft, Calendar } from 'lucide-react';
+import { MapPin, ArrowLeft, Calendar, Ban } from 'lucide-react';
 
 interface Vehicle {
   id: string;
@@ -22,6 +22,8 @@ interface Vehicle {
   status: string;
   photos: { id: string; url: string }[];
   owner: { name: string };
+  availability: { id: string; startDate: string; endDate: string; reason: string | null }[];
+  bookings: { id: string; startDate: string; endDate: string }[];
   options: { id: string; status: string; startDate: string; endDate: string; queuePosition: number }[];
 }
 
@@ -103,6 +105,35 @@ export default function ProductionVehicleDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Unavailable Dates */}
+      {(vehicle.availability.length > 0 || vehicle.bookings.length > 0) && (
+        <Card className="mb-6">
+          <CardHeader><h2 className="text-lg font-semibold">Unavailable Dates</h2></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {vehicle.bookings.map((b) => (
+                <div key={b.id} className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm">
+                  <Ban className="h-4 w-4 text-red-400 shrink-0" />
+                  <span className="line-through text-gray-500">
+                    {new Date(b.startDate).toLocaleDateString('en-ZA')} — {new Date(b.endDate).toLocaleDateString('en-ZA')}
+                  </span>
+                  <Badge variant="danger">Booked</Badge>
+                </div>
+              ))}
+              {vehicle.availability.map((a) => (
+                <div key={a.id} className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg text-sm">
+                  <Ban className="h-4 w-4 text-orange-400 shrink-0" />
+                  <span className="line-through text-gray-500">
+                    {new Date(a.startDate).toLocaleDateString('en-ZA')} — {new Date(a.endDate).toLocaleDateString('en-ZA')}
+                  </span>
+                  <Badge variant="warning">Blocked{a.reason ? ` — ${a.reason}` : ''}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Active Options */}
       {vehicle.options.length > 0 && (

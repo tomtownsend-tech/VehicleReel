@@ -35,7 +35,14 @@ export async function GET(
     return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
   }
 
-  return NextResponse.json(vehicle);
+  // Fetch confirmed bookings separately (Booking relates to Vehicle via vehicleId)
+  const confirmedBookings = await prisma.booking.findMany({
+    where: { vehicleId: params.id, status: 'CONFIRMED' },
+    select: { id: true, startDate: true, endDate: true },
+    orderBy: { startDate: 'asc' },
+  });
+
+  return NextResponse.json({ ...vehicle, bookings: confirmedBookings });
 }
 
 export async function PATCH(
