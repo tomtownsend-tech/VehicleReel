@@ -28,6 +28,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
 }
 
 export function optionPlacedEmail(ownerName: string, vehicleName: string, productionUser: string, rate: string, dates: string, deadline: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
   return {
     subject: `New option on your ${escapeHtml(vehicleName)}`,
     html: `
@@ -39,7 +40,8 @@ export function optionPlacedEmail(ownerName: string, vehicleName: string, produc
         <li><strong>Rate:</strong> ${escapeHtml(rate)}</li>
         <li><strong>Response deadline:</strong> ${escapeHtml(deadline)}</li>
       </ul>
-      <p>Log in to VehicleReel to accept or decline.</p>
+      <p><a href="${baseUrl}/owner/options" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Review Option</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
   };
 }

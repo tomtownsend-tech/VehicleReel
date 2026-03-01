@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -15,6 +16,7 @@ interface Notification {
 }
 
 export function NotificationBell() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -85,14 +87,14 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
@@ -115,7 +117,8 @@ export function NotificationBell() {
                     key={n.id}
                     onClick={() => {
                       if (!n.read) markRead(n.id);
-                      if (link) window.location.href = link;
+                      setOpen(false);
+                      if (link) router.push(link);
                     }}
                     className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${!n.read ? 'bg-blue-50' : ''}`}
                   >

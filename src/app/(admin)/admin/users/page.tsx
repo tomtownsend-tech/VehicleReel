@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,7 +71,15 @@ export default function AdminUsersPage() {
                     {' · '}Joined {new Date(user.createdAt).toLocaleDateString('en-ZA')}
                   </p>
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
+                  {user.status === 'PENDING_VERIFICATION' && user.role === 'OWNER' && (
+                    <Link
+                      href="/admin/documents"
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    >
+                      Review Documents
+                    </Link>
+                  )}
                   {user.status === 'BANNED' ? (
                     <Button size="sm" variant="outline" onClick={() => handleAction(user.id, 'UNBAN')}>Unban</Button>
                   ) : (
