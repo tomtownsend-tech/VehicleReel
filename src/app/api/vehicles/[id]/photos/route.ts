@@ -10,22 +10,17 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let step = 'init';
   try {
-    step = 'getSupabase';
     const supabase = getSupabase();
-    step = 'getSession';
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    step = 'findVehicle';
     const vehicle = await prisma.vehicle.findUnique({ where: { id: params.id } });
     if (!vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     if (vehicle.ownerId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    step = 'parseFormData';
     let formData: FormData;
     try {
       formData = await request.formData();
@@ -34,7 +29,6 @@ export async function POST(
       return NextResponse.json({ error: `Could not read uploaded files: ${msg}` }, { status: 400 });
     }
 
-    step = 'getFiles';
     const files = formData.getAll('photos') as File[];
 
     if (files.length === 0) {
@@ -53,7 +47,6 @@ export async function POST(
       }
     }
 
-    step = 'countExisting';
     const existingCount = await prisma.vehiclePhoto.count({ where: { vehicleId: params.id } });
 
     const photos = [];
@@ -63,9 +56,7 @@ export async function POST(
       const contentType = file.type || 'image/jpeg';
       const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
 
-      step = `upload-${i}-arrayBuffer`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      step = `upload-${i}-supabase`;
       const { error } = await supabase.storage
         .from('vehicle-photos')
         .upload(path, buffer, { contentType });
@@ -75,12 +66,10 @@ export async function POST(
         continue;
       }
 
-      step = `upload-${i}-getUrl`;
       const { data: urlData } = supabase.storage
         .from('vehicle-photos')
         .getPublicUrl(path);
 
-      step = `upload-${i}-createRecord`;
       const photo = await prisma.vehiclePhoto.create({
         data: {
           vehicleId: params.id,
@@ -93,9 +82,9 @@ export async function POST(
 
     return NextResponse.json(photos, { status: 201 });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`Photo upload error at step="${step}":`, err);
-    return NextResponse.json({ error: `Upload failed at step: ${step}. ${msg}` }, { status: 500 });
+    console.error('Photo upload error:', err);
+    const msg = err instanceof Error ? err.message : 'Internal server error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -123,7 +112,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Delete from Supabase storage
     const path = photo.url.split('/vehicle-photos/')[1];
     if (path) {
       await supabase.storage.from('vehicle-photos').remove([path]);
@@ -132,7 +120,7 @@ export async function DELETE(
     await prisma.vehiclePhoto.delete({ where: { id: photoId } });
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Photo delete handler error:', err);
+    console.error('Photo delete error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
