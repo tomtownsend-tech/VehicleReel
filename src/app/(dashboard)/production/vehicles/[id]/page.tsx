@@ -107,7 +107,7 @@ export default function ProductionVehicleDetailPage() {
       </Card>
 
       {/* Unavailable Dates */}
-      {(vehicle.availability.length > 0 || vehicle.bookings.length > 0) && (
+      {(vehicle.availability.filter((a) => !a.reason?.startsWith('Booked:')).length > 0 || vehicle.bookings.length > 0) && (
         <Card className="mb-6">
           <CardHeader><h2 className="text-lg font-semibold">Unavailable Dates</h2></CardHeader>
           <CardContent>
@@ -121,7 +121,7 @@ export default function ProductionVehicleDetailPage() {
                   <Badge variant="danger">Booked</Badge>
                 </div>
               ))}
-              {vehicle.availability.map((a) => (
+              {vehicle.availability.filter((a) => !a.reason?.startsWith('Booked:')).map((a) => (
                 <div key={a.id} className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg text-sm">
                   <Ban className="h-4 w-4 text-orange-400 shrink-0" />
                   <span className="line-through text-gray-500">

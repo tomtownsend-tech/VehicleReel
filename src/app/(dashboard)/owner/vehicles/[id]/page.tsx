@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
+import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X, Ban } from 'lucide-react';
 import { compressImage } from '@/lib/utils/compress-image';
 
 interface Vehicle {
@@ -24,6 +24,7 @@ interface Vehicle {
   photos: { id: string; url: string; order: number }[];
   documents: { id: string; type: string; status: string }[];
   availability: { id: string; startDate: string; endDate: string; reason: string | null }[];
+  bookings: { id: string; startDate: string; endDate: string }[];
   options: { id: string; status: string; startDate: string; endDate: string; queuePosition: number }[];
 }
 
@@ -227,7 +228,27 @@ export default function VehicleDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Availability Calendar */}
+      {/* Booked Dates */}
+      {vehicle.bookings.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader><h2 className="text-lg font-semibold">Booked Dates</h2></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {vehicle.bookings.map((b) => (
+                <div key={b.id} className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm">
+                  <Ban className="h-4 w-4 text-red-400 shrink-0" />
+                  <span className="line-through text-gray-500">
+                    {new Date(b.startDate).toLocaleDateString('en-ZA')} — {new Date(b.endDate).toLocaleDateString('en-ZA')}
+                  </span>
+                  <Badge variant="danger">Booked</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Blocked Dates */}
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -251,11 +272,11 @@ export default function VehicleDetailPage() {
               </div>
             </div>
           )}
-          {vehicle.availability.length === 0 ? (
+          {vehicle.availability.filter((b) => !b.reason?.startsWith('Booked:')).length === 0 ? (
             <p className="text-sm text-gray-500">No dates blocked. Your vehicle is available for all dates.</p>
           ) : (
             <div className="space-y-2">
-              {vehicle.availability.map((block) => (
+              {vehicle.availability.filter((b) => !b.reason?.startsWith('Booked:')).map((block) => (
                 <div key={block.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <div className="flex items-center gap-2 text-sm">

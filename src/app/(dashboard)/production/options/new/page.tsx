@@ -1,10 +1,11 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { RESPONSE_DEADLINE_PRESETS, CONFIRMATION_WINDOW_PRESETS } from '@/lib/constants';
 import { ArrowLeft } from 'lucide-react';
@@ -14,7 +15,11 @@ function PlaceOptionForm() {
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get('vehicleId') || '';
 
-  const [vehicle, setVehicle] = useState<{ make: string; model: string; year: number } | null>(null);
+  const [vehicle, setVehicle] = useState<{
+    make: string; model: string; year: number;
+    availability: { startDate: string; endDate: string }[];
+    bookings: { startDate: string; endDate: string }[];
+  } | null>(null);
   const [form, setForm] = useState({
     rateType: 'PER_DAY',
     rateRand: '',
@@ -33,6 +38,18 @@ function PlaceOptionForm() {
         .then(setVehicle);
     }
   }, [vehicleId]);
+
+  const unavailableDates = useMemo(() => {
+    if (!vehicle) return [];
+    const dates: { start: Date; end: Date }[] = [];
+    for (const b of vehicle.bookings || []) {
+      dates.push({ start: new Date(b.startDate), end: new Date(b.endDate) });
+    }
+    for (const a of vehicle.availability || []) {
+      dates.push({ start: new Date(a.startDate), end: new Date(a.endDate) });
+    }
+    return dates;
+  }, [vehicle]);
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -106,20 +123,20 @@ function PlaceOptionForm() {
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <Input
+              <DatePicker
                 id="startDate"
                 label="Start Date"
-                type="date"
                 value={form.startDate}
-                onChange={(e) => updateField('startDate', e.target.value)}
+                onChange={(v) => updateField('startDate', v)}
+                unavailableDates={unavailableDates}
                 required
               />
-              <Input
+              <DatePicker
                 id="endDate"
                 label="End Date"
-                type="date"
                 value={form.endDate}
-                onChange={(e) => updateField('endDate', e.target.value)}
+                onChange={(v) => updateField('endDate', v)}
+                unavailableDates={unavailableDates}
                 required
               />
             </div>
