@@ -32,10 +32,12 @@ export function MobileNav() {
         { href: '/production/settings', label: 'Settings' },
       ];
 
+  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
+
   return (
     <div className="lg:hidden">
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white">
-        <Link href="/" className="text-xl font-bold text-gray-900">
+        <Link href={homeHref} className="text-xl font-bold text-gray-900">
           VehicleReel
         </Link>
         <div className="flex items-center gap-2">
