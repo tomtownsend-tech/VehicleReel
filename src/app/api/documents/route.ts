@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSupabase } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,80 +39,81 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = getSupabase();
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const supabase = getSupabase();
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const formData = await request.formData();
-  const file = formData.get('file') as File;
-  const type = formData.get('type') as string;
-  const vehicleId = formData.get('vehicleId') as string | null;
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (e) {
+      console.error('FormData parse error:', e);
+      return NextResponse.json({ error: 'Could not read uploaded file. The file may be too large (max 4.5MB on Vercel).' }, { status: 400 });
+    }
 
-  if (!file || !type) {
-    return NextResponse.json({ error: 'File and type are required' }, { status: 400 });
+    const file = formData.get('file') as File;
+    const type = formData.get('type') as string;
+    const vehicleId = formData.get('vehicleId') as string | null;
+
+    if (!file || !type) {
+      return NextResponse.json({ error: 'File and type are required' }, { status: 400 });
+    }
+
+    const validTypes = ['SA_ID', 'DRIVERS_LICENSE', 'VEHICLE_REGISTRATION', 'COMPANY_REGISTRATION'];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
+    }
+
+    // Validate file size (4MB max to stay within Vercel limits)
+    const MAX_DOC_SIZE = 4 * 1024 * 1024;
+    if (file.size > MAX_DOC_SIZE) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 4MB.' }, { status: 400 });
+    }
+
+    // Validate MIME type — allow common document and image types
+    if (file.type && !file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      return NextResponse.json({ error: 'Invalid file type. Allowed: PDF, JPEG, PNG, WebP.' }, { status: 400 });
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+    const contentType = file.type || 'application/octet-stream';
+    const path = `documents/${session.user.id}/${Date.now()}.${ext}`;
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(path, buffer, { contentType });
+
+    if (error) {
+      console.error('Upload error:', error);
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    }
+
+    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+
+    const document = await prisma.document.create({
+      data: {
+        userId: session.user.id,
+        vehicleId,
+        type: type as 'SA_ID' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'COMPANY_REGISTRATION',
+        fileUrl: urlData.publicUrl,
+        fileName: file.name,
+        status: 'PENDING_REVIEW',
+      },
+    });
+
+    // Queue for AI review
+    await prisma.documentReviewQueue.create({
+      data: {
+        documentId: document.id,
+        status: 'PENDING',
+      },
+    });
+
+    return NextResponse.json(document, { status: 201 });
+  } catch (err) {
+    console.error('Document upload handler error:', err);
+    return NextResponse.json({ error: 'Internal server error during document upload' }, { status: 500 });
   }
-
-  const validTypes = ['SA_ID', 'DRIVERS_LICENSE', 'VEHICLE_REGISTRATION', 'COMPANY_REGISTRATION'];
-  if (!validTypes.includes(type)) {
-    return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
-  }
-
-  // Validate file size (10MB max for documents)
-  const MAX_DOC_SIZE = 10 * 1024 * 1024;
-  if (file.size > MAX_DOC_SIZE) {
-    return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
-  }
-
-  // Validate MIME type
-  const ALLOWED_DOC_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
-  if (!ALLOWED_DOC_MIMES.includes(file.type)) {
-    return NextResponse.json({ error: 'Invalid file type. Allowed: PDF, JPEG, PNG, WebP.' }, { status: 400 });
-  }
-
-  // Validate file extension matches MIME type
-  const MIME_TO_EXT: Record<string, string[]> = {
-    'application/pdf': ['pdf'],
-    'image/jpeg': ['jpg', 'jpeg'],
-    'image/png': ['png'],
-    'image/webp': ['webp'],
-  };
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (!ext || !MIME_TO_EXT[file.type]?.includes(ext)) {
-    return NextResponse.json({ error: 'File extension does not match file type.' }, { status: 400 });
-  }
-
-  const path = `documents/${session.user.id}/${Date.now()}.${ext}`;
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { error } = await supabase.storage
-    .from('documents')
-    .upload(path, buffer, { contentType: file.type });
-
-  if (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
-  }
-
-  const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
-
-  const document = await prisma.document.create({
-    data: {
-      userId: session.user.id,
-      vehicleId,
-      type: type as 'SA_ID' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'COMPANY_REGISTRATION',
-      fileUrl: urlData.publicUrl,
-      fileName: file.name,
-      status: 'PENDING_REVIEW',
-    },
-  });
-
-  // Queue for AI review
-  await prisma.documentReviewQueue.create({
-    data: {
-      documentId: document.id,
-      status: 'PENDING',
-    },
-  });
-
-  return NextResponse.json(document, { status: 201 });
 }
