@@ -41,6 +41,7 @@ export default function ProductionSearchPage() {
     startDate: '',
     endDate: '',
     driveSide: '',
+    specialFeatures: '',
   });
 
   function updateFilter(field: string, value: string) {
@@ -170,6 +171,14 @@ export default function ProductionSearchPage() {
                 placeholder="Year to"
               />
             </div>
+            <div className="col-span-2 md:col-span-4">
+              <Input
+                id="specialFeatures"
+                value={filters.specialFeatures}
+                onChange={(e) => updateFilter('specialFeatures', e.target.value)}
+                placeholder="Special features (e.g. police, taxi, military)"
+              />
+            </div>
           </div>
           <div className="flex gap-2 mt-3">
             <Button onClick={handleSearch} loading={loading}>
@@ -179,7 +188,7 @@ export default function ProductionSearchPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                const cleared = { type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '', driveSide: '' };
+                const cleared = { type: '', make: '', model: '', color: '', location: '', yearMin: '', yearMax: '', startDate: '', endDate: '', driveSide: '', specialFeatures: '' };
                 setFilters(cleared);
                 // Trigger search with cleared filters
                 setTimeout(() => handleSearch(), 0);

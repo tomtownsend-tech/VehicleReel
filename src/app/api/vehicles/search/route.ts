@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   const yearMax = searchParams.get('yearMax');
   const location = searchParams.get('location');
   const driveSide = searchParams.get('driveSide');
+  const specialFeatures = searchParams.get('specialFeatures');
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
   const page = parseInt(searchParams.get('page') || '1');
@@ -36,6 +37,19 @@ export async function GET(request: NextRequest) {
   if (color) where.color = { contains: color, mode: 'insensitive' };
   if (location) where.location = location;
   if (driveSide) where.driveSide = driveSide as 'LEFT' | 'RIGHT';
+  if (specialFeatures) {
+    const keywords = specialFeatures.split(',').map(s => s.trim()).filter(Boolean);
+    if (keywords.length > 0) {
+      let condition = Prisma.sql`array_to_string("specialFeatures", ' ') ILIKE ${'%' + keywords[0] + '%'}`;
+      for (let i = 1; i < keywords.length; i++) {
+        condition = Prisma.sql`${condition} OR array_to_string("specialFeatures", ' ') ILIKE ${'%' + keywords[i] + '%'}`;
+      }
+      const matchingIds: { id: string }[] = await prisma.$queryRaw`
+        SELECT id FROM vehicles WHERE (${condition})
+      `;
+      where.id = { in: matchingIds.map(v => v.id) };
+    }
+  }
   if (yearMin || yearMax) {
     where.year = {};
     if (yearMin) (where.year as Prisma.IntFilter).gte = parseInt(yearMin);
