@@ -10,25 +10,31 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  let step = 'init';
   try {
+    step = 'getSupabase';
     const supabase = getSupabase();
+    step = 'getSession';
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    step = 'findVehicle';
     const vehicle = await prisma.vehicle.findUnique({ where: { id: params.id } });
     if (!vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     if (vehicle.ownerId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    step = 'parseFormData';
     let formData: FormData;
     try {
       formData = await request.formData();
     } catch (e) {
-      console.error('FormData parse error:', e);
-      return NextResponse.json({ error: 'Could not read uploaded files. The files may be too large (max 4.5MB total on Vercel).' }, { status: 400 });
+      const msg = e instanceof Error ? e.message : String(e);
+      return NextResponse.json({ error: `Could not read uploaded files: ${msg}` }, { status: 400 });
     }
 
+    step = 'getFiles';
     const files = formData.getAll('photos') as File[];
 
     if (files.length === 0) {
@@ -36,18 +42,18 @@ export async function POST(
     }
 
     // Validate all files before processing any
-    const MAX_PHOTO_SIZE = 4 * 1024 * 1024; // 4MB per file to stay within Vercel limits
+    const MAX_PHOTO_SIZE = 4 * 1024 * 1024;
 
     for (const file of files) {
       if (file.size > MAX_PHOTO_SIZE) {
         return NextResponse.json({ error: `File "${file.name}" too large. Maximum size is 4MB per photo.` }, { status: 400 });
       }
-      // Mobile browsers may report empty or generic MIME types — allow image/* broadly
       if (file.type && !file.type.startsWith('image/')) {
         return NextResponse.json({ error: `File "${file.name}" is not an image. Please upload JPEG, PNG, WebP, or HEIC photos.` }, { status: 400 });
       }
     }
 
+    step = 'countExisting';
     const existingCount = await prisma.vehiclePhoto.count({ where: { vehicleId: params.id } });
 
     const photos = [];
@@ -57,7 +63,9 @@ export async function POST(
       const contentType = file.type || 'image/jpeg';
       const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
 
+      step = `upload-${i}-arrayBuffer`;
       const buffer = Buffer.from(await file.arrayBuffer());
+      step = `upload-${i}-supabase`;
       const { error } = await supabase.storage
         .from('vehicle-photos')
         .upload(path, buffer, { contentType });
@@ -67,10 +75,12 @@ export async function POST(
         continue;
       }
 
+      step = `upload-${i}-getUrl`;
       const { data: urlData } = supabase.storage
         .from('vehicle-photos')
         .getPublicUrl(path);
 
+      step = `upload-${i}-createRecord`;
       const photo = await prisma.vehiclePhoto.create({
         data: {
           vehicleId: params.id,
@@ -83,8 +93,9 @@ export async function POST(
 
     return NextResponse.json(photos, { status: 201 });
   } catch (err) {
-    console.error('Photo upload handler error:', err);
-    return NextResponse.json({ error: 'Internal server error during photo upload' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`Photo upload error at step="${step}":`, err);
+    return NextResponse.json({ error: `Upload failed at step: ${step}. ${msg}` }, { status: 500 });
   }
 }
 
