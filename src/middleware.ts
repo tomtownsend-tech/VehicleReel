@@ -29,7 +29,7 @@ export default withAuth(
       }
       // Unverified owners can only access vehicle creation and settings
       if (token.status === 'PENDING_VERIFICATION') {
-        const allowed = ['/owner/vehicles/new', '/owner/settings'];
+        const allowed = ['/owner/vehicles/new', '/owner/vehicles', '/owner/settings'];
         if (!allowed.some((p) => pathname.startsWith(p))) {
           return NextResponse.redirect(new URL('/owner/vehicles/new', req.url));
         }

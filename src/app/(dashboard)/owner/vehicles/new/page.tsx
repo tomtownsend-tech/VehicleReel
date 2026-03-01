@@ -145,21 +145,28 @@ export default function NewVehiclePage() {
     try {
       // Upload all pending documents
       const pending = documents.filter((d) => d.file && !d.uploaded);
-      await Promise.all(
+      const results = await Promise.allSettled(
         pending.map(async (doc) => {
           if (!doc.file || !vehicleId) return;
           const formData = new FormData();
           formData.append('file', doc.file);
           formData.append('type', doc.type);
           formData.append('vehicleId', vehicleId);
-          await fetch('/api/documents', { method: 'POST', body: formData });
+          const res = await fetch('/api/documents', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            throw new Error(data?.error || 'Upload failed');
+          }
         })
       );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        setError(`${failed.length} document(s) failed to upload. You can retry from settings later.`);
+      }
     } catch {
       // Continue to redirect even if some uploads fail
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
     router.push('/owner/vehicles');
     router.refresh();
   }
