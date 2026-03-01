@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MapPin, Calendar, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
+import { compressImage } from '@/lib/utils/compress-image';
 
 interface Vehicle {
   id: string;
@@ -42,6 +43,8 @@ export default function VehicleDetailPage() {
   const [blockEnd, setBlockEnd] = useState('');
   const [blockReason, setBlockReason] = useState('');
   const [showBlockForm, setShowBlockForm] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/vehicles/${params.id}`)
@@ -49,6 +52,49 @@ export default function VehicleDetailPage() {
       .then(setVehicle)
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
+    setPhotoUploading(true);
+    try {
+      const compressed = await Promise.all(rawFiles.map((f) => compressImage(f)));
+      for (const file of compressed) {
+        const formData = new FormData();
+        formData.append('photos', file);
+        const res = await fetch(`/api/vehicles/${params.id}/photos`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (res.ok) {
+          const newPhotos = await res.json();
+          setVehicle((prev) =>
+            prev ? { ...prev, photos: [...prev.photos, ...newPhotos] } : prev
+          );
+        }
+      }
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  async function deletePhoto(photoId: string) {
+    if (!confirm('Delete this photo?')) return;
+    setDeletingPhotoId(photoId);
+    try {
+      const res = await fetch(`/api/vehicles/${params.id}/photos?photoId=${photoId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setVehicle((prev) =>
+          prev ? { ...prev, photos: prev.photos.filter((p) => p.id !== photoId) } : prev
+        );
+      }
+    } finally {
+      setDeletingPhotoId(null);
+    }
+  }
 
   async function addBlock() {
     if (!blockStart || !blockEnd) return;
@@ -108,15 +154,34 @@ export default function VehicleDetailPage() {
       </div>
 
       {/* Photos */}
-      {vehicle.photos.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 mb-6">
+      <div className="mb-6">
+        <div className="grid grid-cols-3 gap-2">
           {vehicle.photos.map((photo) => (
-            <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+            <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
               <img src={photo.url} alt="" className="w-full h-full object-cover" />
+              <button
+                onClick={() => deletePhoto(photo.id)}
+                disabled={deletingPhotoId === photo.id}
+                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
+              >
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
             </div>
           ))}
+          <label className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            <Upload className="h-5 w-5 text-gray-400 mb-1" />
+            <span className="text-xs text-gray-500">{photoUploading ? 'Uploading...' : 'Add Photos'}</span>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={photoUploading}
+            />
+          </label>
         </div>
-      )}
+      </div>
 
       {/* Details */}
       <Card className="mb-6">

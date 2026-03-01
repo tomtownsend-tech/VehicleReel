@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { VEHICLE_TYPES, VEHICLE_CONDITIONS, COLORS, LOCATIONS } from '@/lib/constants';
 import { Upload, X, Check } from 'lucide-react';
+import { compressImage } from '@/lib/utils/compress-image';
 
 type Step = 'details' | 'photos' | 'documents';
 
@@ -83,37 +84,6 @@ export default function NewVehiclePage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<File> {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
-            } else {
-              resolve(file);
-            }
-          },
-          'image/jpeg',
-          quality
-        );
-      };
-      img.onerror = () => resolve(file);
-      img.src = URL.createObjectURL(file);
-    });
   }
 
   async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
