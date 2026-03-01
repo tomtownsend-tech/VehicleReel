@@ -40,7 +40,7 @@ export function Sidebar() {
   const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-gray-200 lg:bg-white overflow-visible">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-gray-200 lg:bg-white lg:sticky lg:top-0 lg:h-screen overflow-visible">
       <div className="relative flex items-center justify-between h-16 px-6 border-b border-gray-200 overflow-visible">
         <Link href={homeHref} className="text-xl font-bold text-gray-900">
           VehicleReel
@@ -48,7 +48,7 @@ export function Sidebar() {
         <NotificationBell />
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1">
+      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const isActive = pathname.startsWith(link.href);
           return (
