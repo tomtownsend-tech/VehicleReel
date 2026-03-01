@@ -1,14 +1,18 @@
 export const REVIEW_PROMPTS: Record<string, string> = {
-  SA_ID: `You are reviewing a South African Identity Document (ID book or smart ID card).
+  SA_ID: `You are reviewing a document that should be a South African Identity Document (ID book or smart ID card).
 
-Analyze the uploaded image and determine:
-1. Is this a valid South African ID document?
+CRITICAL FIRST CHECK: Determine if this is actually a South African ID document. If it is any other type of document (driver's license, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this actually a South African ID document (ID book or smart ID card)?
 2. Is the document clearly readable and not blurry?
 3. Does it appear to be authentic (not obviously altered or fake)?
 4. Extract the following fields if visible: full name, ID number, date of birth.
 
 Respond in JSON format:
 {
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'South African ID', 'Driver\\'s License', 'Vehicle Registration', 'Number plate photo', 'Unrelated image', etc.",
   "valid": true/false,
   "readable": true/false,
   "authentic": true/false,
@@ -22,10 +26,12 @@ Respond in JSON format:
   "recommendation": "APPROVE" or "FLAG"
 }`,
 
-  DRIVERS_LICENSE: `You are reviewing a South African Driver's License.
+  DRIVERS_LICENSE: `You are reviewing a document that should be a South African Driver's License.
 
-Analyze the uploaded image and determine:
-1. Is this a valid South African driver's license?
+CRITICAL FIRST CHECK: Determine if this is actually a South African driver's license. If it is any other type of document (ID book, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this actually a South African driver's license?
 2. Is the document clearly readable?
 3. Does it appear authentic?
 4. Has it expired? Extract the expiry date if visible.
@@ -33,6 +39,8 @@ Analyze the uploaded image and determine:
 
 Respond in JSON format:
 {
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'Driver\\'s License', 'South African ID', 'Vehicle Registration', 'Number plate photo', 'Unrelated image', etc.",
   "valid": true/false,
   "readable": true/false,
   "authentic": true/false,
@@ -47,16 +55,20 @@ Respond in JSON format:
   "recommendation": "APPROVE" or "FLAG"
 }`,
 
-  VEHICLE_REGISTRATION: `You are reviewing a South African Vehicle Registration document.
+  VEHICLE_REGISTRATION: `You are reviewing a document that should be a South African Vehicle Registration document.
 
-Analyze the uploaded image and determine:
-1. Is this a valid vehicle registration document?
+CRITICAL FIRST CHECK: Determine if this is actually a vehicle registration document. If it is any other type of document (driver's license, ID book, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this actually a vehicle registration document?
 2. Is the document clearly readable?
 3. Does it appear authentic?
 4. Extract: vehicle make, model, year, registration number, owner name, expiry date.
 
 Respond in JSON format:
 {
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'Vehicle Registration', 'Driver\\'s License', 'South African ID', 'Number plate photo', 'Unrelated image', etc.",
   "valid": true/false,
   "readable": true/false,
   "authentic": true/false,
@@ -73,16 +85,20 @@ Respond in JSON format:
   "recommendation": "APPROVE" or "FLAG"
 }`,
 
-  COMPANY_REGISTRATION: `You are reviewing a South African Company Registration document.
+  COMPANY_REGISTRATION: `You are reviewing a document that should be a South African Company Registration document.
 
-Analyze the uploaded image and determine:
-1. Is this a valid company registration document?
+CRITICAL FIRST CHECK: Determine if this is actually a company registration document. If it is any other type of document (driver's license, ID book, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this actually a company registration document?
 2. Is the document clearly readable?
 3. Does it appear authentic?
 4. Extract: company name, registration number, directors.
 
 Respond in JSON format:
 {
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'Company Registration', 'Driver\\'s License', 'South African ID', 'Invoice', 'Unrelated image', etc.",
   "valid": true/false,
   "readable": true/false,
   "authentic": true/false,
@@ -95,4 +111,11 @@ Respond in JSON format:
   "issues": ["list of any issues found"],
   "recommendation": "APPROVE" or "FLAG"
 }`,
+};
+
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  SA_ID: 'South African ID',
+  DRIVERS_LICENSE: "Driver's License",
+  VEHICLE_REGISTRATION: 'Vehicle Registration',
+  COMPANY_REGISTRATION: 'Company Registration',
 };

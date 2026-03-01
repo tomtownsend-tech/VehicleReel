@@ -119,6 +119,22 @@ export function documentStatusEmail(userName: string, docType: string, status: s
   };
 }
 
+export function documentFlaggedEmail(userName: string, docType: string, reason: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  return {
+    subject: `Document rejected: ${escapeHtml(docType)}`,
+    html: `
+      <h2>Document Rejected</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>Your <strong>${escapeHtml(docType)}</strong> upload was not accepted.</p>
+      <p><strong>Reason:</strong> ${escapeHtml(reason)}</p>
+      <p>Please upload the correct document to continue.</p>
+      <p><a href="${baseUrl}/owner/settings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Document</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+    `,
+  };
+}
+
 export function documentExpiringEmail(userName: string, docType: string, expiryDate: string) {
   return {
     subject: `Document expiring soon: ${escapeHtml(docType)}`,
