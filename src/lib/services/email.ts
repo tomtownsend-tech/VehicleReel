@@ -15,7 +15,7 @@ interface SendEmailParams {
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
   try {
     await resend.emails.send({
-      from: `VehicleReel <${process.env.EMAIL_FROM || 'noreply@vehiclereel.co.za'}>`,
+      from: `VehicleReel <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
       to,
       subject,
       html,
