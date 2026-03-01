@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,17 +39,11 @@ function PlaceOptionForm() {
     }
   }, [vehicleId]);
 
-  const unavailableDates = useMemo(() => {
-    if (!vehicle) return [];
-    const dates: { start: Date; end: Date }[] = [];
-    for (const b of vehicle.bookings || []) {
-      dates.push({ start: new Date(b.startDate), end: new Date(b.endDate) });
-    }
-    for (const a of vehicle.availability || []) {
-      dates.push({ start: new Date(a.startDate), end: new Date(a.endDate) });
-    }
-    return dates;
-  }, [vehicle]);
+  // Build unavailable date ranges from bookings + owner-blocked dates
+  const unavailableRanges = [
+    ...(vehicle?.bookings || []),
+    ...(vehicle?.availability || []),
+  ];
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -128,7 +122,7 @@ function PlaceOptionForm() {
                 label="Start Date"
                 value={form.startDate}
                 onChange={(v) => updateField('startDate', v)}
-                unavailableDates={unavailableDates}
+                unavailableRanges={unavailableRanges}
                 required
               />
               <DatePicker
@@ -136,7 +130,7 @@ function PlaceOptionForm() {
                 label="End Date"
                 value={form.endDate}
                 onChange={(v) => updateField('endDate', v)}
-                unavailableDates={unavailableDates}
+                unavailableRanges={unavailableRanges}
                 required
               />
             </div>

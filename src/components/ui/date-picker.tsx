@@ -1,40 +1,37 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Calendar } from 'lucide-react';
 
-interface UnavailableDate {
-  start: Date;
-  end: Date;
+interface DateRange {
+  startDate: string;
+  endDate: string;
 }
 
 interface DatePickerProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  unavailableDates?: UnavailableDate[];
+  unavailableRanges?: DateRange[];
   required?: boolean;
   id?: string;
 }
 
-function startOfDay(d: Date) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function isDateUnavailable(date: Date, unavailableDates: UnavailableDate[]) {
-  const d = startOfDay(date);
-  return unavailableDates.some((range) => {
-    const start = startOfDay(range.start);
-    const end = startOfDay(range.end);
-    return d >= start && d <= end;
-  });
-}
-
-function formatYYYYMMDD(date: Date) {
+/** Format Date to YYYY-MM-DD using local time */
+function toDateString(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+/** Check if a YYYY-MM-DD string falls within any unavailable range */
+function isUnavailable(dateStr: string, ranges: DateRange[]): boolean {
+  return ranges.some((r) => {
+    const start = r.startDate.slice(0, 10);
+    const end = r.endDate.slice(0, 10);
+    return dateStr >= start && dateStr <= end;
+  });
 }
 
 const MONTH_NAMES = [
@@ -44,9 +41,10 @@ const MONTH_NAMES = [
 
 const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-export function DatePicker({ label, value, onChange, unavailableDates = [], required, id }: DatePickerProps) {
+export function DatePicker({ label, value, onChange, unavailableRanges = [], required, id }: DatePickerProps) {
   const today = new Date();
-  const initialDate = value ? new Date(value + 'T00:00:00') : today;
+  const todayStr = toDateString(today);
+  const initialDate = value ? new Date(value + 'T12:00:00') : today;
   const [viewMonth, setViewMonth] = useState(initialDate.getMonth());
   const [viewYear, setViewYear] = useState(initialDate.getFullYear());
   const [open, setOpen] = useState(false);
@@ -80,13 +78,9 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
     }
   }
 
-  function selectDate(date: Date) {
-    onChange(formatYYYYMMDD(date));
+  function selectDate(dateStr: string) {
+    onChange(dateStr);
     setOpen(false);
-  }
-
-  function clearDate() {
-    onChange('');
   }
 
   function goToToday() {
@@ -96,39 +90,32 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
 
   // Build calendar grid
   const firstDay = new Date(viewYear, viewMonth, 1);
-  // Monday=0 offset
-  let startOffset = firstDay.getDay() - 1;
+  let startOffset = firstDay.getDay() - 1; // Monday=0
   if (startOffset < 0) startOffset = 6;
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
 
-  const cells: { date: Date; currentMonth: boolean }[] = [];
+  const cells: { dateStr: string; day: number; currentMonth: boolean }[] = [];
 
-  // Previous month trailing days
   for (let i = startOffset - 1; i >= 0; i--) {
     const d = daysInPrevMonth - i;
-    cells.push({ date: new Date(viewYear, viewMonth - 1, d), currentMonth: false });
+    cells.push({ dateStr: toDateString(new Date(viewYear, viewMonth - 1, d)), day: d, currentMonth: false });
   }
 
-  // Current month
   for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ date: new Date(viewYear, viewMonth, d), currentMonth: true });
+    cells.push({ dateStr: toDateString(new Date(viewYear, viewMonth, d)), day: d, currentMonth: true });
   }
 
-  // Next month leading days (fill to complete row)
   const remaining = 7 - (cells.length % 7);
   if (remaining < 7) {
     for (let d = 1; d <= remaining; d++) {
-      cells.push({ date: new Date(viewYear, viewMonth + 1, d), currentMonth: false });
+      cells.push({ dateStr: toDateString(new Date(viewYear, viewMonth + 1, d)), day: d, currentMonth: false });
     }
   }
 
-  const selectedDate = value ? startOfDay(new Date(value + 'T00:00:00')) : null;
-  const todayStart = startOfDay(today);
-
   const displayValue = value
-    ? new Date(value + 'T00:00:00').toLocaleDateString('en-ZA')
+    ? new Date(value + 'T12:00:00').toLocaleDateString('en-ZA')
     : '';
 
   return (
@@ -142,18 +129,21 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
         type="button"
         id={id}
         onClick={() => setOpen(!open)}
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm text-left transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="flex items-center justify-between w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
-        {displayValue || <span className="text-gray-400">yyyy/mm/dd</span>}
+        <span className={displayValue ? '' : 'text-gray-400'}>
+          {displayValue || 'yyyy/mm/dd'}
+        </span>
+        <Calendar className="h-4 w-4 text-gray-400" />
       </button>
 
       {open && (
         <div className="absolute z-50 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg p-3 w-[280px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <button type="button" className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-700">
               {MONTH_NAMES[viewMonth]} {viewYear}
-            </button>
+            </span>
             <div className="flex gap-1">
               <button type="button" onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded">
                 <ChevronUp className="h-4 w-4 text-gray-500" />
@@ -174,27 +164,27 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
           {/* Calendar grid */}
           <div className="grid grid-cols-7">
             {cells.map((cell, i) => {
-              const unavailable = isDateUnavailable(cell.date, unavailableDates);
-              const isToday = startOfDay(cell.date).getTime() === todayStart.getTime();
-              const isSelected = selectedDate && startOfDay(cell.date).getTime() === selectedDate.getTime();
+              const unavailable = cell.currentMonth && isUnavailable(cell.dateStr, unavailableRanges);
+              const isToday = cell.dateStr === todayStr;
+              const isSelected = cell.dateStr === value;
 
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => !unavailable && selectDate(cell.date)}
+                  onClick={() => !unavailable && selectDate(cell.dateStr)}
                   disabled={unavailable}
                   className={[
-                    'h-8 w-full text-sm rounded transition-colors relative',
+                    'h-8 w-full text-sm rounded transition-colors',
                     !cell.currentMonth ? 'text-gray-300' : '',
                     cell.currentMonth && !unavailable && !isSelected ? 'text-gray-700 hover:bg-blue-50' : '',
-                    cell.currentMonth && unavailable ? 'text-blue-500 cursor-not-allowed' : '',
+                    unavailable ? 'text-blue-500 cursor-not-allowed' : '',
                     isSelected ? 'bg-blue-600 text-white font-medium' : '',
                     isToday && !isSelected ? 'bg-blue-100 font-medium' : '',
                   ].join(' ')}
                 >
-                  <span className={unavailable && cell.currentMonth ? 'line-through' : ''}>
-                    {cell.date.getDate()}
+                  <span className={unavailable ? 'line-through decoration-blue-400' : ''}>
+                    {cell.day}
                   </span>
                 </button>
               );
@@ -203,7 +193,7 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
 
           {/* Footer */}
           <div className="flex justify-between mt-2 pt-2 border-t border-gray-100">
-            <button type="button" onClick={clearDate} className="text-xs text-blue-600 hover:text-blue-800">
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="text-xs text-blue-600 hover:text-blue-800">
               Clear
             </button>
             <button type="button" onClick={goToToday} className="text-xs text-blue-600 hover:text-blue-800">
@@ -213,7 +203,6 @@ export function DatePicker({ label, value, onChange, unavailableDates = [], requ
         </div>
       )}
 
-      {/* Hidden input for form validation */}
       {required && <input type="hidden" value={value} required />}
     </div>
   );
