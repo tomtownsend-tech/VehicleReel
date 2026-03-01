@@ -41,12 +41,12 @@ export default function OwnerBookingDetailPage() {
   const isArchived = booking ? new Date() > new Date(booking.endDate) : false;
 
   useEffect(() => {
-    fetch(`/api/options/${params.id}`)
+    fetch(`/api/bookings/${params.id}`)
       .then((r) => r.json())
-      .then((opt) => {
-        if (opt.booking) {
-          setBooking(opt.booking);
-          fetch(`/api/bookings/${opt.booking.id}/messages`)
+      .then((b) => {
+        if (b && !b.error) {
+          setBooking(b);
+          fetch(`/api/bookings/${b.id}/messages`)
             .then((r) => r.json())
             .then(setMessages);
         }
