@@ -141,7 +141,7 @@ export default function CoordinatorBookingDetailPage() {
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Booking Details</h2></CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><dt className="text-white/50">Production</dt><dd className="font-medium text-white">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
             <div><dt className="text-white/50">Owner</dt><dd className="font-medium text-white">{booking.option.vehicle.owner.name}</dd></div>
             <div><dt className="text-white/50">Dates</dt><dd className="font-medium text-white">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>

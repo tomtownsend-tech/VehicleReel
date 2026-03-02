@@ -64,7 +64,7 @@ export default function AdminVehiclesPage() {
         {vehicles.map((v) => (
           <Card key={v.id}>
             <CardContent className="py-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <Link href={`/admin/vehicles/${v.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-12 h-12 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {v.photos[0] ? (

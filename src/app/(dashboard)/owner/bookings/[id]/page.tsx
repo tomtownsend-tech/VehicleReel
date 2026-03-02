@@ -125,7 +125,7 @@ export default function OwnerBookingDetailPage() {
 
       <Card className="mb-6">
         <CardContent className="py-4">
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}</dd></div>
             <div><dt className="text-white/50">Production User</dt><dd className="font-medium">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
             <div><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>

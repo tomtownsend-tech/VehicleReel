@@ -82,7 +82,7 @@ export default function AdminDocumentsPage() {
           {filteredDocs.map((doc) => (
             <Card key={doc.id}>
               <CardContent className="py-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-3">
                       <span className="font-medium text-white">{doc.type.replace(/_/g, ' ')}</span>

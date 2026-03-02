@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
         {users.map((user) => (
           <Card key={user.id}>
             <CardContent className="py-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-3">
                     <span className="font-medium text-white">{user.name}</span>

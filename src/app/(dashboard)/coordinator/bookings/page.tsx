@@ -62,7 +62,7 @@ export default function CoordinatorBookingsPage() {
               <Link key={b.id} href={`/coordinator/bookings/${b.id}`}>
                 <Card className="hover:border-white/20 transition-colors cursor-pointer">
                   <CardContent className="py-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-white">
@@ -78,7 +78,7 @@ export default function CoordinatorBookingsPage() {
                           {formatDate(b.startDate)} — {formatDate(b.endDate)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
                         <div className="flex items-center gap-1" title="Check-in progress">
                           {checkedIn === totalDays ? (
                             <CheckCircle className="h-4 w-4 text-emerald-400" />

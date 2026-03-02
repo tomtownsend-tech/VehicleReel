@@ -88,7 +88,7 @@ export default function OwnerOptionsPage() {
             >
             <Card className={opt.booking ? 'hover:border-white/20 transition-colors' : ''}>
               <CardContent className="py-4">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-white">
@@ -102,7 +102,7 @@ export default function OwnerOptionsPage() {
                       From: {opt.productionUser.name}
                       {opt.productionUser.companyName && ` (${opt.productionUser.companyName})`}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-white/60">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-white/60">
                       <span>{formatDate(opt.startDate)} — {formatDate(opt.endDate)}</span>
                       <span>
                         {formatCurrency(opt.ownerPayoutCents)}

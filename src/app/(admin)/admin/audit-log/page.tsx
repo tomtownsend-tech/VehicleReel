@@ -39,7 +39,7 @@ export default function AdminAuditLogPage() {
           {logs.map((log) => (
             <Card key={log.id}>
               <CardContent className="py-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <span className="text-sm font-medium text-white">{log.action}</span>
                     <span className="text-sm text-white/50 ml-2">{log.entityType} · {log.entityId.slice(0, 8)}...</span>

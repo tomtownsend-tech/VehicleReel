@@ -262,7 +262,7 @@ export default function NewVehiclePage() {
                 placeholder="Select drive side..."
               />
             )}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 id="make"
                 label="Make"
@@ -280,7 +280,7 @@ export default function NewVehiclePage() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
                 id="color"
                 label="Color"
@@ -299,7 +299,7 @@ export default function NewVehiclePage() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 id="mileage"
                 label="Mileage (km)"
@@ -409,7 +409,7 @@ export default function NewVehiclePage() {
                 />
               </label>
               {extraPreviews.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mt-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                   {extraPreviews.map((preview, i) => (
                     <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-800">
                       <img src={preview} alt="" className="w-full h-full object-cover" />

@@ -107,7 +107,7 @@ export default function AdminVehicleDetailPage() {
 
       {/* Photos */}
       {vehicle.photos.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
           {vehicle.photos.map((photo) => (
             <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-gray-800">
               <img src={photo.url} alt="" className="w-full h-full object-cover" />
@@ -146,7 +146,7 @@ export default function AdminVehicleDetailPage() {
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Details</h2></CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div><dt className="text-white/50">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
             {vehicle.driveSide && (
               <div><dt className="text-white/50">Drive</dt><dd className="font-medium">{vehicle.driveSide === 'LEFT' ? 'Left-Hand Drive' : 'Right-Hand Drive'}</dd></div>

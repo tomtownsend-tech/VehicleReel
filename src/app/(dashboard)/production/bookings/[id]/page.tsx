@@ -273,7 +273,7 @@ export default function ProductionBookingDetailPage() {
       {/* Booking Summary */}
       <Card className="mb-6">
         <CardContent className="py-4">
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}</dd></div>
             <div><dt className="text-white/50">Owner</dt><dd className="font-medium">{booking.option.vehicle.owner.name}</dd></div>
             <div><dt className="text-white/50">Location</dt><dd className="font-medium">{booking.option.vehicle.location}</dd></div>
@@ -418,7 +418,7 @@ export default function ProductionBookingDetailPage() {
               const dateObj = new Date(dateStr + 'T00:00:00');
               const canCheckIn = dateObj <= today && !isCheckedIn;
               return (
-                <div key={d.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                <div key={d.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 border-b border-white/5 last:border-0 gap-1">
                   <span className="text-sm font-medium">{formatDate(d.date)}</span>
                   {isCheckedIn ? (
                     <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>

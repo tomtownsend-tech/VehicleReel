@@ -128,7 +128,7 @@ export default function AdminBookingDetailPage() {
       {/* Booking Info */}
       <Card className="mb-6">
         <CardContent className="py-4">
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><dt className="text-white/50">Production</dt><dd className="font-medium text-white">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
             <div><dt className="text-white/50">Owner</dt><dd className="font-medium text-white">{booking.option.vehicle.owner.name}</dd></div>
             <div><dt className="text-white/50">Dates</dt><dd className="font-medium text-white">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
@@ -188,7 +188,7 @@ export default function AdminBookingDetailPage() {
               const hasDetails = d.callTime || d.locationAddress || d.locationPin || d.notes;
               return (
                 <div key={d.id} className="border border-white/10 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 border-b border-white/5 last:border-0 gap-1">
                     <span className="text-sm font-semibold text-white">{formatDate(d.date)}</span>
                     {isCheckedIn ? (
                       <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>

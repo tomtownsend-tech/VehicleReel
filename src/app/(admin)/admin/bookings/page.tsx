@@ -57,7 +57,7 @@ export default function AdminBookingsPage() {
             <div key={b.id} className="cursor-pointer" onClick={() => router.push(`/admin/bookings/${b.id}`)}>
             <Card className="hover:border-white/20 transition-colors">
               <CardContent className="py-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-white">

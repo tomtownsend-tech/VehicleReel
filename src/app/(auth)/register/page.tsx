@@ -80,7 +80,7 @@ function RegisterForm() {
       {!form.role && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white/70">I am a...</label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => updateField('role', 'OWNER')}

@@ -40,19 +40,19 @@ export default function OwnerSettingsPage() {
         <CardHeader><h2 className="text-lg font-semibold">Profile</h2></CardHeader>
         <CardContent>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-white/60">Name</dt>
               <dd className="font-medium text-white">{session?.user?.name}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-white/60">Email</dt>
               <dd className="font-medium text-white">{session?.user?.email}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-white/60">Account Type</dt>
               <dd className="font-medium text-white">Vehicle Owner</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-white/60">Status</dt>
               <dd><Badge variant={statusVariant[session?.user?.status || ''] || 'default'}>{session?.user?.status}</Badge></dd>
             </div>

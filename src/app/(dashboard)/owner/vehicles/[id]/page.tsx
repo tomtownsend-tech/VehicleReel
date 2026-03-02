@@ -178,7 +178,7 @@ export default function VehicleDetailPage() {
               )}
 
               <h3 className="text-sm font-medium text-white mb-2">Required Photos</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
                 {REQUIRED_PHOTO_LABELS.map((label, i) => {
                   const photo = photosByOrder.get(i);
                   return (
@@ -214,7 +214,7 @@ export default function VehicleDetailPage() {
               </div>
 
               <h3 className="text-sm font-medium text-white mb-2">Additional Photos</h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {extraPhotos.map((photo) => (
                   <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 group">
                     <img src={photo.url} alt="" className="w-full h-full object-cover" />
@@ -249,7 +249,7 @@ export default function VehicleDetailPage() {
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Details</h2></CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div><dt className="text-white/50">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
             {vehicle.driveSide && (
               <div><dt className="text-white/50">Drive</dt><dd className="font-medium">{vehicle.driveSide === 'LEFT' ? 'Left-Hand Drive' : 'Right-Hand Drive'}</dd></div>
@@ -325,7 +325,7 @@ export default function VehicleDetailPage() {
         <CardContent>
           {showBlockForm && (
             <div className="mb-4 p-4 bg-gray-800 rounded-lg space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input id="blockStart" label="Start Date" type="date" value={blockStart} onChange={(e) => setBlockStart(e.target.value)} />
                 <Input id="blockEnd" label="End Date" type="date" value={blockEnd} onChange={(e) => setBlockEnd(e.target.value)} />
               </div>

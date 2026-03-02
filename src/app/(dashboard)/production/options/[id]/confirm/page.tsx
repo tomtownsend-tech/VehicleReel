@@ -118,13 +118,13 @@ export default function ConfirmOptionPage() {
         <CardHeader><h2 className="text-lg font-semibold">Booking Summary</h2></CardHeader>
         <CardContent>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between"><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{option.vehicle.year} {option.vehicle.make} {option.vehicle.model}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/50">Location</dt><dd className="font-medium">{option.vehicle.location}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/50">Owner</dt><dd className="font-medium">{option.vehicle.owner.name}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(option.startDate)} — {formatDate(option.endDate)}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{option.vehicle.year} {option.vehicle.make} {option.vehicle.model}</dd></div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Location</dt><dd className="font-medium">{option.vehicle.location}</dd></div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Owner</dt><dd className="font-medium">{option.vehicle.owner.name}</dd></div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(option.startDate)} — {formatDate(option.endDate)}</dd></div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             {option.rateType === 'PER_DAY' && (
-              <div className="flex justify-between"><dt className="text-white/50">Estimated Total</dt><dd className="font-medium">{formatCurrency(option.rateCents * Math.max(1, Math.ceil((new Date(option.endDate).getTime() - new Date(option.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1))}</dd></div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><dt className="text-white/50">Estimated Total</dt><dd className="font-medium">{formatCurrency(option.rateCents * Math.max(1, Math.ceil((new Date(option.endDate).getTime() - new Date(option.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1))}</dd></div>
             )}
           </dl>
         </CardContent>

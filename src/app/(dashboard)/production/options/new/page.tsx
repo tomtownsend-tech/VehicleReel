@@ -183,7 +183,7 @@ function PlaceOptionForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <DatePicker
                 id="startDate"
                 label="Start Date"
@@ -250,7 +250,7 @@ function PlaceOptionForm() {
 
               <div className="space-y-2 mb-4">
                 <label className="text-sm text-white/60">How will the vehicle be used? *</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {VEHICLE_USAGE_TYPES.map((type) => (
                     <label key={type} className="flex items-center gap-2 text-sm">
                       <input
@@ -314,7 +314,7 @@ function PlaceOptionForm() {
             placeholder="e.g. BMW Campaign Q2"
             required
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <DatePicker
               id="new-project-start"
               label="Start Date"

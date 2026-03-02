@@ -67,8 +67,8 @@ export default function ProductionOptionsPage() {
           {options.map((opt) => (
             <Card key={opt.id}>
               <CardContent className="py-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
                     <div className="h-16 w-24 rounded-lg bg-gray-800 overflow-hidden flex-shrink-0">
                       {opt.vehicle.photos[0]?.url ? (
                         <img src={opt.vehicle.photos[0].url} alt={`${opt.vehicle.year} ${opt.vehicle.make} ${opt.vehicle.model}`} className="h-full w-full object-cover" />
@@ -85,7 +85,7 @@ export default function ProductionOptionsPage() {
                         {OPTION_STATUS_LABELS[opt.status] || opt.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-white/60">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-white/60">
                       <span>{formatDate(opt.startDate)} — {formatDate(opt.endDate)}</span>
                       <span>
                         {formatCurrency(opt.rateCents)}

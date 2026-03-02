@@ -67,7 +67,7 @@ export default function AdminSpecialRequestsPage() {
             >
               <CardContent className="py-4">
                 <div onClick={() => setExpandedId(expandedId === req.id ? null : req.id)}>
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Sparkles className="h-4 w-4 text-white/70" />
