@@ -125,7 +125,10 @@ export async function reviewDocument(documentId: string) {
     }
 
     // Check if all user documents are approved — activate listing/user
-    await checkAndActivateUser(document.userId, document.vehicleId);
+    // Skip for insurance docs (booking-specific, not user-verification)
+    if (document.type !== 'INSURANCE') {
+      await checkAndActivateUser(document.userId, document.vehicleId);
+    }
 
     // Update queue entry
     await prisma.documentReviewQueue.updateMany({

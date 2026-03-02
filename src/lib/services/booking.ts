@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { format } from 'date-fns';
+import { format, subHours } from 'date-fns';
 import { safeNotify } from './notification';
-import { bookingConfirmedEmail, optionDeclinedEmail } from './email';
+import { bookingConfirmedEmail, optionDeclinedEmail, insuranceReminderEmail } from './email';
 
 export async function confirmBooking(optionId: string, productionUserId: string, logistics: 'VEHICLE_COLLECTION' | 'OWNER_DELIVERY') {
   // Create booking and update option in a transaction (validation inside tx to prevent races)
@@ -116,6 +116,18 @@ export async function confirmBooking(optionId: string, productionUserId: string,
       booking.productionUser.name, vehicleName, datesDisplay, rateDisplay, logisticsDisplay,
       vehicle.owner.name, vehicle.owner.email, vehicle.owner.phone,
     ),
+  });
+
+  // Send initial insurance reminder to production user
+  const insuranceDeadline = subHours(new Date(booking.startDate), 24);
+  const deadlineDisplay = format(insuranceDeadline, 'MMM d, yyyy HH:mm');
+  await safeNotify({
+    userId: productionUserId,
+    type: 'INSURANCE_REMINDER',
+    title: 'Upload Vehicle Insurance',
+    message: `Please upload vehicle insurance for your ${vehicleName} booking by ${deadlineDisplay}.`,
+    data: { bookingId: booking.id },
+    emailContent: insuranceReminderEmail(booking.productionUser.name, vehicleName, deadlineDisplay, booking.id),
   });
 
   // Notify declined overlapping option holders

@@ -15,4 +15,6 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, { title: string; icon: str
   LISTING_ACTIVATED: { title: 'Listing Activated', icon: 'Play' },
   USER_BANNED: { title: 'Account Banned', icon: 'Ban' },
   DATES_BLOCKED: { title: 'Dates Blocked', icon: 'CalendarOff' },
+  INSURANCE_REMINDER: { title: 'Insurance Reminder', icon: 'FileWarning' },
+  INSURANCE_OVERDUE: { title: 'Insurance Overdue', icon: 'AlertTriangle' },
 };

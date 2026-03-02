@@ -147,6 +147,36 @@ export function documentExpiringEmail(userName: string, docType: string, expiryD
   };
 }
 
+export function insuranceReminderEmail(productionName: string, vehicleName: string, deadlineDate: string, bookingId: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  return {
+    subject: `Insurance required for ${escapeHtml(vehicleName)} booking`,
+    html: `
+      <h2>Vehicle Insurance Required</h2>
+      <p>Hi ${escapeHtml(productionName)},</p>
+      <p>Please upload the vehicle insurance certificate for your upcoming booking of <strong>${escapeHtml(vehicleName)}</strong>.</p>
+      <p>The insurance must be uploaded by <strong>${escapeHtml(deadlineDate)}</strong> (24 hours before the shoot).</p>
+      <p><a href="${baseUrl}/production/bookings/${escapeHtml(bookingId)}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Insurance</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+    `,
+  };
+}
+
+export function insuranceOverdueEmail(productionName: string, vehicleName: string, bookingId: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  return {
+    subject: `URGENT: Insurance overdue for ${escapeHtml(vehicleName)} booking`,
+    html: `
+      <h2>Insurance Upload Overdue</h2>
+      <p>Hi ${escapeHtml(productionName)},</p>
+      <p>The deadline has passed to upload insurance for your booking of <strong>${escapeHtml(vehicleName)}</strong>.</p>
+      <p>Please upload it as soon as possible so the owner can review it before the shoot.</p>
+      <p><a href="${baseUrl}/production/bookings/${escapeHtml(bookingId)}" style="display:inline-block;background-color:#dc2626;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Now</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+    `,
+  };
+}
+
 export function messageReceivedEmail(userName: string, senderName: string, vehicleName: string) {
   return {
     subject: `New message about ${escapeHtml(vehicleName)}`,

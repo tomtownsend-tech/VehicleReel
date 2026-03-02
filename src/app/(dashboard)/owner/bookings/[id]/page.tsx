@@ -6,8 +6,16 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, FileText, ExternalLink } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+
+interface InsuranceDocument {
+  id: string;
+  status: string;
+  fileUrl: string;
+  fileName: string;
+  createdAt: string;
+}
 
 interface Booking {
   id: string;
@@ -20,6 +28,7 @@ interface Booking {
   status: string;
   option: { vehicle: { make: string; model: string; year: number; location: string } };
   productionUser: { name: string; email: string; phone: string | null; companyName: string | null };
+  documents: InsuranceDocument[];
 }
 
 interface Message {
@@ -100,6 +109,33 @@ export default function OwnerBookingDetailPage() {
             <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-gray-500">Contact</dt><dd className="font-medium">{booking.productionUser.email}{booking.productionUser.phone && ` | ${booking.productionUser.phone}`}</dd></div>
           </dl>
+        </CardContent>
+      </Card>
+
+      {/* Vehicle Insurance */}
+      <Card className="mb-6">
+        <CardHeader>
+          <h2 className="text-lg font-semibold">Vehicle Insurance</h2>
+        </CardHeader>
+        <CardContent>
+          {booking.documents?.[0] ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium">{booking.documents[0].fileName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {booking.documents[0].status === 'PENDING_REVIEW' && <Badge variant="warning">Pending Review</Badge>}
+                {booking.documents[0].status === 'APPROVED' && <Badge variant="success">Approved</Badge>}
+                {booking.documents[0].status === 'FLAGGED' && <Badge variant="danger">Flagged</Badge>}
+                <a href={booking.documents[0].fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No insurance document uploaded yet.</p>
+          )}
         </CardContent>
       </Card>
 

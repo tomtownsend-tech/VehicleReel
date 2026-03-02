@@ -60,9 +60,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File and type are required' }, { status: 400 });
     }
 
-    const validTypes = ['SA_ID', 'DRIVERS_LICENSE', 'VEHICLE_REGISTRATION', 'COMPANY_REGISTRATION'];
+    const validTypes = ['SA_ID', 'DRIVERS_LICENSE', 'VEHICLE_REGISTRATION', 'COMPANY_REGISTRATION', 'INSURANCE'];
     if (!validTypes.includes(type)) {
       return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
+    }
+
+    const bookingId = formData.get('bookingId') as string | null;
+
+    // Insurance documents require a bookingId and must be uploaded by the production user
+    if (type === 'INSURANCE') {
+      if (!bookingId) {
+        return NextResponse.json({ error: 'Booking ID is required for insurance documents' }, { status: 400 });
+      }
+      const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+      if (!booking) {
+        return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+      }
+      if (booking.productionUserId !== session.user.id) {
+        return NextResponse.json({ error: 'Only the production user can upload insurance for this booking' }, { status: 403 });
+      }
+      // Block duplicate upload if one is already PENDING_REVIEW or APPROVED (allow re-upload if FLAGGED)
+      const existingInsurance = await prisma.document.findFirst({
+        where: { bookingId, type: 'INSURANCE', status: { in: ['PENDING_REVIEW', 'APPROVED'] } },
+      });
+      if (existingInsurance) {
+        return NextResponse.json({ error: 'An insurance document is already uploaded for this booking' }, { status: 409 });
+      }
     }
 
     // Validate file size (4MB max to stay within Vercel limits)
@@ -96,7 +119,8 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         vehicleId,
-        type: type as 'SA_ID' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'COMPANY_REGISTRATION',
+        bookingId: type === 'INSURANCE' ? bookingId : undefined,
+        type: type as 'SA_ID' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'COMPANY_REGISTRATION' | 'INSURANCE',
         fileUrl: urlData.publicUrl,
         fileName: file.name,
         status: 'PENDING_REVIEW',

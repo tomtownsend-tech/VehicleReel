@@ -6,8 +6,17 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Upload, AlertTriangle, FileText, ExternalLink } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+
+interface InsuranceDocument {
+  id: string;
+  status: string;
+  fileUrl: string;
+  fileName: string;
+  extractedData: { flagReason?: string } | null;
+  createdAt: string;
+}
 
 interface Booking {
   id: string;
@@ -19,6 +28,7 @@ interface Booking {
   status: string;
   option: { vehicle: { make: string; model: string; year: number; location: string; owner: { name: string; email: string; phone: string | null } } };
   productionUser: { name: string };
+  documents: InsuranceDocument[];
 }
 
 interface Message {
@@ -36,9 +46,13 @@ export default function ProductionBookingDetailPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isArchived = booking ? new Date() > new Date(booking.endDate) : false;
+  const insuranceDoc = booking?.documents?.[0] || null;
+  const insuranceDeadline = booking ? new Date(new Date(booking.startDate).getTime() - 24 * 60 * 60 * 1000) : null;
+  const isPastDeadline = insuranceDeadline ? new Date() >= insuranceDeadline : false;
 
   useEffect(() => {
     // Fetch booking by its ID
@@ -56,6 +70,31 @@ export default function ProductionBookingDetailPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  async function uploadInsurance(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !booking) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'INSURANCE');
+      formData.append('bookingId', booking.id);
+      const res = await fetch('/api/documents', { method: 'POST', body: formData });
+      if (res.ok) {
+        // Refresh booking to get updated documents
+        const bookingRes = await fetch(`/api/bookings/${booking.id}`);
+        const updated = await bookingRes.json();
+        setBooking(updated);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Upload failed');
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
 
   async function sendMessage() {
     if (!newMessage.trim() || !booking) return;
@@ -100,6 +139,66 @@ export default function ProductionBookingDetailPage() {
             <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-gray-500">Owner Contact</dt><dd className="font-medium">{booking.option.vehicle.owner.email}{booking.option.vehicle.owner.phone && ` | ${booking.option.vehicle.owner.phone}`}</dd></div>
           </dl>
+        </CardContent>
+      </Card>
+
+      {/* Vehicle Insurance */}
+      <Card className="mb-6">
+        <CardHeader>
+          <h2 className="text-lg font-semibold">Vehicle Insurance</h2>
+        </CardHeader>
+        <CardContent>
+          {!insuranceDoc ? (
+            <div className="space-y-3">
+              {isPastDeadline && (
+                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg p-3">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  <span>The insurance upload deadline has passed. Please upload as soon as possible.</span>
+                </div>
+              )}
+              {!isPastDeadline && insuranceDeadline && (
+                <p className="text-sm text-gray-500">
+                  Please upload by <strong>{insuranceDeadline.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</strong> (24 hours before shoot).
+                </p>
+              )}
+              <label className="inline-flex cursor-pointer">
+                <input type="file" accept=".pdf,image/*" onChange={uploadInsurance} className="hidden" disabled={uploading} />
+                <span className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  <Upload className="h-4 w-4" />{uploading ? 'Uploading...' : 'Upload Insurance PDF'}
+                </span>
+              </label>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium">{insuranceDoc.fileName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {insuranceDoc.status === 'PENDING_REVIEW' && <Badge variant="warning">Pending Review</Badge>}
+                  {insuranceDoc.status === 'APPROVED' && <Badge variant="success">Approved</Badge>}
+                  {insuranceDoc.status === 'FLAGGED' && <Badge variant="danger">Flagged</Badge>}
+                  <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+              {insuranceDoc.status === 'FLAGGED' && (
+                <div className="space-y-2">
+                  {insuranceDoc.extractedData?.flagReason && (
+                    <p className="text-sm text-red-600">{insuranceDoc.extractedData.flagReason}</p>
+                  )}
+                  <label className="inline-flex cursor-pointer">
+                    <input type="file" accept=".pdf,image/*" onChange={uploadInsurance} className="hidden" disabled={uploading} />
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      <Upload className="h-4 w-4" />{uploading ? 'Uploading...' : 'Re-upload'}
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

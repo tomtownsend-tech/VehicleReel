@@ -111,6 +111,37 @@ Respond in JSON format:
   "issues": ["list of any issues found"],
   "recommendation": "APPROVE" or "FLAG"
 }`,
+  INSURANCE: `You are reviewing a document that should be a vehicle insurance certificate or policy.
+
+CRITICAL FIRST CHECK: Determine if this is actually a vehicle insurance document. If it is any other type of document (driver's license, ID book, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this actually a vehicle insurance certificate or policy?
+2. Is the document clearly readable?
+3. Does it appear authentic?
+4. Is the policy still valid (not expired)?
+5. Extract: insurer name, policy number, policyholder name, vehicle description, cover start date, cover end date.
+
+Respond in JSON format:
+{
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'Vehicle Insurance', 'Driver\\'s License', 'South African ID', 'Vehicle Registration', 'Unrelated image', etc.",
+  "valid": true/false,
+  "readable": true/false,
+  "authentic": true/false,
+  "expired": true/false,
+  "confidence": 0.0-1.0,
+  "extractedFields": {
+    "insurerName": "string or null",
+    "policyNumber": "string or null",
+    "policyholderName": "string or null",
+    "vehicleDescription": "string or null",
+    "coverStartDate": "string or null",
+    "coverEndDate": "string or null"
+  },
+  "issues": ["list of any issues found"],
+  "recommendation": "APPROVE" or "FLAG"
+}`,
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -118,4 +149,5 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   DRIVERS_LICENSE: "Driver's License",
   VEHICLE_REGISTRATION: 'Vehicle Registration',
   COMPANY_REGISTRATION: 'Company Registration',
+  INSURANCE: 'Vehicle Insurance',
 };

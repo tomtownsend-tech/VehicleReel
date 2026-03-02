@@ -26,6 +26,7 @@ enum DocumentType {
   DRIVERS_LICENSE
   VEHICLE_REGISTRATION
   COMPANY_REGISTRATION
+  INSURANCE
 }
 
 enum DocumentStatus {
@@ -117,6 +118,8 @@ enum NotificationType {
   LISTING_ACTIVATED
   USER_BANNED
   DATES_BLOCKED
+  INSURANCE_REMINDER
+  INSURANCE_OVERDUE
 }
 
 model User {
@@ -147,6 +150,7 @@ model Document {
   id            String         @id @default(cuid())
   userId        String
   vehicleId     String?
+  bookingId     String?
   type          DocumentType
   status        DocumentStatus @default(PENDING_REVIEW)
   fileUrl       String
@@ -158,11 +162,13 @@ model Document {
 
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  booking       Booking?       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reviews       DocumentReview[]
   reviewQueue   DocumentReviewQueue[]
 
   @@index([userId])
   @@index([vehicleId])
+  @@index([bookingId])
   @@index([status, expiryDate])
   @@map("documents")
 }
@@ -306,6 +312,7 @@ model Booking {
   option           Option        @relation(fields: [optionId], references: [id])
   productionUser   User          @relation("ProductionBookings", fields: [productionUserId], references: [id])
   messages         Message[]
+  documents        Document[]
 
   @@index([vehicleId, status])
   @@index([ownerId])

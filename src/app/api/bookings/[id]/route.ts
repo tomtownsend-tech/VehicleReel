@@ -23,6 +23,11 @@ export async function GET(
         },
       },
       productionUser: { select: { id: true, name: true, email: true, phone: true, companyName: true } },
+      documents: {
+        where: { type: 'INSURANCE' },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
     },
   });
 
