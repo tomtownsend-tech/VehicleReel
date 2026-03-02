@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
         productionUserEmail: user.email,
         vehicleDescription: parsed.data.vehicleDescription,
         shootDates: parsed.data.shootDates,
+        additionalNotes: parsed.data.additionalNotes,
       },
       emailContent,
     });

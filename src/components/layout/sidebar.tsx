@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Car, Search, FileText, Calendar, Settings, LogOut,
-  Users, BarChart3, Shield, BookOpen,
+  Users, BarChart3, Shield, BookOpen, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -33,6 +33,7 @@ const adminLinks = [
   { href: '/admin/vehicles', label: 'Vehicles', icon: Car },
   { href: '/admin/documents', label: 'Documents', icon: Shield },
   { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
+  { href: '/admin/special-requests', label: 'Special Requests', icon: Sparkles },
   { href: '/admin/audit-log', label: 'Audit Log', icon: BookOpen },
 ];
 

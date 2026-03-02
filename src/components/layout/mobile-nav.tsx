@@ -19,6 +19,8 @@ export function MobileNav() {
         { href: '/admin/users', label: 'Users' },
         { href: '/admin/vehicles', label: 'Vehicles' },
         { href: '/admin/documents', label: 'Documents' },
+        { href: '/admin/bookings', label: 'Bookings' },
+        { href: '/admin/special-requests', label: 'Special Requests' },
       ]
     : role === 'COORDINATOR'
     ? [
