@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send, Upload, AlertTriangle, FileText, ExternalLink, CheckCircle, Clock, MapPin, Save } from 'lucide-react';
+import { ArrowLeft, Send, Upload, AlertTriangle, FileText, ExternalLink, CheckCircle, Clock, MapPin, Save, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface InsuranceDocument {
@@ -18,7 +18,14 @@ interface InsuranceDocument {
   createdAt: string;
 }
 
-interface DailyDetail { id: string; date: string; callTime: string | null }
+interface DailyDetail {
+  id: string;
+  date: string;
+  callTime: string | null;
+  locationAddress: string | null;
+  locationPin: string | null;
+  notes: string | null;
+}
 interface CheckIn { id: string; date: string; checkedInAt: string }
 
 interface Booking {
@@ -48,6 +55,13 @@ interface Message {
   sender: { id: string; name: string };
 }
 
+interface DayForm {
+  callTime: string;
+  locationAddress: string;
+  locationPin: string;
+  notes: string;
+}
+
 export default function ProductionBookingDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -59,11 +73,10 @@ export default function ProductionBookingDetailPage() {
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Booking details form
-  const [locationAddress, setLocationAddress] = useState('');
-  const [locationPin, setLocationPin] = useState('');
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [callTimes, setCallTimes] = useState<Record<string, string>>({});
+  // Per-day form state keyed by date string
+  const [dayForms, setDayForms] = useState<Record<string, DayForm>>({});
+  const [sameForAll, setSameForAll] = useState(false);
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [savingDetails, setSavingDetails] = useState(false);
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
 
@@ -78,39 +91,122 @@ export default function ProductionBookingDetailPage() {
       .then((data) => {
         if (data && !data.error) {
           setBooking(data);
-          setLocationAddress(data.locationAddress || '');
-          setLocationPin(data.locationPin || '');
-          setSpecialInstructions(data.specialInstructions || '');
-          const times: Record<string, string> = {};
+          // Initialize per-day form state
+          const forms: Record<string, DayForm> = {};
           data.dailyDetails?.forEach((d: DailyDetail) => {
-            times[d.date.split('T')[0]] = d.callTime || '';
+            const dateStr = d.date.split('T')[0];
+            forms[dateStr] = {
+              callTime: d.callTime || '',
+              locationAddress: d.locationAddress || '',
+              locationPin: d.locationPin || '',
+              notes: d.notes || '',
+            };
           });
-          setCallTimes(times);
+          setDayForms(forms);
+          // Auto-expand first day
+          if (data.dailyDetails?.length > 0) {
+            setExpandedDay(data.dailyDetails[0].date.split('T')[0]);
+          }
         }
       })
       .catch(() => {});
   }, [params.id]);
 
-  // Fetch messages for coordinator thread
+  // Fetch messages
   useEffect(() => {
     if (!booking) return;
-    if (hasCoordinator) {
-      fetch(`/api/bookings/${booking.id}/messages?thread=PRODUCTION_COORDINATOR`)
-        .then((r) => r.ok ? r.json() : [])
-        .then((data) => setMessages(Array.isArray(data) ? data : []))
-        .catch(() => {});
-    } else {
-      // Legacy messages
-      fetch(`/api/bookings/${booking.id}/messages`)
-        .then((r) => r.json())
-        .then((data) => setMessages(Array.isArray(data) ? data : []))
-        .catch(() => {});
-    }
+    const url = hasCoordinator
+      ? `/api/bookings/${booking.id}/messages?thread=PRODUCTION_COORDINATOR`
+      : `/api/bookings/${booking.id}/messages`;
+    fetch(url)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setMessages(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, [booking?.id, hasCoordinator]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  function updateDayForm(dateStr: string, field: keyof DayForm, value: string) {
+    if (sameForAll) {
+      // Apply to all days
+      setDayForms((prev) => {
+        const updated = { ...prev };
+        for (const key in updated) {
+          updated[key] = { ...updated[key], [field]: value };
+        }
+        return updated;
+      });
+    } else {
+      setDayForms((prev) => ({
+        ...prev,
+        [dateStr]: { ...prev[dateStr], [field]: value },
+      }));
+    }
+  }
+
+  function applyToAllDays() {
+    if (!expandedDay || !dayForms[expandedDay]) return;
+    const source = dayForms[expandedDay];
+    setDayForms((prev) => {
+      const updated = { ...prev };
+      for (const key in updated) {
+        updated[key] = { ...source };
+      }
+      return updated;
+    });
+    setSameForAll(true);
+  }
+
+  async function saveDetails() {
+    if (!booking) return;
+    setSavingDetails(true);
+    try {
+      const days = Object.entries(dayForms).map(([date, form]) => ({
+        date,
+        callTime: form.callTime || undefined,
+        locationAddress: form.locationAddress || undefined,
+        locationPin: form.locationPin || undefined,
+        notes: form.notes || undefined,
+      }));
+      const res = await fetch(`/api/bookings/${booking.id}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (updated?.dailyDetails) {
+          setBooking((prev) => prev ? { ...prev, dailyDetails: updated.dailyDetails } : prev);
+        }
+      }
+    } finally {
+      setSavingDetails(false);
+    }
+  }
+
+  async function handleCheckIn(dateStr: string) {
+    if (!booking) return;
+    setCheckingIn(dateStr);
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}/check-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateStr }),
+      });
+      if (res.ok) {
+        const bookingRes = await fetch(`/api/bookings/${booking.id}`);
+        const updated = await bookingRes.json();
+        if (updated && !updated.error) setBooking(updated);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Check-in failed');
+      }
+    } finally {
+      setCheckingIn(null);
+    }
+  }
 
   async function uploadInsurance(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -157,50 +253,6 @@ export default function ProductionBookingDetailPage() {
     }
   }
 
-  async function saveDetails() {
-    if (!booking) return;
-    setSavingDetails(true);
-    try {
-      const dailyCallTimes = Object.entries(callTimes)
-        .filter(([, v]) => v.trim())
-        .map(([date, callTime]) => ({ date, callTime }));
-      const res = await fetch(`/api/bookings/${booking.id}/details`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locationAddress: locationAddress || undefined, locationPin: locationPin || undefined, specialInstructions: specialInstructions || undefined, dailyCallTimes }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setBooking((prev) => prev ? { ...prev, ...updated } : prev);
-      }
-    } finally {
-      setSavingDetails(false);
-    }
-  }
-
-  async function handleCheckIn(dateStr: string) {
-    if (!booking) return;
-    setCheckingIn(dateStr);
-    try {
-      const res = await fetch(`/api/bookings/${booking.id}/check-in`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: dateStr }),
-      });
-      if (res.ok) {
-        // Refresh booking
-        const bookingRes = await fetch(`/api/bookings/${booking.id}`);
-        const updated = await bookingRes.json();
-        if (updated && !updated.error) setBooking(updated);
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Check-in failed');
-      }
-    } finally {
-      setCheckingIn(null);
-    }
-  }
-
   if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
@@ -218,6 +270,7 @@ export default function ProductionBookingDetailPage() {
         <Badge variant="success">{booking.status}</Badge>
       </div>
 
+      {/* Booking Summary */}
       <Card className="mb-6">
         <CardContent className="py-4">
           <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -233,75 +286,123 @@ export default function ProductionBookingDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Booking Details Form */}
+      {/* Shoot Details — Per Day */}
       <Card className="mb-6">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold">Shoot Details</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-gray-500" />
+              <h2 className="text-lg font-semibold">Shoot Details</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {booking.dailyDetails.length > 1 && (
+                <button
+                  onClick={applyToAllDays}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <Copy className="h-3 w-3" />
+                  Apply current day to all
+                </button>
+              )}
+            </div>
           </div>
+          {booking.dailyDetails.length > 1 && (
+            <div className="mt-2">
+              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sameForAll}
+                  onChange={(e) => setSameForAll(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Same details for all days (edits sync across all days)
+              </label>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location Address</label>
-              <input
-                value={locationAddress}
-                onChange={(e) => setLocationAddress(e.target.value)}
-                placeholder="e.g. 123 Main St, Cape Town"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Google Maps Pin (URL)</label>
-              <input
-                value={locationPin}
-                onChange={(e) => setLocationPin(e.target.value)}
-                placeholder="https://maps.google.com/..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Special Instructions</label>
-              <textarea
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
-                rows={3}
-                placeholder="Any special handling instructions, parking details, etc."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <Button onClick={saveDetails} loading={savingDetails}>
-              <Save className="h-4 w-4 mr-1" /> Save Details
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Daily Schedule with Call Times */}
-      <Card className="mb-6">
-        <CardHeader><h2 className="text-lg font-semibold">Daily Schedule</h2></CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {booking.dailyDetails.map((d) => {
               const dateStr = d.date.split('T')[0];
+              const isExpanded = expandedDay === dateStr;
+              const form = dayForms[dateStr] || { callTime: '', locationAddress: '', locationPin: '', notes: '' };
+              const hasContent = form.callTime || form.locationAddress || form.locationPin || form.notes;
+              const isCheckedIn = checkedDates.has(dateStr);
+
               return (
-                <div key={d.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-sm font-medium w-32 flex-shrink-0">{formatDate(d.date)}</span>
-                  <input
-                    value={callTimes[dateStr] || ''}
-                    onChange={(e) => setCallTimes((prev) => ({ ...prev, [dateStr]: e.target.value }))}
-                    placeholder="Call time (e.g. 06:00)"
-                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div key={d.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* Day header — always visible */}
+                  <button
+                    onClick={() => setExpandedDay(isExpanded ? null : dateStr)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-gray-900">{formatDate(d.date)}</span>
+                      {hasContent && !isExpanded && (
+                        <span className="text-xs text-gray-400">
+                          {form.callTime && `Call: ${form.callTime}`}
+                          {form.callTime && form.locationAddress && ' · '}
+                          {form.locationAddress && form.locationAddress.slice(0, 30)}
+                          {(form.locationAddress?.length || 0) > 30 && '...'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isCheckedIn && <Badge variant="success"><CheckCircle className="h-3 w-3" /></Badge>}
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {/* Expanded per-day form */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-3 border-t border-gray-100 bg-gray-50/50">
+                      <div className="pt-3">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Call Time</label>
+                        <input
+                          value={form.callTime}
+                          onChange={(e) => updateDayForm(dateStr, 'callTime', e.target.value)}
+                          placeholder="e.g. 06:00"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Location Address</label>
+                        <input
+                          value={form.locationAddress}
+                          onChange={(e) => updateDayForm(dateStr, 'locationAddress', e.target.value)}
+                          placeholder="e.g. 123 Main St, Cape Town"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Google Maps Pin (URL)</label>
+                        <input
+                          value={form.locationPin}
+                          onChange={(e) => updateDayForm(dateStr, 'locationPin', e.target.value)}
+                          placeholder="https://maps.google.com/..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Notes / Special Instructions</label>
+                        <textarea
+                          value={form.notes}
+                          onChange={(e) => updateDayForm(dateStr, 'notes', e.target.value)}
+                          rows={2}
+                          placeholder="Parking details, access codes, etc."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
-            {booking.dailyDetails.length > 0 && (
-              <Button size="sm" variant="outline" onClick={saveDetails} loading={savingDetails}>
-                <Save className="h-3 w-3 mr-1" /> Save Call Times
-              </Button>
-            )}
+          </div>
+          <div className="mt-4">
+            <Button onClick={saveDetails} loading={savingDetails}>
+              <Save className="h-4 w-4 mr-1" /> Save All Details
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -337,9 +438,7 @@ export default function ProductionBookingDetailPage() {
 
       {/* Vehicle Insurance */}
       <Card className="mb-6">
-        <CardHeader>
-          <h2 className="text-lg font-semibold">Vehicle Insurance</h2>
-        </CardHeader>
+        <CardHeader><h2 className="text-lg font-semibold">Vehicle Insurance</h2></CardHeader>
         <CardContent>
           {!insuranceDoc ? (
             <div className="space-y-3">

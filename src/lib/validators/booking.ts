@@ -1,13 +1,20 @@
 import { z } from 'zod';
 
-export const bookingDetailsSchema = z.object({
+const dailyDetailSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  callTime: z.string().max(50).optional(),
   locationAddress: z.string().max(500).optional(),
-  locationPin: z.string().url().max(1000).optional(),
+  locationPin: z.string().max(1000).optional(),
+  notes: z.string().max(2000).optional(),
+});
+
+export const bookingDetailsSchema = z.object({
+  // Booking-level fields (kept for backward compat)
+  locationAddress: z.string().max(500).optional(),
+  locationPin: z.string().max(1000).optional(),
   specialInstructions: z.string().max(2000).optional(),
-  dailyCallTimes: z.array(z.object({
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    callTime: z.string().max(50),
-  })).optional(),
+  // Per-day details
+  days: z.array(dailyDetailSchema).optional(),
 });
 
 export const checkInSchema = z.object({

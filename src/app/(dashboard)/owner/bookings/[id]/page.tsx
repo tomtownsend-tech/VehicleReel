@@ -17,7 +17,7 @@ interface InsuranceDocument {
   createdAt: string;
 }
 
-interface DailyDetail { id: string; date: string; callTime: string | null }
+interface DailyDetail { id: string; date: string; callTime: string | null; locationAddress: string | null; locationPin: string | null; notes: string | null }
 interface CheckIn { id: string; date: string; checkedInAt: string }
 
 interface Booking {
@@ -137,45 +137,35 @@ export default function OwnerBookingDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Read-only Booking Details */}
-      {(booking.locationAddress || booking.locationPin || booking.specialInstructions) && (
-        <Card className="mb-6">
-          <CardHeader><h2 className="text-lg font-semibold">Shoot Details</h2></CardHeader>
-          <CardContent>
-            <dl className="space-y-3 text-sm">
-              {booking.locationAddress && (
-                <div><dt className="text-gray-500">Shoot Location</dt><dd className="font-medium">{booking.locationAddress}</dd></div>
-              )}
-              {booking.locationPin && (
-                <div><dt className="text-gray-500">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Open in Maps</a></dd></div>
-              )}
-              {booking.specialInstructions && (
-                <div><dt className="text-gray-500">Special Instructions</dt><dd className="font-medium">{booking.specialInstructions}</dd></div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Read-only Daily Schedule */}
+      {/* Per-Day Shoot Details & Schedule */}
       {booking.dailyDetails.length > 0 && (
         <Card className="mb-6">
-          <CardHeader><h2 className="text-lg font-semibold">Daily Schedule</h2></CardHeader>
+          <CardHeader><h2 className="text-lg font-semibold">Shoot Schedule</h2></CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {booking.dailyDetails.map((d) => {
                 const dateStr = d.date.split('T')[0];
                 const isCheckedIn = checkedDates.has(dateStr);
+                const hasDetails = d.callTime || d.locationAddress || d.locationPin || d.notes;
                 return (
-                  <div key={d.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium w-32">{formatDate(d.date)}</span>
-                      {d.callTime && <span className="text-sm text-gray-500">Call: {d.callTime}</span>}
+                  <div key={d.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-gray-900">{formatDate(d.date)}</span>
+                      {isCheckedIn ? (
+                        <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
+                      ) : (
+                        <Badge variant="default"><Clock className="h-3 w-3 mr-1 inline" />Pending</Badge>
+                      )}
                     </div>
-                    {isCheckedIn ? (
-                      <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
+                    {hasDetails ? (
+                      <dl className="space-y-1 text-sm mt-2">
+                        {d.callTime && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Call Time</dt><dd className="font-medium">{d.callTime}</dd></div>}
+                        {d.locationAddress && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Location</dt><dd className="font-medium">{d.locationAddress}</dd></div>}
+                        {d.locationPin && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Map Pin</dt><dd><a href={d.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">Open in Maps</a></dd></div>}
+                        {d.notes && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Notes</dt><dd className="font-medium">{d.notes}</dd></div>}
+                      </dl>
                     ) : (
-                      <Badge variant="default"><Clock className="h-3 w-3 mr-1 inline" />Pending</Badge>
+                      <p className="text-xs text-gray-400 mt-1">No details provided yet</p>
                     )}
                   </div>
                 );
