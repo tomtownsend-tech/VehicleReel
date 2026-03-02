@@ -73,10 +73,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const { projectId, ...optionData } = parsed.data;
+
     const option = await placeOption({
-      ...parsed.data,
+      ...optionData,
       productionUserId: session.user.id,
     });
+
+    if (projectId) {
+      const project = await prisma.project.findUnique({ where: { id: projectId } });
+      if (project && project.productionUserId === session.user.id) {
+        await prisma.projectOption.create({
+          data: { projectId, optionId: option.id },
+        });
+      }
+    }
 
     return NextResponse.json(option, { status: 201 });
   } catch (error) {

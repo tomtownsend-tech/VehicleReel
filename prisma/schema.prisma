@@ -156,6 +156,7 @@ model User {
   notifications          Notification[]
   auditLogs              AuditLog[]
   checkIns               BookingCheckIn[]
+  projects               Project[]      @relation("ProductionProjects")
 
   @@map("users")
 }
@@ -296,9 +297,10 @@ model Option {
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 
-  vehicle                 Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  productionUser          User         @relation("ProductionOptions", fields: [productionUserId], references: [id], onDelete: Cascade)
+  vehicle                 Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  productionUser          User             @relation("ProductionOptions", fields: [productionUserId], references: [id], onDelete: Cascade)
   booking                 Booking?
+  projectOptions          ProjectOption[]
 
   @@index([vehicleId, status])
   @@index([productionUserId, status])
@@ -418,4 +420,35 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  productionUserId String
+  name             String
+  description      String?
+  startDate        DateTime        @db.Date
+  endDate          DateTime        @db.Date
+  shareToken       String          @unique @default(cuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  productionUser   User            @relation("ProductionProjects", fields: [productionUserId], references: [id], onDelete: Cascade)
+  projectOptions   ProjectOption[]
+
+  @@index([productionUserId])
+  @@map("projects")
+}
+
+model ProjectOption {
+  projectId String
+  optionId  String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  option    Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, optionId])
+  @@index([optionId])
+  @@map("project_options")
 }

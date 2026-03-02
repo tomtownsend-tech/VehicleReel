@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Modal } from '@/components/ui/modal';
 import { Card, CardContent } from '@/components/ui/card';
 import { RESPONSE_DEADLINE_PRESETS, CONFIRMATION_WINDOW_PRESETS, VEHICLE_USAGE_TYPES } from '@/lib/constants';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 function PlaceOptionForm() {
   const router = useRouter();
@@ -20,6 +21,7 @@ function PlaceOptionForm() {
     availability: { startDate: string; endDate: string }[];
     bookings: { startDate: string; endDate: string }[];
   } | null>(null);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
     rateType: 'PER_DAY',
     rateRand: '',
@@ -30,9 +32,15 @@ function PlaceOptionForm() {
     usageTypes: [] as string[],
     precisionDriverRequired: false,
     usageDescription: '',
+    projectId: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showNewProject, setShowNewProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectStart, setNewProjectStart] = useState('');
+  const [newProjectEnd, setNewProjectEnd] = useState('');
+  const [creatingProject, setCreatingProject] = useState(false);
 
   useEffect(() => {
     if (vehicleId) {
@@ -40,7 +48,33 @@ function PlaceOptionForm() {
         .then((r) => r.json())
         .then(setVehicle);
     }
+    fetch('/api/projects')
+      .then((r) => r.json())
+      .then((data) => setProjects((data.data || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))));
   }, [vehicleId]);
+
+  async function handleCreateProject() {
+    if (!newProjectName || !newProjectStart || !newProjectEnd) return;
+    setCreatingProject(true);
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newProjectName, startDate: newProjectStart, endDate: newProjectEnd }),
+      });
+      if (res.ok) {
+        const project = await res.json();
+        setProjects((prev) => [...prev, { id: project.id, name: project.name }]);
+        setForm((prev) => ({ ...prev, projectId: project.id }));
+        setShowNewProject(false);
+        setNewProjectName('');
+        setNewProjectStart('');
+        setNewProjectEnd('');
+      }
+    } finally {
+      setCreatingProject(false);
+    }
+  }
 
   // Build unavailable date ranges from bookings + owner-blocked dates
   const unavailableRanges = [
@@ -73,6 +107,7 @@ function PlaceOptionForm() {
           usageTypes: form.usageTypes,
           precisionDriverRequired: form.precisionDriverRequired,
           usageDescription: form.usageDescription || undefined,
+          projectId: form.projectId || undefined,
         }),
       });
 
@@ -121,6 +156,32 @@ function PlaceOptionForm() {
             {error && (
               <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>
             )}
+
+            <div className="space-y-1">
+              <label htmlFor="projectId" className="block text-sm font-medium text-gray-700">
+                Add to Project
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  id="projectId"
+                  value={form.projectId}
+                  onChange={(e) => updateField('projectId', e.target.value)}
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">None</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNewProject(true)}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                >
+                  <Plus className="h-3.5 w-3.5" /> New
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <DatePicker
@@ -242,6 +303,38 @@ function PlaceOptionForm() {
           </form>
         </CardContent>
       </Card>
+
+      <Modal open={showNewProject} onClose={() => setShowNewProject(false)} title="New Project">
+        <div className="space-y-4">
+          <Input
+            id="new-project-name"
+            label="Project Name"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            placeholder="e.g. BMW Campaign Q2"
+            required
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <DatePicker
+              id="new-project-start"
+              label="Start Date"
+              value={newProjectStart}
+              onChange={setNewProjectStart}
+              required
+            />
+            <DatePicker
+              id="new-project-end"
+              label="End Date"
+              value={newProjectEnd}
+              onChange={setNewProjectEnd}
+              required
+            />
+          </div>
+          <Button onClick={handleCreateProject} className="w-full" loading={creatingProject}>
+            Create Project
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

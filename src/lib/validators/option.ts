@@ -12,6 +12,7 @@ export const createOptionSchema = z.object({
   usageTypes: z.array(z.string()).min(1, 'Select at least one usage type'),
   precisionDriverRequired: z.boolean(),
   usageDescription: z.string().optional(),
+  projectId: z.string().optional(),
 }).refine((data) => {
   const start = toUTCDate(data.startDate);
   const end = toUTCDate(data.endDate);

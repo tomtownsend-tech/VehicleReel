@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Car, Search, FileText, Calendar, Settings, LogOut,
-  Users, BarChart3, Shield, BookOpen, Sparkles,
+  Users, BarChart3, Shield, BookOpen, Sparkles, FolderOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -19,6 +19,7 @@ const ownerLinks = [
 const productionLinks = [
   { href: '/production/search', label: 'Search Vehicles', icon: Search },
   { href: '/production/options', label: 'My Options', icon: FileText },
+  { href: '/production/projects', label: 'Projects', icon: FolderOpen },
   { href: '/production/settings', label: 'Settings', icon: Settings },
 ];
 
