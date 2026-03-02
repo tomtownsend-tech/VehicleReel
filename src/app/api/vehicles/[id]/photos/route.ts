@@ -47,6 +47,7 @@ export async function POST(
       }
     }
 
+    const orderOverride = formData.get('order');
     const existingCount = await prisma.vehiclePhoto.count({ where: { vehicleId: params.id } });
 
     const photos = [];
@@ -70,11 +71,13 @@ export async function POST(
         .from('vehicle-photos')
         .getPublicUrl(path);
 
+      const photoOrder = orderOverride !== null ? parseInt(orderOverride as string) : existingCount + i;
+
       const photo = await prisma.vehiclePhoto.create({
         data: {
           vehicleId: params.id,
           url: urlData.publicUrl,
-          order: existingCount + i,
+          order: photoOrder,
         },
       });
       photos.push(photo);
