@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -16,9 +17,20 @@ interface BookingItem {
   createdAt: string;
   option: { vehicle: { make: string; model: string; year: number } };
   productionUser: { name: string; companyName: string | null };
+  coordinator: { id: string; name: string } | null;
+  checkIns: { id: string }[];
+  dailyDetails: { id: string }[];
 }
 
+const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
+  CONFIRMED: 'success',
+  PAYMENT_READY: 'warning',
+  COMPLETED: 'default',
+  CANCELLED: 'danger',
+};
+
 export default function AdminBookingsPage() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +54,8 @@ export default function AdminBookingsPage() {
       ) : (
         <div className="space-y-3">
           {bookings.map((b) => (
-            <Card key={b.id}>
+            <div key={b.id} className="cursor-pointer" onClick={() => router.push(`/admin/bookings/${b.id}`)}>
+            <Card className="hover:shadow-md transition-shadow">
               <CardContent className="py-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -50,12 +63,16 @@ export default function AdminBookingsPage() {
                       <span className="font-medium text-gray-900">
                         {b.option.vehicle.year} {b.option.vehicle.make} {b.option.vehicle.model}
                       </span>
-                      <Badge variant="success">{b.status}</Badge>
+                      <Badge variant={statusVariant[b.status] || 'default'}>{b.status}</Badge>
                     </div>
                     <p className="text-sm text-gray-500 mt-0.5">
                       {b.productionUser.name}{b.productionUser.companyName && ` (${b.productionUser.companyName})`}
                       {' · '}{formatDate(b.startDate)} — {formatDate(b.endDate)}
                       {' · '}{formatCurrency(b.rateCents)}{b.rateType === 'PER_DAY' ? '/day' : ' pkg'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Coordinator: {b.coordinator ? b.coordinator.name : 'Not assigned'}
+                      {' · '}Check-ins: {b.checkIns.length}/{b.dailyDetails.length}
                     </p>
                   </div>
                   <span className="text-xs text-gray-400">
@@ -64,6 +81,7 @@ export default function AdminBookingsPage() {
                 </div>
               </CardContent>
             </Card>
+            </div>
           ))}
         </div>
       )}

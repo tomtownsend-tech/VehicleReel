@@ -50,6 +50,18 @@ export async function confirmBooking(optionId: string, productionUserId: string,
       },
     });
 
+    // Seed daily detail rows for each calendar day
+    const dailyDetails: { bookingId: string; date: Date }[] = [];
+    const current = new Date(option.startDate);
+    const end = new Date(option.endDate);
+    while (current <= end) {
+      dailyDetails.push({ bookingId: newBooking.id, date: new Date(current) });
+      current.setDate(current.getDate() + 1);
+    }
+    if (dailyDetails.length > 0) {
+      await tx.bookingDailyDetail.createMany({ data: dailyDetails });
+    }
+
     // Create availability block for the booked dates
     await tx.availabilityBlock.create({
       data: {
@@ -143,4 +155,115 @@ export async function confirmBooking(optionId: string, productionUserId: string,
   }
 
   return booking;
+}
+
+export async function assignCoordinator(bookingId: string, coordinatorId: string, adminUserId: string) {
+  const coordinator = await prisma.user.findUnique({ where: { id: coordinatorId }, select: { role: true, name: true } });
+  if (!coordinator || coordinator.role !== 'COORDINATOR') throw new Error('User is not a coordinator');
+
+  const booking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: { coordinatorId },
+    include: {
+      option: { include: { vehicle: { select: { make: true, model: true } } } },
+      productionUser: { select: { name: true } },
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: adminUserId,
+      action: 'COORDINATOR_ASSIGNED',
+      entityType: 'BOOKING',
+      entityId: bookingId,
+      details: { coordinatorId, coordinatorName: coordinator.name },
+    },
+  });
+
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+  const datesDisplay = `${format(booking.startDate, 'MMM d, yyyy')} - ${format(booking.endDate, 'MMM d, yyyy')}`;
+
+  await safeNotify({
+    userId: coordinatorId,
+    type: 'COORDINATOR_ASSIGNED',
+    title: 'New Booking Assignment',
+    message: `You have been assigned to coordinate the ${vehicleName} booking (${datesDisplay}) for ${booking.productionUser.name}.`,
+    data: { bookingId },
+  });
+
+  return booking;
+}
+
+export async function checkInDay(bookingId: string, date: string, productionUserId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { dailyDetails: true, checkIns: true, option: { include: { vehicle: { select: { make: true, model: true } } } } },
+  });
+  if (!booking) throw new Error('Booking not found');
+  if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
+
+  const checkDate = new Date(date + 'T00:00:00.000Z');
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  if (checkDate > today) throw new Error('Cannot check in for a future date');
+
+  const checkIn = await prisma.bookingCheckIn.create({
+    data: { bookingId, date: checkDate, checkedInBy: productionUserId },
+  });
+
+  // Check if all days are now checked in
+  const totalDays = booking.dailyDetails.length;
+  const checkedInCount = booking.checkIns.length + 1; // +1 for the one we just created
+  if (checkedInCount >= totalDays && totalDays > 0) {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: 'PAYMENT_READY' },
+    });
+
+    if (booking.coordinatorId) {
+      const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+      await safeNotify({
+        userId: booking.coordinatorId,
+        type: 'BOOKING_PAYMENT_READY',
+        title: 'All Days Checked In',
+        message: `All shoot days have been checked in for the ${vehicleName} booking. Payment is now ready.`,
+        data: { bookingId },
+      });
+    }
+  }
+
+  return checkIn;
+}
+
+export async function updateBookingDetails(
+  bookingId: string,
+  productionUserId: string,
+  details: { locationAddress?: string; locationPin?: string; specialInstructions?: string; dailyCallTimes?: { date: string; callTime: string }[] }
+) {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) throw new Error('Booking not found');
+  if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
+
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      locationAddress: details.locationAddress,
+      locationPin: details.locationPin,
+      specialInstructions: details.specialInstructions,
+    },
+  });
+
+  if (details.dailyCallTimes) {
+    for (const { date, callTime } of details.dailyCallTimes) {
+      await prisma.bookingDailyDetail.updateMany({
+        where: { bookingId, date: new Date(date + 'T00:00:00.000Z') },
+        data: { callTime },
+      });
+    }
+  }
+
+  return prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { dailyDetails: { orderBy: { date: 'asc' } }, checkIns: true },
+  });
 }

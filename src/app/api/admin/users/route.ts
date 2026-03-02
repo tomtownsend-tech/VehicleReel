@@ -46,8 +46,31 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
   const { userId, action } = body;
 
-  if (!userId || !['BAN', 'UNBAN'].includes(action)) {
+  if (!userId || !['BAN', 'UNBAN', 'SET_COORDINATOR', 'UNSET_COORDINATOR'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
+  // Handle coordinator role changes
+  if (action === 'SET_COORDINATOR') {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { role: 'COORDINATOR' },
+    });
+    await prisma.auditLog.create({
+      data: { userId: session.user.id, action: 'SET_COORDINATOR', entityType: 'USER', entityId: userId, details: { email: user.email } },
+    });
+    return NextResponse.json(user);
+  }
+  if (action === 'UNSET_COORDINATOR') {
+    // Restore to PRODUCTION by default when removing coordinator role
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { role: 'PRODUCTION' },
+    });
+    await prisma.auditLog.create({
+      data: { userId: session.user.id, action: 'UNSET_COORDINATOR', entityType: 'USER', entityId: userId, details: { email: user.email } },
+    });
+    return NextResponse.json(user);
   }
 
   let newStatus: 'BANNED' | 'VERIFIED' | 'PENDING_VERIFICATION';

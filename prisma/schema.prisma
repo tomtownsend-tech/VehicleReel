@@ -12,6 +12,7 @@ enum UserRole {
   OWNER
   PRODUCTION
   ADMIN
+  COORDINATOR
 }
 
 enum UserStatus {
@@ -94,6 +95,7 @@ enum BookingStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+  PAYMENT_READY
 }
 
 enum LogisticsType {
@@ -120,6 +122,13 @@ enum NotificationType {
   DATES_BLOCKED
   INSURANCE_REMINDER
   INSURANCE_OVERDUE
+  COORDINATOR_ASSIGNED
+  BOOKING_PAYMENT_READY
+}
+
+enum MessageThread {
+  PRODUCTION_COORDINATOR
+  OWNER_COORDINATOR
 }
 
 model User {
@@ -135,13 +144,15 @@ model User {
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
-  documents             Document[]
-  vehicles              Vehicle[]
-  optionsAsProduction   Option[]       @relation("ProductionOptions")
-  bookingsAsProduction  Booking[]      @relation("ProductionBookings")
-  sentMessages          Message[]      @relation("SentMessages")
-  notifications         Notification[]
-  auditLogs             AuditLog[]
+  documents              Document[]
+  vehicles               Vehicle[]
+  optionsAsProduction    Option[]       @relation("ProductionOptions")
+  bookingsAsProduction   Booking[]      @relation("ProductionBookings")
+  bookingsAsCoordinator  Booking[]      @relation("CoordinatorBookings")
+  sentMessages           Message[]      @relation("SentMessages")
+  notifications          Notification[]
+  auditLogs              AuditLog[]
+  checkIns               BookingCheckIn[]
 
   @@map("users")
 }
@@ -294,44 +305,81 @@ model Option {
 }
 
 model Booking {
-  id               String        @id @default(cuid())
-  optionId         String        @unique
-  vehicleId        String
-  ownerId          String
-  productionUserId String
-  rateType         RateType
-  rateCents        Int
-  ownerPayoutCents Int           @default(0)
-  startDate        DateTime      @db.Date
-  endDate          DateTime      @db.Date
-  logistics        LogisticsType
-  status           BookingStatus @default(CONFIRMED)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  optionId            String        @unique
+  vehicleId           String
+  ownerId             String
+  productionUserId    String
+  coordinatorId       String?
+  rateType            RateType
+  rateCents           Int
+  ownerPayoutCents    Int           @default(0)
+  startDate           DateTime      @db.Date
+  endDate             DateTime      @db.Date
+  logistics           LogisticsType
+  status              BookingStatus @default(CONFIRMED)
+  locationAddress     String?
+  locationPin         String?
+  specialInstructions String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  option           Option        @relation(fields: [optionId], references: [id])
-  productionUser   User          @relation("ProductionBookings", fields: [productionUserId], references: [id])
+  option           Option              @relation(fields: [optionId], references: [id])
+  productionUser   User                @relation("ProductionBookings", fields: [productionUserId], references: [id])
+  coordinator      User?               @relation("CoordinatorBookings", fields: [coordinatorId], references: [id])
   messages         Message[]
   documents        Document[]
+  dailyDetails     BookingDailyDetail[]
+  checkIns         BookingCheckIn[]
 
   @@index([vehicleId, status])
   @@index([ownerId])
   @@index([productionUserId])
+  @@index([coordinatorId])
   @@map("bookings")
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   bookingId String
   senderId  String
   content   String
-  createdAt DateTime @default(now())
+  thread    MessageThread?
+  createdAt DateTime       @default(now())
 
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   sender    User     @relation("SentMessages", fields: [senderId], references: [id])
 
-  @@index([bookingId, createdAt])
+  @@index([bookingId, thread, createdAt])
   @@map("messages")
+}
+
+model BookingDailyDetail {
+  id        String   @id @default(cuid())
+  bookingId String
+  date      DateTime @db.Date
+  callTime  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, date])
+  @@map("booking_daily_details")
+}
+
+model BookingCheckIn {
+  id          String   @id @default(cuid())
+  bookingId   String
+  date        DateTime @db.Date
+  checkedInAt DateTime @default(now())
+  checkedInBy String
+
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [checkedInBy], references: [id])
+
+  @@unique([bookingId, date])
+  @@map("booking_check_ins")
 }
 
 model Notification {

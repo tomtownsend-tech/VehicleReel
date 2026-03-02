@@ -35,7 +35,7 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleAction(userId: string, action: 'BAN' | 'UNBAN') {
+  async function handleAction(userId: string, action: 'BAN' | 'UNBAN' | 'SET_COORDINATOR' | 'UNSET_COORDINATOR') {
     const res = await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: updated.status } : u)));
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: updated.status, role: updated.role } : u)));
     }
   }
 
@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
                   </div>
                   <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {user.role === 'OWNER' ? `${user._count.vehicles} vehicles` : `${user._count.optionsAsProduction} options`}
+                    {user.role === 'OWNER' ? `${user._count.vehicles} vehicles` : user.role === 'COORDINATOR' ? 'Coordinator' : `${user._count.optionsAsProduction} options`}
                     {' · '}Joined {new Date(user.createdAt).toLocaleDateString('en-ZA')}
                   </p>
                 </div>
@@ -80,9 +80,20 @@ export default function AdminUsersPage() {
                       Review Documents
                     </Link>
                   )}
+                  {/* Coordinator toggle - only for non-admin, non-owner users */}
+                  {user.role === 'PRODUCTION' && (
+                    <Button size="sm" variant="outline" onClick={() => handleAction(user.id, 'SET_COORDINATOR')}>
+                      Make Coordinator
+                    </Button>
+                  )}
+                  {user.role === 'COORDINATOR' && (
+                    <Button size="sm" variant="outline" onClick={() => handleAction(user.id, 'UNSET_COORDINATOR')}>
+                      Remove Coordinator
+                    </Button>
+                  )}
                   {user.status === 'BANNED' ? (
                     <Button size="sm" variant="outline" onClick={() => handleAction(user.id, 'UNBAN')}>Unban</Button>
-                  ) : (
+                  ) : user.role !== 'ADMIN' && (
                     <Button size="sm" variant="danger" onClick={() => handleAction(user.id, 'BAN')}>Ban</Button>
                   )}
                 </div>

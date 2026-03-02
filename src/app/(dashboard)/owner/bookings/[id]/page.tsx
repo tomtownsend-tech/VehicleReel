@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send, FileText, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Send, FileText, ExternalLink, CheckCircle, Clock } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface InsuranceDocument {
@@ -17,6 +17,9 @@ interface InsuranceDocument {
   createdAt: string;
 }
 
+interface DailyDetail { id: string; date: string; callTime: string | null }
+interface CheckIn { id: string; date: string; checkedInAt: string }
+
 interface Booking {
   id: string;
   rateType: string;
@@ -26,8 +29,15 @@ interface Booking {
   endDate: string;
   logistics: string;
   status: string;
+  coordinatorId: string | null;
+  locationAddress: string | null;
+  locationPin: string | null;
+  specialInstructions: string | null;
   option: { vehicle: { make: string; model: string; year: number; location: string } };
   productionUser: { name: string; email: string; phone: string | null; companyName: string | null };
+  coordinator: { id: string; name: string; email: string } | null;
+  dailyDetails: DailyDetail[];
+  checkIns: CheckIn[];
   documents: InsuranceDocument[];
 }
 
@@ -48,20 +58,30 @@ export default function OwnerBookingDetailPage() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isArchived = booking ? new Date() > new Date(booking.endDate) : false;
+  const hasCoordinator = !!booking?.coordinatorId;
 
   useEffect(() => {
     fetch(`/api/bookings/${params.id}`)
       .then((r) => r.json())
       .then((b) => {
-        if (b && !b.error) {
-          setBooking(b);
-          fetch(`/api/bookings/${b.id}/messages`)
-            .then((r) => r.json())
-            .then(setMessages);
-        }
+        if (b && !b.error) setBooking(b);
       });
   }, [params.id]);
+
+  useEffect(() => {
+    if (!booking) return;
+    if (hasCoordinator) {
+      fetch(`/api/bookings/${booking.id}/messages?thread=OWNER_COORDINATOR`)
+        .then((r) => r.ok ? r.json() : [])
+        .then((data) => setMessages(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    } else {
+      fetch(`/api/bookings/${booking.id}/messages`)
+        .then((r) => r.json())
+        .then((data) => setMessages(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }
+  }, [booking?.id, hasCoordinator]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,10 +91,12 @@ export default function OwnerBookingDetailPage() {
     if (!newMessage.trim() || !booking) return;
     setSending(true);
     try {
+      const body: Record<string, string> = { content: newMessage };
+      if (hasCoordinator) body.thread = 'OWNER_COORDINATOR';
       const res = await fetch(`/api/bookings/${booking.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newMessage }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         const msg = await res.json();
@@ -87,6 +109,8 @@ export default function OwnerBookingDetailPage() {
   }
 
   if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
+
+  const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -108,9 +132,58 @@ export default function OwnerBookingDetailPage() {
             <div><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(booking.ownerPayoutCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-gray-500">Contact</dt><dd className="font-medium">{booking.productionUser.email}{booking.productionUser.phone && ` | ${booking.productionUser.phone}`}</dd></div>
+            {booking.coordinator && <div><dt className="text-gray-500">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
           </dl>
         </CardContent>
       </Card>
+
+      {/* Read-only Booking Details */}
+      {(booking.locationAddress || booking.locationPin || booking.specialInstructions) && (
+        <Card className="mb-6">
+          <CardHeader><h2 className="text-lg font-semibold">Shoot Details</h2></CardHeader>
+          <CardContent>
+            <dl className="space-y-3 text-sm">
+              {booking.locationAddress && (
+                <div><dt className="text-gray-500">Shoot Location</dt><dd className="font-medium">{booking.locationAddress}</dd></div>
+              )}
+              {booking.locationPin && (
+                <div><dt className="text-gray-500">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Open in Maps</a></dd></div>
+              )}
+              {booking.specialInstructions && (
+                <div><dt className="text-gray-500">Special Instructions</dt><dd className="font-medium">{booking.specialInstructions}</dd></div>
+              )}
+            </dl>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Read-only Daily Schedule */}
+      {booking.dailyDetails.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader><h2 className="text-lg font-semibold">Daily Schedule</h2></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {booking.dailyDetails.map((d) => {
+                const dateStr = d.date.split('T')[0];
+                const isCheckedIn = checkedDates.has(dateStr);
+                return (
+                  <div key={d.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium w-32">{formatDate(d.date)}</span>
+                      {d.callTime && <span className="text-sm text-gray-500">Call: {d.callTime}</span>}
+                    </div>
+                    {isCheckedIn ? (
+                      <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
+                    ) : (
+                      <Badge variant="default"><Clock className="h-3 w-3 mr-1 inline" />Pending</Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Vehicle Insurance */}
       <Card className="mb-6">
@@ -143,37 +216,43 @@ export default function OwnerBookingDetailPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Conversation</h2>
-            {isArchived && <Badge variant="default">Archived</Badge>}
+            <h2 className="text-lg font-semibold">
+              {hasCoordinator ? 'Messages with Coordinator' : 'Conversation'}
+            </h2>
+            {!hasCoordinator && <Badge variant="warning">No coordinator assigned yet</Badge>}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-64 overflow-y-auto mb-4 space-y-3">
-            {messages.length === 0 && <p className="text-sm text-gray-500 text-center py-8">No messages yet.</p>}
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender.id === session?.user?.id ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] rounded-lg px-3 py-2 ${msg.sender.id === session?.user?.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                  <p className="text-xs font-medium mb-0.5 opacity-70">{msg.sender.name}</p>
-                  <p className="text-sm">{msg.content}</p>
-                  <p className="text-xs opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
+          {!hasCoordinator ? (
+            <p className="text-sm text-gray-500 text-center py-4">Messaging will be available once a coordinator is assigned to this booking.</p>
+          ) : (
+            <>
+              <div className="h-64 overflow-y-auto mb-4 space-y-3">
+                {messages.length === 0 && <p className="text-sm text-gray-500 text-center py-8">No messages yet.</p>}
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.sender.id === session?.user?.id ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] rounded-lg px-3 py-2 ${msg.sender.id === session?.user?.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                      <p className="text-xs font-medium mb-0.5 opacity-70">{msg.sender.name}</p>
+                      <p className="text-sm">{msg.content}</p>
+                      <p className="text-xs opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          {!isArchived && (
-            <div className="flex gap-2">
-              <input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <Button onClick={sendMessage} loading={sending} disabled={!newMessage.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+              <div className="flex gap-2">
+                <input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Button onClick={sendMessage} loading={sending} disabled={!newMessage.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

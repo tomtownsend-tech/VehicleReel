@@ -72,7 +72,7 @@ export function NotificationBell() {
   function getNotificationLink(n: Notification): string | null {
     const data = n.data as Record<string, string> | undefined;
     if (!data) return null;
-    const prefix = userRole === 'PRODUCTION' ? '/production' : '/owner';
+    const prefix = userRole === 'COORDINATOR' ? '/coordinator' : userRole === 'PRODUCTION' ? '/production' : '/owner';
     if (data.bookingId) return `${prefix}/bookings/${data.bookingId}`;
     if (data.optionId) return `${prefix}/options`;
     if (data.vehicleId) return `${prefix}/vehicles/${data.vehicleId}`;

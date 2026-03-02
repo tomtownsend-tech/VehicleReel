@@ -4,9 +4,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { safeNotify } from '@/lib/services/notification';
 import { messageReceivedEmail } from '@/lib/services/email';
+import { MessageThread } from '@prisma/client';
+
+const VALID_THREADS: MessageThread[] = ['PRODUCTION_COORDINATOR', 'OWNER_COORDINATOR'];
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -17,12 +20,55 @@ export async function GET(
   });
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+
+  const thread = request.nextUrl.searchParams.get('thread') as MessageThread | null;
+
+  // If thread param provided, use new coordinator-based messaging
+  if (thread) {
+    if (!VALID_THREADS.includes(thread)) {
+      return NextResponse.json({ error: 'Invalid thread' }, { status: 400 });
+    }
+    if (!booking.coordinatorId) {
+      return NextResponse.json({ error: 'No coordinator assigned yet' }, { status: 409 });
+    }
+
+    // Thread access control
+    const role = session.user.role;
+    const userId = session.user.id;
+    if (role === 'PRODUCTION' && thread !== 'PRODUCTION_COORDINATOR') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (role === 'OWNER' && thread !== 'OWNER_COORDINATOR') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // COORDINATOR can read both threads
+    if (role === 'COORDINATOR' && booking.coordinatorId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // Also allow the production user or owner of this booking by ID
+    if (role !== 'COORDINATOR' && role !== 'ADMIN') {
+      if (booking.productionUserId !== userId && booking.ownerId !== userId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    const messages = await prisma.message.findMany({
+      where: { bookingId: params.id, thread },
+      include: { sender: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+      take: 100,
+    });
+
+    return NextResponse.json(messages);
+  }
+
+  // Legacy: no thread param — old direct messaging (backward compat)
   if (booking.ownerId !== session.user.id && booking.productionUserId !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const messages = await prisma.message.findMany({
-    where: { bookingId: params.id },
+    where: { bookingId: params.id, thread: null },
     include: { sender: { select: { id: true, name: true } } },
     orderBy: { createdAt: 'asc' },
     take: 100,
@@ -46,25 +92,84 @@ export async function POST(
   });
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+
+  // Block on cancelled or completed
+  if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') {
+    return NextResponse.json({ error: 'Cannot send messages on this booking.' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { content, thread } = body;
+
+  if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    return NextResponse.json({ error: 'Message content required' }, { status: 400 });
+  }
+
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+
+  // New threaded messaging
+  if (thread) {
+    if (!VALID_THREADS.includes(thread)) {
+      return NextResponse.json({ error: 'Invalid thread' }, { status: 400 });
+    }
+    if (!booking.coordinatorId) {
+      return NextResponse.json({ error: 'No coordinator assigned yet' }, { status: 409 });
+    }
+
+    const role = session.user.role;
+    const userId = session.user.id;
+
+    // Validate sender can post to this thread
+    if (thread === 'PRODUCTION_COORDINATOR') {
+      if (role === 'OWNER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'PRODUCTION' && booking.productionUserId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'COORDINATOR' && booking.coordinatorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (thread === 'OWNER_COORDINATOR') {
+      if (role === 'PRODUCTION') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'OWNER' && booking.ownerId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'COORDINATOR' && booking.coordinatorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const message = await prisma.message.create({
+      data: {
+        bookingId: params.id,
+        senderId: session.user.id,
+        content: content.trim(),
+        thread,
+      },
+      include: { sender: { select: { id: true, name: true } } },
+    });
+
+    // Determine recipient for notification
+    let recipientId: string;
+    if (role === 'COORDINATOR') {
+      // Coordinator replying — notify the respective party
+      recipientId = thread === 'PRODUCTION_COORDINATOR' ? booking.productionUserId : booking.ownerId;
+    } else {
+      // Production or owner messaging — notify coordinator
+      recipientId = booking.coordinatorId;
+    }
+
+    await safeNotify({
+      userId: recipientId,
+      type: 'MESSAGE_RECEIVED',
+      title: 'New Message',
+      message: `${session.user.name} sent a message about the ${vehicleName} booking.`,
+      data: { bookingId: params.id },
+      emailContent: messageReceivedEmail('there', session.user.name || 'Someone', vehicleName),
+    });
+
+    return NextResponse.json(message, { status: 201 });
+  }
+
+  // Legacy: no thread — old direct messaging
   if (booking.ownerId !== session.user.id && booking.productionUserId !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Only allow messages on confirmed bookings
-  if (booking.status === 'CANCELLED') {
-    return NextResponse.json({ error: 'Cannot send messages on a cancelled booking.' }, { status: 403 });
-  }
-
-  // Check if booking dates have passed (read-only)
   if (new Date() > booking.endDate) {
     return NextResponse.json({ error: 'This conversation is archived. No new messages allowed.' }, { status: 403 });
-  }
-
-  const body = await request.json();
-  const { content } = body;
-
-  if (!content || typeof content !== 'string' || content.trim().length === 0) {
-    return NextResponse.json({ error: 'Message content required' }, { status: 400 });
   }
 
   const message = await prisma.message.create({
@@ -76,21 +181,14 @@ export async function POST(
     include: { sender: { select: { id: true, name: true } } },
   });
 
-  // Notify the other party
   const recipientId = session.user.id === booking.ownerId ? booking.productionUserId : booking.ownerId;
-  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
-
   await safeNotify({
     userId: recipientId,
     type: 'MESSAGE_RECEIVED',
     title: 'New Message',
     message: `${session.user.name} sent a message about your ${vehicleName} booking.`,
     data: { bookingId: params.id },
-    emailContent: messageReceivedEmail(
-      recipientId === booking.ownerId ? 'there' : 'there',
-      session.user.name || 'Someone',
-      vehicleName,
-    ),
+    emailContent: messageReceivedEmail('there', session.user.name || 'Someone', vehicleName),
   });
 
   return NextResponse.json(message, { status: 201 });

@@ -36,6 +36,13 @@ export default withAuth(
       }
     }
 
+    // Coordinator routes
+    if (pathname.startsWith('/coordinator')) {
+      if (token.role !== 'COORDINATOR') {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+    }
+
     // Production routes
     if (pathname.startsWith('/production')) {
       if (token.role !== 'PRODUCTION') {
@@ -62,6 +69,7 @@ export const config = {
   matcher: [
     '/owner/:path*',
     '/production/:path*',
+    '/coordinator/:path*',
     '/admin/:path*',
   ],
 };

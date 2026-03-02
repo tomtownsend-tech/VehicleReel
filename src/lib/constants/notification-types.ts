@@ -17,4 +17,6 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, { title: string; icon: str
   DATES_BLOCKED: { title: 'Dates Blocked', icon: 'CalendarOff' },
   INSURANCE_REMINDER: { title: 'Insurance Reminder', icon: 'FileWarning' },
   INSURANCE_OVERDUE: { title: 'Insurance Overdue', icon: 'AlertTriangle' },
+  COORDINATOR_ASSIGNED: { title: 'Coordinator Assigned', icon: 'UserCheck' },
+  BOOKING_PAYMENT_READY: { title: 'Payment Ready', icon: 'CreditCard' },
 };

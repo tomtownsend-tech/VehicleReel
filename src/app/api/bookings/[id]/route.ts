@@ -23,6 +23,9 @@ export async function GET(
         },
       },
       productionUser: { select: { id: true, name: true, email: true, phone: true, companyName: true } },
+      coordinator: { select: { id: true, name: true, email: true } },
+      dailyDetails: { orderBy: { date: 'asc' } },
+      checkIns: { orderBy: { date: 'asc' } },
       documents: {
         where: { type: 'INSURANCE' },
         orderBy: { createdAt: 'desc' },
@@ -32,7 +35,11 @@ export async function GET(
   });
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-  if (booking.ownerId !== session.user.id && booking.productionUserId !== session.user.id && session.user.role !== 'ADMIN') {
+  const isAuthorized = booking.ownerId === session.user.id
+    || booking.productionUserId === session.user.id
+    || booking.coordinatorId === session.user.id
+    || session.user.role === 'ADMIN';
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

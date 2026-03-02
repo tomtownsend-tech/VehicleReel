@@ -20,6 +20,11 @@ export function MobileNav() {
         { href: '/admin/vehicles', label: 'Vehicles' },
         { href: '/admin/documents', label: 'Documents' },
       ]
+    : role === 'COORDINATOR'
+    ? [
+        { href: '/coordinator/bookings', label: 'My Bookings' },
+        { href: '/coordinator/settings', label: 'Settings' },
+      ]
     : role === 'OWNER'
     ? [
         { href: '/owner/vehicles', label: 'My Vehicles' },
@@ -32,7 +37,7 @@ export function MobileNav() {
         { href: '/production/settings', label: 'Settings' },
       ];
 
-  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
+  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'COORDINATOR' ? '/coordinator/bookings' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
 
   return (
     <div className="lg:hidden">

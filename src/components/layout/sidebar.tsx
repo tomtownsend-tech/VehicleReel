@@ -22,6 +22,11 @@ const productionLinks = [
   { href: '/production/settings', label: 'Settings', icon: Settings },
 ];
 
+const coordinatorLinks = [
+  { href: '/coordinator/bookings', label: 'My Bookings', icon: Calendar },
+  { href: '/coordinator/settings', label: 'Settings', icon: Settings },
+];
+
 const adminLinks = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
@@ -36,8 +41,8 @@ export function Sidebar() {
   const { data: session } = useSession();
 
   const role = session?.user?.role;
-  const links = role === 'ADMIN' ? adminLinks : role === 'OWNER' ? ownerLinks : productionLinks;
-  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
+  const links = role === 'ADMIN' ? adminLinks : role === 'COORDINATOR' ? coordinatorLinks : role === 'OWNER' ? ownerLinks : productionLinks;
+  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'COORDINATOR' ? '/coordinator/bookings' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-gray-200 lg:bg-white lg:sticky lg:top-0 lg:h-screen overflow-visible z-50">
