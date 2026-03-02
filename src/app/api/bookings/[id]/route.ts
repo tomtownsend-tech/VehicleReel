@@ -43,5 +43,24 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Backfill daily details for bookings created before the coordinator migration
+  if (booking.dailyDetails.length === 0) {
+    const days: { bookingId: string; date: Date }[] = [];
+    const current = new Date(booking.startDate);
+    const end = new Date(booking.endDate);
+    while (current <= end) {
+      days.push({ bookingId: booking.id, date: new Date(current) });
+      current.setDate(current.getDate() + 1);
+    }
+    if (days.length > 0) {
+      await prisma.bookingDailyDetail.createMany({ data: days, skipDuplicates: true });
+      const refreshed = await prisma.bookingDailyDetail.findMany({
+        where: { bookingId: booking.id },
+        orderBy: { date: 'asc' },
+      });
+      booking.dailyDetails = refreshed;
+    }
+  }
+
   return NextResponse.json(booking);
 }
