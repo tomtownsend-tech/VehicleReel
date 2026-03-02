@@ -68,7 +68,15 @@ export default function ProductionOptionsPage() {
             <Card key={opt.id}>
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex items-start gap-4">
+                    <div className="h-16 w-24 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                      {opt.vehicle.photos[0]?.url ? (
+                        <img src={opt.vehicle.photos[0].url} alt={`${opt.vehicle.year} ${opt.vehicle.make} ${opt.vehicle.model}`} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-300 text-xs">No photo</div>
+                      )}
+                    </div>
+                    <div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-gray-900">
                         {opt.vehicle.year} {opt.vehicle.make} {opt.vehicle.model}
@@ -97,6 +105,7 @@ export default function ProductionOptionsPage() {
                         Confirm by {new Date(opt.confirmationDeadlineAt).toLocaleString('en-ZA')}
                       </div>
                     )}
+                  </div>
                   </div>
                   <div className="flex gap-2">
                     {opt.status === 'ACCEPTED' && opt.queuePosition === 1 && (
