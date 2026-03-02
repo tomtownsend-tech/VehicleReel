@@ -48,6 +48,8 @@ export default function VehicleDetailPage() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
 
+  const REQUIRED_PHOTO_LABELS = ['Front', 'Back', 'Left', 'Right', 'Interior'] as const;
+
   useEffect(() => {
     fetch(`/api/vehicles/${params.id}`)
       .then((r) => r.json())
@@ -157,32 +159,90 @@ export default function VehicleDetailPage() {
 
       {/* Photos */}
       <div className="mb-6">
-        <div className="grid grid-cols-3 gap-2">
-          {vehicle.photos.map((photo) => (
-            <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
-              <img src={photo.url} alt="" className="w-full h-full object-cover" />
-              <button
-                onClick={() => deletePhoto(photo.id)}
-                disabled={deletingPhotoId === photo.id}
-                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
-              >
-                <X className="h-4 w-4 text-gray-600" />
-              </button>
+        {vehicle.photos.length < 5 && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-sm text-amber-800 font-medium">
+              {vehicle.photos.length === 0
+                ? 'Upload the 5 required photos to complete your listing.'
+                : `${5 - vehicle.photos.length} more required photo${5 - vehicle.photos.length > 1 ? 's' : ''} needed.`}
+            </p>
+            <p className="text-xs text-amber-600 mt-0.5">Required: Front, Back, Left, Right, Interior</p>
+          </div>
+        )}
+
+        {vehicle.photos.length < 5 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">Required Photos</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {REQUIRED_PHOTO_LABELS.map((label, i) => {
+                const existingPhoto = vehicle.photos[i];
+                return (
+                  <div key={label} className="relative">
+                    {existingPhoto ? (
+                      <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+                        <img src={existingPhoto.url} alt={label} className="w-full h-full object-cover" />
+                        <span className="absolute bottom-1 left-1 text-xs bg-white/90 text-gray-700 px-1.5 py-0.5 rounded font-medium">{label}</span>
+                        <button
+                          onClick={() => deletePhoto(existingPhoto.id)}
+                          disabled={deletingPhotoId === existingPhoto.id}
+                          className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
+                        >
+                          <X className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className={`flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload className="h-5 w-5 text-gray-400 mb-1" />
+                        <span className="text-xs text-gray-500 font-medium">{label} *</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePhotoUpload}
+                          disabled={photoUploading}
+                        />
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-          <label className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-            <Upload className="h-5 w-5 text-gray-400 mb-1" />
-            <span className="text-xs text-gray-500">{photoUploading ? 'Uploading...' : 'Add Photos'}</span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-              disabled={photoUploading}
-            />
-          </label>
-        </div>
+          </div>
+        )}
+
+        {vehicle.photos.length >= 5 && (
+          <div className="grid grid-cols-3 gap-2">
+            {vehicle.photos.map((photo, i) => (
+              <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
+                <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                {i < 5 && (
+                  <span className="absolute bottom-1 left-1 text-xs bg-white/90 text-gray-700 px-1.5 py-0.5 rounded font-medium">
+                    {REQUIRED_PHOTO_LABELS[i]}
+                  </span>
+                )}
+                <button
+                  onClick={() => deletePhoto(photo.id)}
+                  disabled={deletingPhotoId === photo.id}
+                  className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
+                >
+                  <X className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
+            ))}
+            <label className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Upload className="h-5 w-5 text-gray-400 mb-1" />
+              <span className="text-xs text-gray-500">{photoUploading ? 'Uploading...' : 'Add More'}</span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+                disabled={photoUploading}
+              />
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Details */}
