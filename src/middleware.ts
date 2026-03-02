@@ -48,10 +48,11 @@ export default withAuth(
       if (token.role !== 'PRODUCTION') {
         return NextResponse.redirect(new URL('/login', req.url));
       }
-      // Unverified production users can only access settings
+      // Unverified production users can only access documents and settings
       if (token.status === 'PENDING_VERIFICATION') {
-        if (!pathname.startsWith('/production/settings')) {
-          return NextResponse.redirect(new URL('/production/settings', req.url));
+        const allowed = ['/production/documents', '/production/settings'];
+        if (!allowed.some((p) => pathname.startsWith(p))) {
+          return NextResponse.redirect(new URL('/production/documents', req.url));
         }
       }
     }

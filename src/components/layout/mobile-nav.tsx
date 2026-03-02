@@ -37,6 +37,7 @@ export function MobileNav() {
         { href: '/production/search', label: 'Search' },
         { href: '/production/options', label: 'My Options' },
         { href: '/production/projects', label: 'Projects' },
+        { href: '/production/documents', label: 'Documents' },
         { href: '/production/settings', label: 'Settings' },
       ];
 

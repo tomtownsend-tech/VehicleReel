@@ -37,13 +37,24 @@ export async function PATCH(
 
   // If approving, check if user/vehicle should be activated
   if (status === 'APPROVED') {
+    // Fetch user role for role-aware document requirements
+    const docUser = await prisma.user.findUnique({
+      where: { id: document.userId },
+      select: { role: true },
+    });
+
     const allUserDocs = await prisma.document.findMany({
       where: { userId: document.userId },
     });
 
-    const personalApproved = allUserDocs
-      .filter((d) => ['SA_ID', 'DRIVERS_LICENSE'].includes(d.type) && !d.vehicleId)
-      .every((d) => d.status === 'APPROVED');
+    // Role-aware: OWNER needs SA_ID + DRIVERS_LICENSE, PRODUCTION needs SA_ID + COMPANY_REGISTRATION
+    const requiredTypes = docUser?.role === 'PRODUCTION'
+      ? ['SA_ID', 'COMPANY_REGISTRATION']
+      : ['SA_ID', 'DRIVERS_LICENSE'];
+
+    const personalApproved = requiredTypes.every((type) =>
+      allUserDocs.some((d) => d.type === type && !d.vehicleId && d.status === 'APPROVED')
+    );
 
     if (personalApproved) {
       await prisma.user.update({

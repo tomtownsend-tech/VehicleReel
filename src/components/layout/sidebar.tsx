@@ -20,6 +20,7 @@ const productionLinks = [
   { href: '/production/search', label: 'Search Vehicles', icon: Search },
   { href: '/production/options', label: 'My Options', icon: FileText },
   { href: '/production/projects', label: 'Projects', icon: FolderOpen },
+  { href: '/production/documents', label: 'Documents', icon: Shield },
   { href: '/production/settings', label: 'Settings', icon: Settings },
 ];
 

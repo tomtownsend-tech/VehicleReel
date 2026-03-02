@@ -191,12 +191,29 @@ export async function reviewDocument(documentId: string) {
 }
 
 async function checkAndActivateUser(userId: string, vehicleId: string | null) {
-  // Check personal docs (SA_ID, DRIVERS_LICENSE)
-  const personalDocs = await prisma.document.findMany({
-    where: { userId, type: { in: ['SA_ID', 'DRIVERS_LICENSE'] }, vehicleId: null },
+  // Fetch user role to determine required documents
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
   });
-  const allPersonalApproved = personalDocs.length >= 2 &&
-    personalDocs.every((d) => d.status === 'APPROVED');
+  if (!user) return;
+
+  // Role-aware document requirements:
+  // OWNER: SA_ID + DRIVERS_LICENSE
+  // PRODUCTION: SA_ID + COMPANY_REGISTRATION
+  const requiredTypes: ('SA_ID' | 'DRIVERS_LICENSE' | 'COMPANY_REGISTRATION')[] =
+    user.role === 'PRODUCTION'
+      ? ['SA_ID', 'COMPANY_REGISTRATION']
+      : ['SA_ID', 'DRIVERS_LICENSE'];
+
+  const personalDocs = await prisma.document.findMany({
+    where: { userId, type: { in: requiredTypes }, vehicleId: null },
+  });
+
+  // Check each required type has at least one approved document
+  const allPersonalApproved = requiredTypes.every((type) =>
+    personalDocs.some((d) => d.type === type && d.status === 'APPROVED')
+  );
 
   if (allPersonalApproved) {
     // Activate user
@@ -206,7 +223,7 @@ async function checkAndActivateUser(userId: string, vehicleId: string | null) {
     });
   }
 
-  // Check vehicle docs
+  // Check vehicle docs (only relevant for owners)
   if (vehicleId) {
     const vehicleDocs = await prisma.document.findMany({
       where: { vehicleId, type: 'VEHICLE_REGISTRATION' },

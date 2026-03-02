@@ -54,11 +54,11 @@ function RegisterForm() {
       if (result?.error) {
         router.push('/login');
       } else {
-        // Redirect to onboarding - owners add their vehicle, production users to settings for doc upload
+        // Redirect to onboarding - owners add their vehicle, production users upload documents
         if (form.role === 'OWNER') {
           router.push('/owner/vehicles/new');
         } else {
-          router.push('/production/settings');
+          router.push('/production/documents');
         }
         router.refresh();
       }
