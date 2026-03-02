@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Car, Filter, X, Send, Sparkles } from 'lucide-react';
+import { Search, MapPin, Car, Filter, X, Send, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -166,20 +166,36 @@ export default function ProductionSearchPage() {
               onChange={(e) => updateFilter('location', e.target.value)}
               placeholder="Location"
             />
-            <Input
-              id="startDate"
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => updateFilter('startDate', e.target.value)}
-              placeholder="Start date"
-            />
-            <Input
-              id="endDate"
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => updateFilter('endDate', e.target.value)}
-              placeholder="End date"
-            />
+            <div className="grid grid-cols-2 gap-2 sm:col-span-2 md:col-span-2">
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none z-10" />
+                {!filters.startDate && (
+                  <span className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-white/40 pointer-events-none">Start date</span>
+                )}
+                <input
+                  id="startDate"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => updateFilter('startDate', e.target.value)}
+                  className="block w-full rounded-lg border border-white/15 pl-9 pr-3 py-2 text-sm bg-gray-900 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40 dark-select"
+                  style={!filters.startDate ? { color: 'transparent' } : undefined}
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none z-10" />
+                {!filters.endDate && (
+                  <span className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-white/40 pointer-events-none">End date</span>
+                )}
+                <input
+                  id="endDate"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => updateFilter('endDate', e.target.value)}
+                  className="block w-full rounded-lg border border-white/15 pl-9 pr-3 py-2 text-sm bg-gray-900 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40 dark-select"
+                  style={!filters.endDate ? { color: 'transparent' } : undefined}
+                />
+              </div>
+            </div>
             <Input
               id="yearMin"
               type="number"
