@@ -24,21 +24,21 @@ export default function AdminAnalyticsPage() {
   }, []);
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">Analytics</h1><div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">Analytics</h1><div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
-  if (!data) return <p className="text-gray-500">Failed to load analytics.</p>;
+  if (!data) return <p className="text-white/50">Failed to load analytics.</p>;
 
   const statCards = [
-    { label: 'Total Users', value: data.summary.totalUsers, icon: Users, color: 'text-blue-600 bg-blue-100' },
-    { label: 'Total Vehicles', value: data.summary.totalVehicles, icon: Car, color: 'text-green-600 bg-green-100' },
-    { label: 'Bookings', value: data.summary.totalBookings, icon: Calendar, color: 'text-purple-600 bg-purple-100' },
-    { label: 'Days Booked', value: data.summary.totalDaysBooked, icon: TrendingUp, color: 'text-orange-600 bg-orange-100' },
+    { label: 'Total Users', value: data.summary.totalUsers, icon: Users, color: 'text-blue-400 bg-blue-400/10' },
+    { label: 'Total Vehicles', value: data.summary.totalVehicles, icon: Car, color: 'text-emerald-400 bg-emerald-400/10' },
+    { label: 'Bookings', value: data.summary.totalBookings, icon: Calendar, color: 'text-purple-400 bg-purple-400/10' },
+    { label: 'Days Booked', value: data.summary.totalDaysBooked, icon: TrendingUp, color: 'text-amber-400 bg-amber-400/10' },
   ];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Analytics</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Analytics</h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat) => (
@@ -49,8 +49,8 @@ export default function AdminAnalyticsPage() {
                   <stat.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-white/50">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -65,11 +65,11 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.monthlyTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="days" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.5)' }} />
+                <YAxis tick={{ fill: 'rgba(255,255,255,0.5)' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                <Bar dataKey="days" fill="#ffffff" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -83,20 +83,20 @@ export default function AdminAnalyticsPage() {
             <CardHeader><h2 className="text-lg font-semibold capitalize">{key} Preference</h2></CardHeader>
             <CardContent>
               {data.preferences[key].length === 0 ? (
-                <p className="text-sm text-gray-500">No data yet</p>
+                <p className="text-sm text-white/50">No data yet</p>
               ) : (
                 <div className="space-y-2">
                   {data.preferences[key].map(([name, count]) => (
                     <div key={name} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{name}</span>
+                      <span className="text-sm text-white/70">{name}</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-blue-500 rounded-full"
+                            className="h-full bg-white rounded-full"
                             style={{ width: `${(count / (data.preferences[key][0]?.[1] || 1)) * 100}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                        <span className="text-xs text-white/50 w-8 text-right">{count}</span>
                       </div>
                     </div>
                   ))}

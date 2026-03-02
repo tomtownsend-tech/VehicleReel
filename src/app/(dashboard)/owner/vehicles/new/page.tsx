@@ -211,7 +211,7 @@ export default function NewVehiclePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Add a Vehicle</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Add a Vehicle</h1>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8">
@@ -220,24 +220,24 @@ export default function NewVehiclePage() {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                 i < stepIndex
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-emerald-400/10 text-emerald-400'
                   : i === stepIndex
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-white text-gray-900'
+                  : 'bg-white/10 text-white/40'
               }`}
             >
               {i < stepIndex ? <Check className="h-4 w-4" /> : i + 1}
             </div>
-            <span className={`text-sm ${i === stepIndex ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
+            <span className={`text-sm ${i === stepIndex ? 'font-medium text-white' : 'text-white/50'}`}>
               {s.label}
             </span>
-            {i < STEPS.length - 1 && <div className="w-8 h-px bg-gray-300" />}
+            {i < STEPS.length - 1 && <div className="w-8 h-px bg-white/15" />}
           </div>
         ))}
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-4">{error}</div>
+        <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3 mb-4">{error}</div>
       )}
 
       {/* Step 1: Details */}
@@ -348,26 +348,26 @@ export default function NewVehiclePage() {
       {step === 'photos' && (
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/60">
               Upload photos of your vehicle. The 5 required angles help production teams evaluate your vehicle.
             </p>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Required Photos</h3>
+              <h3 className="text-sm font-medium text-white mb-3">Required Photos</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {REQUIRED_PHOTO_LABELS.map((label) => {
                   const photo = requiredPhotos[label];
                   return (
                     <div key={label} className="relative">
                       <label className={`flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed cursor-pointer transition-colors overflow-hidden ${
-                        photo ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                        photo ? 'border-emerald-400/30 bg-emerald-400/5' : 'border-white/20 hover:border-white/40 hover:bg-white/5'
                       }`}>
                         {photo ? (
                           <img src={photo.preview} alt={label} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
                           <>
-                            <Upload className="h-6 w-6 text-gray-400 mb-1" />
-                            <span className="text-xs text-gray-500">{label} *</span>
+                            <Upload className="h-6 w-6 text-white/40 mb-1" />
+                            <span className="text-xs text-white/50">{label} *</span>
                           </>
                         )}
                         <input
@@ -380,13 +380,13 @@ export default function NewVehiclePage() {
                       {photo && (
                         <button
                           onClick={() => setRequiredPhotos((prev) => ({ ...prev, [label]: null }))}
-                          className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white z-10"
+                          className="absolute top-1 right-1 p-1 bg-gray-900/80 rounded-full hover:bg-gray-900 z-10"
                         >
-                          <X className="h-3 w-3 text-gray-600" />
+                          <X className="h-3 w-3 text-white/60" />
                         </button>
                       )}
                       {photo && (
-                        <span className="absolute bottom-1 left-1 text-xs bg-white/90 text-gray-700 px-1.5 py-0.5 rounded font-medium">{label}</span>
+                        <span className="absolute bottom-1 left-1 text-xs bg-gray-900/90 text-white/70 px-1.5 py-0.5 rounded font-medium">{label}</span>
                       )}
                     </div>
                   );
@@ -394,12 +394,12 @@ export default function NewVehiclePage() {
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Additional Photos (optional)</h3>
-              <p className="text-xs text-gray-400 mb-3">Engine bay, boot/trunk, detail shots, etc.</p>
-              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                <Upload className="h-6 w-6 text-gray-400 mb-1" />
-                <span className="text-sm text-gray-500">Click to upload more photos</span>
+            <div className="border-t border-white/10 pt-4">
+              <h3 className="text-sm font-medium text-white mb-2">Additional Photos (optional)</h3>
+              <p className="text-xs text-white/40 mb-3">Engine bay, boot/trunk, detail shots, etc.</p>
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors">
+                <Upload className="h-6 w-6 text-white/40 mb-1" />
+                <span className="text-sm text-white/50">Click to upload more photos</span>
                 <input
                   type="file"
                   multiple
@@ -411,13 +411,13 @@ export default function NewVehiclePage() {
               {extraPreviews.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 mt-3">
                   {extraPreviews.map((preview, i) => (
-                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-800">
                       <img src={preview} alt="" className="w-full h-full object-cover" />
                       <button
                         onClick={() => removeExtraPhoto(i)}
-                        className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white"
+                        className="absolute top-1 right-1 p-1 bg-gray-900/80 rounded-full hover:bg-gray-900"
                       >
-                        <X className="h-4 w-4 text-gray-600" />
+                        <X className="h-4 w-4 text-white/60" />
                       </button>
                     </div>
                   ))}
@@ -441,25 +441,25 @@ export default function NewVehiclePage() {
       {step === 'documents' && (
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/60">
               Upload your verification documents. These will be reviewed to activate your listing.
             </p>
             {documents.map((doc, i) => (
-              <div key={doc.type} className="border border-gray-200 rounded-lg p-4">
+              <div key={doc.type} className="border border-white/10 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">{docLabels[doc.type]}</span>
+                  <span className="text-sm font-medium text-white">{docLabels[doc.type]}</span>
                   {doc.uploaded && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
                       <Check className="h-3 w-3" /> Uploaded
                     </span>
                   )}
                 </div>
                 {!doc.uploaded && (
-                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
+                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:border-white/40 transition-colors">
                     {doc.file ? (
-                      <span className="text-sm text-gray-700">{doc.file.name}</span>
+                      <span className="text-sm text-white/70">{doc.file.name}</span>
                     ) : (
-                      <span className="text-sm text-gray-400">Click to select file</span>
+                      <span className="text-sm text-white/40">Click to select file</span>
                     )}
                     <input
                       type="file"

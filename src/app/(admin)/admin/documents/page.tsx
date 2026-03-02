@@ -53,7 +53,7 @@ export default function AdminDocumentsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Document Review</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Document Review</h1>
 
       <div className="flex gap-2 mb-6">
         {['ALL', 'PENDING_REVIEW', 'FLAGGED', 'APPROVED', 'EXPIRED'].map((f) => (
@@ -61,7 +61,7 @@ export default function AdminDocumentsPage() {
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              filter === f ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              filter === f ? 'bg-white text-gray-900' : 'bg-white/10 text-white/60 hover:bg-white/15'
             }`}
           >
             {f.replace(/_/g, ' ')}
@@ -72,11 +72,11 @@ export default function AdminDocumentsPage() {
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filteredDocs.length === 0 ? (
-        <p className="text-gray-500">No documents to review.</p>
+        <p className="text-white/50">No documents to review.</p>
       ) : (
         <div className="space-y-4">
           {filteredDocs.map((doc) => (
@@ -85,16 +85,16 @@ export default function AdminDocumentsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-3">
-                      <span className="font-medium text-gray-900">{doc.type.replace(/_/g, ' ')}</span>
+                      <span className="font-medium text-white">{doc.type.replace(/_/g, ' ')}</span>
                       <Badge variant={statusVariant[doc.status] || 'default'}>
                         {doc.status.replace(/_/g, ' ')}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-white/50 mt-1">
                       {doc.user.name} ({doc.user.email}) &mdash; {doc.fileName}
                     </p>
                     {doc.reviews[0]?.confidenceScore != null && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-white/40 mt-1">
                         Confidence: {(doc.reviews[0].confidenceScore * 100).toFixed(0)}%
                       </p>
                     )}
@@ -104,7 +104,7 @@ export default function AdminDocumentsPage() {
                       href={doc.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-700"
+                      className="text-sm text-white/70 hover:text-white"
                     >
                       View
                     </a>

@@ -142,28 +142,28 @@ export default function ProjectDetailPage() {
   }
 
   if (loading || !project) {
-    return <div className="animate-pulse space-y-4"><div className="h-10 bg-gray-100 rounded w-48" /><div className="h-64 bg-gray-100 rounded-xl" /></div>;
+    return <div className="animate-pulse space-y-4"><div className="h-10 bg-gray-800 rounded w-48" /><div className="h-64 bg-gray-800 rounded-xl" /></div>;
   }
 
   return (
     <div>
       <Link
         href="/production/projects"
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Projects
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-white">{project.name}</h1>
+          <p className="text-sm text-white/50 mt-1">
             {formatDate(project.startDate)} &ndash; {formatDate(project.endDate)}
             <span className="mx-2">&middot;</span>
             {project.projectOptions.length} option{project.projectOptions.length !== 1 ? 's' : ''}
           </p>
           {project.description && (
-            <p className="text-sm text-gray-600 mt-2">{project.description}</p>
+            <p className="text-sm text-white/60 mt-2">{project.description}</p>
           )}
         </div>
 
@@ -184,8 +184,8 @@ export default function ProjectDetailPage() {
       </div>
 
       {project.projectOptions.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-gray-300 rounded-xl">
-          <p className="text-gray-500 mb-4">No vehicles in this project yet.</p>
+        <div className="text-center py-16 border border-dashed border-white/15 rounded-xl">
+          <p className="text-white/50 mb-4">No vehicles in this project yet.</p>
           <Button variant="outline" onClick={openAddModal}>
             <Plus className="h-4 w-4 mr-2" />
             Add your first option
@@ -202,30 +202,30 @@ export default function ProjectDetailPage() {
             return (
               <div
                 key={po.optionId}
-                className={`relative rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden ${isDeclined ? 'opacity-50' : ''}`}
+                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden ${isDeclined ? 'opacity-50' : ''}`}
               >
                 <button
                   onClick={() => removeOption(po.optionId)}
-                  className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-1 shadow-sm"
+                  className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
                   title="Remove from project"
                 >
-                  <X className="h-4 w-4 text-gray-500" />
+                  <X className="h-4 w-4 text-white/50" />
                 </button>
-                <div className="aspect-video bg-gray-100 relative">
+                <div className="aspect-video bg-gray-800 relative">
                   {photo ? (
                     <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-sm">No photo</div>
+                    <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
                   )}
                 </div>
                 <div className="p-3">
-                  <p className="font-semibold text-gray-900 text-sm">
+                  <p className="font-semibold text-white text-sm">
                     {vehicle.year} {vehicle.make} {vehicle.model}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-white/50 mt-0.5">
                     {vehicle.color} &middot; {vehicle.type.replace('_', ' ')}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                  <p className="text-xs text-white/50 mt-0.5 flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {vehicle.location}
                   </p>
@@ -243,25 +243,25 @@ export default function ProjectDetailPage() {
 
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Options to Project">
         {loadingOptions ? (
-          <div className="py-8 text-center text-gray-500">Loading options...</div>
+          <div className="py-8 text-center text-white/50">Loading options...</div>
         ) : availableOptions.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-center text-white/50">
             All your options are already in this project, or you have no options yet.
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {availableOptions.map((opt) => (
-              <div key={opt.id} className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                <div className="h-12 w-16 rounded bg-gray-100 overflow-hidden flex-shrink-0">
+              <div key={opt.id} className="flex items-center gap-3 p-2 rounded-lg border border-white/10 hover:bg-white/5">
+                <div className="h-12 w-16 rounded bg-gray-800 overflow-hidden flex-shrink-0">
                   {opt.vehicle.photos[0]?.url && (
                     <img src={opt.vehicle.photos[0].url} alt="" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {opt.vehicle.year} {opt.vehicle.make} {opt.vehicle.model}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-white/50">
                     {formatDate(opt.startDate)} &ndash; {formatDate(opt.endDate)}
                   </p>
                 </div>

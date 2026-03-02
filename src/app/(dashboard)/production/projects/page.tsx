@@ -73,13 +73,13 @@ export default function ProjectsPage() {
   }
 
   if (loading) {
-    return <div className="animate-pulse space-y-4">{[1, 2, 3].map((i) => <div key={i} className="h-40 bg-gray-100 rounded-xl" />)}</div>;
+    return <div className="animate-pulse space-y-4">{[1, 2, 3].map((i) => <div key={i} className="h-40 bg-gray-800 rounded-xl" />)}</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
+        <h1 className="text-2xl font-bold text-white">My Projects</h1>
         <Button onClick={() => setShowModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Project
@@ -88,9 +88,9 @@ export default function ProjectsPage() {
 
       {projects.length === 0 ? (
         <div className="text-center py-16">
-          <FolderOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h2>
-          <p className="text-gray-500 mb-6">Group your vehicle options into projects to present to clients.</p>
+          <FolderOpen className="h-12 w-12 text-white/30 mx-auto mb-4" />
+          <h2 className="text-lg font-medium text-white mb-2">No projects yet</h2>
+          <p className="text-white/50 mb-6">Group your vehicle options into projects to present to clients.</p>
           <Button onClick={() => setShowModal(true)}>Create your first project</Button>
         </div>
       ) : (
@@ -99,9 +99,9 @@ export default function ProjectsPage() {
             <Link
               key={project.id}
               href={`/production/projects/${project.id}`}
-              className="block rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="block rounded-xl border border-white/10 bg-gray-900 hover:border-white/20 transition-colors overflow-hidden"
             >
-              <div className="h-32 bg-gray-50 flex">
+              <div className="h-32 bg-gray-800 flex">
                 {project.thumbnails.length > 0 ? (
                   project.thumbnails.map((url, i) => (
                     <div key={i} className="flex-1 relative">
@@ -110,18 +110,18 @@ export default function ProjectsPage() {
                   ))
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <FolderOpen className="h-8 w-8 text-gray-300" />
+                    <FolderOpen className="h-8 w-8 text-white/30" />
                   </div>
                 )}
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold text-gray-900 truncate">{project.name}</h3>
-                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  <h3 className="font-semibold text-white truncate">{project.name}</h3>
+                  <span className="text-xs bg-white/5 text-white/70 px-2 py-0.5 rounded-full font-medium">
                     {project.optionCount} option{project.optionCount !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-white/50">
                   {formatDate(project.startDate)} &ndash; {formatDate(project.endDate)}
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function ProjectsPage() {
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="New Project">
         <form onSubmit={handleCreate} className="space-y-4">
-          {error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}
+          {error && <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3">{error}</div>}
 
           <Input
             id="project-name"
@@ -144,7 +144,7 @@ export default function ProjectsPage() {
           />
 
           <div className="space-y-1">
-            <label htmlFor="project-desc" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="project-desc" className="block text-sm font-medium text-white/70">
               Description (optional)
             </label>
             <textarea
@@ -153,7 +153,7 @@ export default function ProjectsPage() {
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Brief description of this project..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-white/40 focus:ring-1 focus:ring-white/20"
               maxLength={500}
             />
           </div>

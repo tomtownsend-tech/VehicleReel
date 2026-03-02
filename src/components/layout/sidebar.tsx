@@ -47,9 +47,9 @@ export function Sidebar() {
   const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'COORDINATOR' ? '/coordinator/bookings' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-gray-200 lg:bg-white lg:sticky lg:top-0 lg:h-screen overflow-visible z-50">
-      <div className="relative flex items-center justify-between h-16 px-6 border-b border-gray-200 overflow-visible">
-        <Link href={homeHref} className="text-xl font-bold text-gray-900">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-white/10 lg:bg-gray-900 lg:sticky lg:top-0 lg:h-screen overflow-visible z-50">
+      <div className="relative flex items-center justify-between h-16 px-6 border-b border-white/10 overflow-visible">
+        <Link href={homeHref} className="text-xl font-bold text-white">
           VehicleReel
         </Link>
         <NotificationBell />
@@ -65,8 +65,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
               )}
             >
               <link.icon className="h-5 w-5" />
@@ -76,25 +76,25 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
-          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-            <span className="text-sm font-medium text-blue-700">
+          <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+            <span className="text-sm font-medium text-white">
               {session?.user?.name?.[0]?.toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-sm font-medium text-white truncate">
               {session?.user?.name}
             </p>
-            <p className="text-xs text-gray-500 truncate">
+            <p className="text-xs text-white/50 truncate">
               {session?.user?.email}
             </p>
           </div>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
         >
           <LogOut className="h-5 w-5" />
           Sign out

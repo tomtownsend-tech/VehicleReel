@@ -28,14 +28,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-8"
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
-      <div className={cn('bg-white rounded-xl shadow-xl max-w-lg w-full mx-4', className)}>
+      <div className={cn('bg-gray-900 border border-white/10 rounded-xl shadow-2xl animate-modal-enter max-w-lg w-full mx-4', className)}>
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+            <button onClick={onClose} className="text-white/40 hover:text-white">
               <X className="h-5 w-5" />
             </button>
           </div>

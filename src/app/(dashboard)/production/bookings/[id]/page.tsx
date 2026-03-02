@@ -253,7 +253,7 @@ export default function ProductionBookingDetailPage() {
     }
   }
 
-  if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
+  if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
   const today = new Date();
@@ -261,12 +261,12 @@ export default function ProductionBookingDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => router.push('/production/options')} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
+      <button onClick={() => router.push('/production/options')} className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Booking Details</h1>
+        <h1 className="text-2xl font-bold text-white">Booking Details</h1>
         <Badge variant="success">{booking.status}</Badge>
       </div>
 
@@ -274,14 +274,14 @@ export default function ProductionBookingDetailPage() {
       <Card className="mb-6">
         <CardContent className="py-4">
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-gray-500">Vehicle</dt><dd className="font-medium">{booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}</dd></div>
-            <div><dt className="text-gray-500">Owner</dt><dd className="font-medium">{booking.option.vehicle.owner.name}</dd></div>
-            <div><dt className="text-gray-500">Location</dt><dd className="font-medium">{booking.option.vehicle.location}</dd></div>
-            <div><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
-            <div><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
-            <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
-            <div><dt className="text-gray-500">Owner Contact</dt><dd className="font-medium">{booking.option.vehicle.owner.email}{booking.option.vehicle.owner.phone && ` | ${booking.option.vehicle.owner.phone}`}</dd></div>
-            {booking.coordinator && <div><dt className="text-gray-500">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
+            <div><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}</dd></div>
+            <div><dt className="text-white/50">Owner</dt><dd className="font-medium">{booking.option.vehicle.owner.name}</dd></div>
+            <div><dt className="text-white/50">Location</dt><dd className="font-medium">{booking.option.vehicle.location}</dd></div>
+            <div><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
+            <div><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div><dt className="text-white/50">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
+            <div><dt className="text-white/50">Owner Contact</dt><dd className="font-medium">{booking.option.vehicle.owner.email}{booking.option.vehicle.owner.phone && ` | ${booking.option.vehicle.owner.phone}`}</dd></div>
+            {booking.coordinator && <div><dt className="text-white/50">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
           </dl>
         </CardContent>
       </Card>
@@ -291,14 +291,14 @@ export default function ProductionBookingDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-gray-500" />
+              <MapPin className="h-5 w-5 text-white/50" />
               <h2 className="text-lg font-semibold">Shoot Details</h2>
             </div>
             <div className="flex items-center gap-2">
               {booking.dailyDetails.length > 1 && (
                 <button
                   onClick={applyToAllDays}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white/70 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <Copy className="h-3 w-3" />
                   Apply current day to all
@@ -308,12 +308,12 @@ export default function ProductionBookingDetailPage() {
           </div>
           {booking.dailyDetails.length > 1 && (
             <div className="mt-2">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={sameForAll}
                   onChange={(e) => setSameForAll(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-white/15 text-white focus:ring-white/20 bg-white/5"
                 />
                 Same details for all days (edits sync across all days)
               </label>
@@ -330,16 +330,16 @@ export default function ProductionBookingDetailPage() {
               const isCheckedIn = checkedDates.has(dateStr);
 
               return (
-                <div key={d.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                <div key={d.id} className="border border-white/10 rounded-lg overflow-hidden">
                   {/* Day header — always visible */}
                   <button
                     onClick={() => setExpandedDay(isExpanded ? null : dateStr)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-900">{formatDate(d.date)}</span>
+                      <span className="text-sm font-semibold text-white">{formatDate(d.date)}</span>
                       {hasContent && !isExpanded && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-white/40">
                           {form.callTime && `Call: ${form.callTime}`}
                           {form.callTime && form.locationAddress && ' · '}
                           {form.locationAddress && form.locationAddress.slice(0, 30)}
@@ -349,48 +349,48 @@ export default function ProductionBookingDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {isCheckedIn && <Badge variant="success"><CheckCircle className="h-3 w-3" /></Badge>}
-                      {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-white/40" /> : <ChevronDown className="h-4 w-4 text-white/40" />}
                     </div>
                   </button>
 
                   {/* Expanded per-day form */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 space-y-3 border-t border-gray-100 bg-gray-50/50">
+                    <div className="px-4 pb-4 space-y-3 border-t border-white/5 bg-white/5">
                       <div className="pt-3">
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Call Time</label>
+                        <label className="block text-xs font-medium text-white/60 mb-1">Call Time</label>
                         <input
                           value={form.callTime}
                           onChange={(e) => updateDayForm(dateStr, 'callTime', e.target.value)}
                           placeholder="e.g. 06:00"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Location Address</label>
+                        <label className="block text-xs font-medium text-white/60 mb-1">Location Address</label>
                         <input
                           value={form.locationAddress}
                           onChange={(e) => updateDayForm(dateStr, 'locationAddress', e.target.value)}
                           placeholder="e.g. 123 Main St, Cape Town"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Google Maps Pin (URL)</label>
+                        <label className="block text-xs font-medium text-white/60 mb-1">Google Maps Pin (URL)</label>
                         <input
                           value={form.locationPin}
                           onChange={(e) => updateDayForm(dateStr, 'locationPin', e.target.value)}
                           placeholder="https://maps.google.com/..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Notes / Special Instructions</label>
+                        <label className="block text-xs font-medium text-white/60 mb-1">Notes / Special Instructions</label>
                         <textarea
                           value={form.notes}
                           onChange={(e) => updateDayForm(dateStr, 'notes', e.target.value)}
                           rows={2}
                           placeholder="Parking details, access codes, etc."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
                         />
                       </div>
                     </div>
@@ -418,7 +418,7 @@ export default function ProductionBookingDetailPage() {
               const dateObj = new Date(dateStr + 'T00:00:00');
               const canCheckIn = dateObj <= today && !isCheckedIn;
               return (
-                <div key={d.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div key={d.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                   <span className="text-sm font-medium">{formatDate(d.date)}</span>
                   {isCheckedIn ? (
                     <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
@@ -443,19 +443,19 @@ export default function ProductionBookingDetailPage() {
           {!insuranceDoc ? (
             <div className="space-y-3">
               {isPastDeadline && (
-                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-400/10 rounded-lg p-3">
                   <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                   <span>The insurance upload deadline has passed. Please upload as soon as possible.</span>
                 </div>
               )}
               {!isPastDeadline && insuranceDeadline && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-white/50">
                   Please upload by <strong>{insuranceDeadline.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</strong> (24 hours before shoot).
                 </p>
               )}
               <label className="inline-flex cursor-pointer">
                 <input type="file" accept=".pdf,image/*" onChange={uploadInsurance} className="hidden" disabled={uploading} />
-                <span className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <span className="inline-flex items-center gap-2 px-4 py-2 border border-white/15 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5">
                   <Upload className="h-4 w-4" />{uploading ? 'Uploading...' : 'Upload Insurance PDF'}
                 </span>
               </label>
@@ -464,14 +464,14 @@ export default function ProductionBookingDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
+                  <FileText className="h-4 w-4 text-white/50" />
                   <span className="text-sm font-medium">{insuranceDoc.fileName}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {insuranceDoc.status === 'PENDING_REVIEW' && <Badge variant="warning">Pending Review</Badge>}
                   {insuranceDoc.status === 'APPROVED' && <Badge variant="success">Approved</Badge>}
                   {insuranceDoc.status === 'FLAGGED' && <Badge variant="danger">Flagged</Badge>}
-                  <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                  <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
@@ -479,11 +479,11 @@ export default function ProductionBookingDetailPage() {
               {insuranceDoc.status === 'FLAGGED' && (
                 <div className="space-y-2">
                   {insuranceDoc.extractedData?.flagReason && (
-                    <p className="text-sm text-red-600">{insuranceDoc.extractedData.flagReason}</p>
+                    <p className="text-sm text-red-400">{insuranceDoc.extractedData.flagReason}</p>
                   )}
                   <label className="inline-flex cursor-pointer">
                     <input type="file" accept=".pdf,image/*" onChange={uploadInsurance} className="hidden" disabled={uploading} />
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-white/15 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5">
                       <Upload className="h-4 w-4" />{uploading ? 'Uploading...' : 'Re-upload'}
                     </span>
                   </label>
@@ -506,14 +506,14 @@ export default function ProductionBookingDetailPage() {
         </CardHeader>
         <CardContent>
           {!hasCoordinator ? (
-            <p className="text-sm text-gray-500 text-center py-4">Messaging will be available once a coordinator is assigned to this booking.</p>
+            <p className="text-sm text-white/50 text-center py-4">Messaging will be available once a coordinator is assigned to this booking.</p>
           ) : (
             <>
               <div className="h-64 overflow-y-auto mb-4 space-y-3">
-                {messages.length === 0 && <p className="text-sm text-gray-500 text-center py-8">No messages yet. Start the conversation!</p>}
+                {messages.length === 0 && <p className="text-sm text-white/50 text-center py-8">No messages yet. Start the conversation!</p>}
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender.id === session?.user?.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] rounded-lg px-3 py-2 ${msg.sender.id === session?.user?.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                    <div className={`max-w-[70%] rounded-lg px-3 py-2 ${msg.sender.id === session?.user?.id ? 'bg-white text-gray-900' : 'bg-white/10 text-white'}`}>
                       <p className="text-xs font-medium mb-0.5 opacity-70">{msg.sender.name}</p>
                       <p className="text-sm">{msg.content}</p>
                       <p className="text-xs opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}</p>
@@ -528,7 +528,7 @@ export default function ProductionBookingDetailPage() {
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                   placeholder="Type a message..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
                 />
                 <Button onClick={sendMessage} loading={sending} disabled={!newMessage.trim()}>
                   <Send className="h-4 w-4" />

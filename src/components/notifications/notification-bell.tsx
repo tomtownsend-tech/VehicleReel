@@ -84,24 +84,24 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-gray-600 hover:text-gray-900"
+        className="relative p-2 text-white/60 hover:text-white"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-80 bg-gray-900 rounded-xl shadow-black/20 border border-white/10 z-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <h3 className="font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={() => markRead()}
-                className="text-xs text-blue-600 hover:text-blue-700"
+                className="text-xs text-white/70 hover:text-white"
               >
                 Mark all read
               </button>
@@ -109,7 +109,7 @@ export function NotificationBell() {
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="p-4 text-sm text-gray-500 text-center">No notifications</p>
+              <p className="p-4 text-sm text-white/50 text-center">No notifications</p>
             ) : (
               notifications.map((n) => {
                 const link = getNotificationLink(n);
@@ -121,11 +121,11 @@ export function NotificationBell() {
                       setOpen(false);
                       if (link) router.push(link);
                     }}
-                    className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${!n.read ? 'bg-blue-50' : ''}`}
+                    className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 ${!n.read ? 'bg-white/5' : ''}`}
                   >
-                    <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-sm font-medium text-white">{n.title}</p>
+                    <p className="text-xs text-white/50 mt-0.5">{n.message}</p>
+                    <p className="text-xs text-white/40 mt-1">
                       {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                     </p>
                   </button>

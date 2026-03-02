@@ -121,7 +121,7 @@ export function DatePicker({ label, value, onChange, unavailableRanges = [], req
   return (
     <div className="space-y-1 relative" ref={containerRef}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="block text-sm font-medium text-white/70">
           {label}
         </label>
       )}
@@ -129,27 +129,27 @@ export function DatePicker({ label, value, onChange, unavailableRanges = [], req
         type="button"
         id={id}
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="flex items-center justify-between w-full rounded-lg border border-white/15 px-3 py-2 text-sm bg-gray-900 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
       >
-        <span className={displayValue ? '' : 'text-gray-400'}>
+        <span className={displayValue ? '' : 'text-white/40'}>
           {displayValue || 'yyyy/mm/dd'}
         </span>
-        <Calendar className="h-4 w-4 text-gray-400" />
+        <Calendar className="h-4 w-4 text-white/40" />
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg p-3 w-[280px]">
+        <div className="absolute z-50 mt-1 bg-gray-900 rounded-lg border border-white/10 shadow-lg p-3 w-[280px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-white/70">
               {MONTH_NAMES[viewMonth]} {viewYear}
             </span>
             <div className="flex gap-1">
-              <button type="button" onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded">
-                <ChevronUp className="h-4 w-4 text-gray-500" />
+              <button type="button" onClick={prevMonth} className="p-1 hover:bg-white/10 rounded">
+                <ChevronUp className="h-4 w-4 text-white/50" />
               </button>
-              <button type="button" onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded">
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+              <button type="button" onClick={nextMonth} className="p-1 hover:bg-white/10 rounded">
+                <ChevronDown className="h-4 w-4 text-white/50" />
               </button>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function DatePicker({ label, value, onChange, unavailableRanges = [], req
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {DAY_HEADERS.map((d, i) => (
-              <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">{d}</div>
+              <div key={i} className="text-center text-xs font-medium text-white/50 py-1">{d}</div>
             ))}
           </div>
 
@@ -176,14 +176,14 @@ export function DatePicker({ label, value, onChange, unavailableRanges = [], req
                   disabled={unavailable}
                   className={[
                     'h-8 w-full text-sm rounded transition-colors',
-                    !cell.currentMonth ? 'text-gray-300' : '',
-                    cell.currentMonth && !unavailable && !isSelected ? 'text-gray-700 hover:bg-blue-50' : '',
-                    unavailable ? 'text-blue-500 cursor-not-allowed' : '',
-                    isSelected ? 'bg-blue-600 text-white font-medium' : '',
-                    isToday && !isSelected ? 'bg-blue-100 font-medium' : '',
+                    !cell.currentMonth ? 'text-white/30' : '',
+                    cell.currentMonth && !unavailable && !isSelected ? 'text-white/70 hover:bg-white/5' : '',
+                    unavailable ? 'text-red-400/50 cursor-not-allowed' : '',
+                    isSelected ? 'bg-white text-gray-900 font-medium' : '',
+                    isToday && !isSelected ? 'bg-white/10 font-medium' : '',
                   ].join(' ')}
                 >
-                  <span className={unavailable ? 'line-through decoration-blue-400' : ''}>
+                  <span className={unavailable ? 'line-through decoration-red-400/50' : ''}>
                     {cell.day}
                   </span>
                 </button>
@@ -192,11 +192,11 @@ export function DatePicker({ label, value, onChange, unavailableRanges = [], req
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between mt-2 pt-2 border-t border-gray-100">
-            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="text-xs text-blue-600 hover:text-blue-800">
+          <div className="flex justify-between mt-2 pt-2 border-t border-white/5">
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="text-xs text-white/70 hover:text-white">
               Clear
             </button>
-            <button type="button" onClick={goToToday} className="text-xs text-blue-600 hover:text-blue-800">
+            <button type="button" onClick={goToToday} className="text-xs text-white/70 hover:text-white">
               Today
             </button>
           </div>

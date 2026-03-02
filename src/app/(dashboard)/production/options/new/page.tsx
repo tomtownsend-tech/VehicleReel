@@ -138,14 +138,14 @@ function PlaceOptionForm() {
     <div className="max-w-lg mx-auto">
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Place Option</h1>
+      <h1 className="text-2xl font-bold text-white mb-2">Place Option</h1>
       {vehicle && (
-        <p className="text-gray-500 mb-6">
+        <p className="text-white/50 mb-6">
           {vehicle.year} {vehicle.make} {vehicle.model}
         </p>
       )}
@@ -154,11 +154,11 @@ function PlaceOptionForm() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>
+              <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3">{error}</div>
             )}
 
             <div className="space-y-1">
-              <label htmlFor="projectId" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="projectId" className="block text-sm font-medium text-white/70">
                 Add to Project
               </label>
               <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ function PlaceOptionForm() {
                   id="projectId"
                   value={form.projectId}
                   onChange={(e) => updateField('projectId', e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
                 >
                   <option value="">None</option>
                   {projects.map((p) => (
@@ -176,7 +176,7 @@ function PlaceOptionForm() {
                 <button
                   type="button"
                   onClick={() => setShowNewProject(true)}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                  className="flex items-center gap-1 text-sm text-white/70 hover:text-white whitespace-nowrap"
                 >
                   <Plus className="h-3.5 w-3.5" /> New
                 </button>
@@ -245,11 +245,11 @@ function PlaceOptionForm() {
               onChange={(e) => updateField('confirmationWindowHours', e.target.value)}
             />
 
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Vehicle Usage</h3>
+            <div className="border-t border-white/10 pt-4">
+              <h3 className="text-sm font-medium text-white mb-3">Vehicle Usage</h3>
 
               <div className="space-y-2 mb-4">
-                <label className="text-sm text-gray-600">How will the vehicle be used? *</label>
+                <label className="text-sm text-white/60">How will the vehicle be used? *</label>
                 <div className="grid grid-cols-2 gap-2">
                   {VEHICLE_USAGE_TYPES.map((type) => (
                     <label key={type} className="flex items-center gap-2 text-sm">
@@ -264,7 +264,7 @@ function PlaceOptionForm() {
                               : prev.usageTypes.filter((t) => t !== type),
                           }));
                         }}
-                        className="rounded border-gray-300 text-black focus:ring-black"
+                        className="rounded border-white/15 text-white focus:ring-white/20 bg-white/5"
                       />
                       {type}
                     </label>
@@ -277,13 +277,13 @@ function PlaceOptionForm() {
                   type="checkbox"
                   checked={form.precisionDriverRequired}
                   onChange={(e) => setForm((prev) => ({ ...prev, precisionDriverRequired: e.target.checked }))}
-                  className="rounded border-gray-300 text-black focus:ring-black"
+                  className="rounded border-white/15 text-white focus:ring-white/20 bg-white/5"
                 />
                 Precision driver required
               </label>
 
               <div>
-                <label htmlFor="usageDescription" className="block text-sm text-gray-600 mb-1">
+                <label htmlFor="usageDescription" className="block text-sm text-white/60 mb-1">
                   Storyboard / Description (optional)
                 </label>
                 <textarea
@@ -292,7 +292,7 @@ function PlaceOptionForm() {
                   value={form.usageDescription}
                   onChange={(e) => setForm((prev) => ({ ...prev, usageDescription: e.target.value }))}
                   placeholder="Describe how the vehicle will be used in the scene..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:ring-1 focus:ring-black"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-white/40 focus:ring-1 focus:ring-white/20"
                 />
               </div>
             </div>

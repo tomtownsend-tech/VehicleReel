@@ -48,12 +48,12 @@ export default function AdminUsersPage() {
   }
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">User Management</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">User Management</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">User Management</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">User Management</h1>
       <div className="space-y-3">
         {users.map((user) => (
           <Card key={user.id}>
@@ -61,12 +61,12 @@ export default function AdminUsersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="font-medium text-gray-900">{user.name}</span>
+                    <span className="font-medium text-white">{user.name}</span>
                     <Badge variant={statusVariant[user.status] || 'default'}>{user.status}</Badge>
                     <Badge variant="default">{user.role}</Badge>
                   </div>
-                  <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-sm text-white/50 mt-0.5">{user.email}</p>
+                  <p className="text-xs text-white/40 mt-0.5">
                     {user.role === 'OWNER' ? `${user._count.vehicles} vehicles` : user.role === 'COORDINATOR' ? 'Coordinator' : `${user._count.optionsAsProduction} options`}
                     {' · '}Joined {new Date(user.createdAt).toLocaleDateString('en-ZA')}
                   </p>
@@ -75,7 +75,7 @@ export default function AdminUsersPage() {
                   {user.status === 'PENDING_VERIFICATION' && user.role === 'OWNER' && (
                     <Link
                       href="/admin/documents"
-                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/15"
                     >
                       Review Documents
                     </Link>

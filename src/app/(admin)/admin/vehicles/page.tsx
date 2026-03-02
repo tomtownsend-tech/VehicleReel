@@ -54,31 +54,31 @@ export default function AdminVehiclesPage() {
   }
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">Vehicle Management</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">Vehicle Management</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Vehicle Management</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Vehicle Management</h1>
       <div className="space-y-3">
         {vehicles.map((v) => (
           <Card key={v.id}>
             <CardContent className="py-3">
               <div className="flex items-center justify-between">
                 <Link href={`/admin/vehicles/${v.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {v.photos[0] ? (
                       <img src={v.photos[0].url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <Car className="h-6 w-6 text-gray-300" />
+                      <Car className="h-6 w-6 text-white/30" />
                     )}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 hover:text-blue-600">{v.year} {v.make} {v.model}</span>
+                      <span className="font-medium text-white hover:text-white/70">{v.year} {v.make} {v.model}</span>
                       <Badge variant={statusVariant[v.status] || 'default'}>{v.status}</Badge>
                     </div>
-                    <p className="text-sm text-gray-500">{v.owner.name} · {v.location} · {v._count.options} options</p>
+                    <p className="text-sm text-white/50">{v.owner.name} · {v.location} · {v._count.options} options</p>
                   </div>
                 </Link>
                 <div className="flex gap-2 flex-shrink-0 ml-3">

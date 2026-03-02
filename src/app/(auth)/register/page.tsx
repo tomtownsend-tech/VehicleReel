@@ -72,32 +72,32 @@ function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">
+        <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3">
           {error}
         </div>
       )}
 
       {!form.role && (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">I am a...</label>
+          <label className="block text-sm font-medium text-white/70">I am a...</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => updateField('role', 'OWNER')}
-              className="flex flex-col items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors"
             >
               <span className="text-2xl mb-1">🚗</span>
-              <span className="font-medium text-gray-900">Vehicle Owner</span>
-              <span className="text-xs text-gray-500 mt-1">List my vehicles</span>
+              <span className="font-medium text-white">Vehicle Owner</span>
+              <span className="text-xs text-white/50 mt-1">List my vehicles</span>
             </button>
             <button
               type="button"
               onClick={() => updateField('role', 'PRODUCTION')}
-              className="flex flex-col items-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors"
             >
               <span className="text-2xl mb-1">🎬</span>
-              <span className="font-medium text-gray-900">Production</span>
-              <span className="text-xs text-gray-500 mt-1">Find vehicles</span>
+              <span className="font-medium text-white">Production</span>
+              <span className="text-xs text-white/50 mt-1">Find vehicles</span>
             </button>
           </div>
         </div>
@@ -106,13 +106,13 @@ function RegisterForm() {
       {form.role && (
         <>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-white/60">
               Registering as: <strong>{form.role === 'OWNER' ? 'Vehicle Owner' : 'Production'}</strong>
             </span>
             <button
               type="button"
               onClick={() => updateField('role', '')}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-white/70 hover:text-white"
             >
               Change
             </button>
@@ -179,11 +179,11 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">VehicleReel</h1>
-          <p className="mt-2 text-gray-600">Create your account</p>
+          <h1 className="text-3xl font-bold text-white">VehicleReel</h1>
+          <p className="mt-2 text-white/60">Create your account</p>
         </div>
 
         <Card>
@@ -192,9 +192,9 @@ export default function RegisterPage() {
               <RegisterForm />
             </Suspense>
 
-            <p className="mt-4 text-center text-sm text-gray-600">
+            <p className="mt-4 text-center text-sm text-white/60">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link href="/login" className="text-white/70 hover:text-white font-medium">
                 Sign in
               </Link>
             </p>

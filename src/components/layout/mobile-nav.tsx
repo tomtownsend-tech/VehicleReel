@@ -44,22 +44,22 @@ export function MobileNav() {
 
   return (
     <div className="lg:hidden">
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white">
-        <Link href={homeHref} className="text-xl font-bold text-gray-900">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 bg-gray-900">
+        <Link href={homeHref} className="text-xl font-bold text-white">
           VehicleReel
         </Link>
         <div className="flex items-center gap-2">
-          <Link href={`/${role?.toLowerCase()}/settings`} className="p-2 text-gray-600">
+          <Link href={`/${role?.toLowerCase()}/settings`} className="p-2 text-white/60">
             <Bell className="h-5 w-5" />
           </Link>
-          <button onClick={() => setOpen(!open)} className="p-2 text-gray-600">
+          <button onClick={() => setOpen(!open)} className="p-2 text-white/60">
             {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </div>
 
       {open && (
-        <nav className="bg-white border-b border-gray-200 px-4 py-2">
+        <nav className="bg-gray-900 border-b border-white/10 px-4 py-2">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -68,8 +68,8 @@ export function MobileNav() {
               className={cn(
                 'block px-3 py-2 rounded-lg text-sm font-medium',
                 pathname.startsWith(link.href)
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/60 hover:bg-white/5'
               )}
             >
               {link.label}
@@ -77,7 +77,7 @@ export function MobileNav() {
           ))}
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5"
           >
             Sign out
           </button>

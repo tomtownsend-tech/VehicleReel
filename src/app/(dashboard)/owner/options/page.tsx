@@ -65,18 +65,18 @@ export default function OwnerOptionsPage() {
   }
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">Options</h1><div className="space-y-4">{[1, 2].map((i) => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">Options</h1><div className="space-y-4">{[1, 2].map((i) => <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Options</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Options</h1>
 
       {options.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No options yet</h3>
-          <p className="text-gray-500">Options from production teams will appear here.</p>
+        <div className="bg-gray-900 rounded-xl border border-white/10 p-12 text-center">
+          <FileText className="h-12 w-12 text-white/30 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">No options yet</h3>
+          <p className="text-white/50">Options from production teams will appear here.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -86,23 +86,23 @@ export default function OwnerOptionsPage() {
               className={opt.booking ? 'cursor-pointer' : ''}
               onClick={() => opt.booking && router.push(`/owner/bookings/${opt.booking.id}`)}
             >
-            <Card className={opt.booking ? 'hover:border-blue-300 transition-colors' : ''}>
+            <Card className={opt.booking ? 'hover:border-white/20 transition-colors' : ''}>
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-white">
                         {opt.vehicle.year} {opt.vehicle.make} {opt.vehicle.model}
                       </span>
                       <Badge variant={statusVariant[opt.status] || 'default'}>
                         {OPTION_STATUS_LABELS[opt.status] || opt.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-white/50 mt-1">
                       From: {opt.productionUser.name}
                       {opt.productionUser.companyName && ` (${opt.productionUser.companyName})`}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-white/60">
                       <span>{formatDate(opt.startDate)} — {formatDate(opt.endDate)}</span>
                       <span>
                         {formatCurrency(opt.ownerPayoutCents)}
@@ -113,22 +113,22 @@ export default function OwnerOptionsPage() {
                     {opt.usageTypes?.length > 0 && (
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
                         {opt.usageTypes.map((type) => (
-                          <span key={type} className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                          <span key={type} className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-white/70">
                             {type}
                           </span>
                         ))}
                         {opt.precisionDriverRequired && (
-                          <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                          <span className="inline-flex items-center rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-medium text-amber-400">
                             Precision Driver
                           </span>
                         )}
                       </div>
                     )}
                     {opt.usageDescription && (
-                      <p className="mt-1.5 text-sm text-gray-500 italic">&ldquo;{opt.usageDescription}&rdquo;</p>
+                      <p className="mt-1.5 text-sm text-white/50 italic">&ldquo;{opt.usageDescription}&rdquo;</p>
                     )}
                     {opt.status === 'PENDING_RESPONSE' && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-orange-600">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-amber-400">
                         <Clock className="h-3 w-3" />
                         Respond by {new Date(opt.responseDeadlineAt).toLocaleString('en-ZA')}
                       </div>
@@ -141,7 +141,7 @@ export default function OwnerOptionsPage() {
                     </div>
                   )}
                   {opt.booking && (
-                    <ChevronRight className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-white/40 mt-1 flex-shrink-0" />
                   )}
                 </div>
               </CardContent>

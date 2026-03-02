@@ -34,26 +34,26 @@ export default function CoordinatorSettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Profile</h2></CardHeader>
         <CardContent>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-gray-500">Name</dt>
-              <dd className="font-medium text-gray-900">{session?.user?.name}</dd>
+              <dt className="text-white/50">Name</dt>
+              <dd className="font-medium text-white">{session?.user?.name}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-gray-500">Email</dt>
-              <dd className="font-medium text-gray-900">{session?.user?.email}</dd>
+              <dt className="text-white/50">Email</dt>
+              <dd className="font-medium text-white">{session?.user?.email}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-gray-500">Account Type</dt>
-              <dd className="font-medium text-gray-900">Coordinator</dd>
+              <dt className="text-white/50">Account Type</dt>
+              <dd className="font-medium text-white">Coordinator</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-gray-500">Status</dt>
+              <dt className="text-white/50">Status</dt>
               <dd><Badge variant={statusVariant[session?.user?.status || ''] || 'default'}>{session?.user?.status}</Badge></dd>
             </div>
           </dl>
@@ -65,8 +65,8 @@ export default function CoordinatorSettingsPage() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-900">Email Notifications</p>
-              <p className="text-xs text-gray-500">Receive email notifications for booking assignments and messages</p>
+              <p className="text-sm font-medium text-white">Email Notifications</p>
+              <p className="text-xs text-white/50">Receive email notifications for booking assignments and messages</p>
             </div>
             <Button
               size="sm"

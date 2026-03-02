@@ -110,10 +110,10 @@ export default function ProductionSearchPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Search Vehicles</h1>
+        <h1 className="text-2xl font-bold text-white">Search Vehicles</h1>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden flex items-center gap-2 text-sm text-gray-600"
+          className="lg:hidden flex items-center gap-2 text-sm text-white/60"
         >
           <Filter className="h-4 w-4" />
           {showFilters ? 'Hide' : 'Show'} Filters
@@ -122,7 +122,7 @@ export default function ProductionSearchPage() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="bg-gray-900 rounded-xl border border-white/10 p-4 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Select
               id="type"
@@ -227,23 +227,23 @@ export default function ProductionSearchPage() {
       )}
 
       {/* Results */}
-      <p className="text-sm text-gray-500 mb-4">{total} vehicle{total !== 1 ? 's' : ''} found</p>
+      <p className="text-sm text-white/50 mb-4">{total} vehicle{total !== 1 ? 's' : ''} found</p>
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-              <div className="aspect-video bg-gray-200 rounded-lg mb-3" />
-              <div className="h-5 bg-gray-200 rounded w-2/3 mb-2" />
-              <div className="h-4 bg-gray-200 rounded w-1/3" />
+            <div key={i} className="bg-gray-900 rounded-xl border border-white/10 p-4 animate-pulse">
+              <div className="aspect-video bg-gray-800 rounded-lg mb-3" />
+              <div className="h-5 bg-gray-800 rounded w-2/3 mb-2" />
+              <div className="h-4 bg-gray-800 rounded w-1/3" />
             </div>
           ))}
         </div>
       ) : vehicles.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles found</h3>
-          <p className="text-gray-500">Try adjusting your filters or search criteria.</p>
+        <div className="bg-gray-900 rounded-xl border border-white/10 p-12 text-center">
+          <Search className="h-12 w-12 text-white/30 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">No vehicles found</h3>
+          <p className="text-white/50">Try adjusting your filters or search criteria.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -251,9 +251,9 @@ export default function ProductionSearchPage() {
             <Link
               key={vehicle.id}
               href={`/production/vehicles/${vehicle.id}`}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              className="bg-gray-900 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-colors"
             >
-              <div className="aspect-video bg-gray-100 relative">
+              <div className="aspect-video bg-gray-800 relative">
                 {vehicle.photos[0] ? (
                   <img
                     src={vehicle.photos[0].url}
@@ -262,7 +262,7 @@ export default function ProductionSearchPage() {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <Car className="h-12 w-12 text-gray-300" />
+                    <Car className="h-12 w-12 text-white/30" />
                   </div>
                 )}
                 {getOptionBadge(vehicle) && (
@@ -270,21 +270,21 @@ export default function ProductionSearchPage() {
                 )}
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-white">
                   {vehicle.year} {vehicle.make} {vehicle.model}
                 </h3>
-                <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                <div className="flex items-center gap-1 mt-1 text-sm text-white/50">
                   <MapPin className="h-3.5 w-3.5" />
                   {vehicle.location}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-gray-500 capitalize">
+                  <span className="text-xs text-white/50 capitalize">
                     {vehicle.type.toLowerCase().replace(/_/g, ' ')}
                   </span>
-                  <span className="text-xs text-gray-300">|</span>
-                  <span className="text-xs text-gray-500">{vehicle.color}</span>
-                  <span className="text-xs text-gray-300">|</span>
-                  <span className="text-xs text-gray-500 capitalize">{vehicle.condition.toLowerCase()}</span>
+                  <span className="text-xs text-white/30">|</span>
+                  <span className="text-xs text-white/50">{vehicle.color}</span>
+                  <span className="text-xs text-white/30">|</span>
+                  <span className="text-xs text-white/50 capitalize">{vehicle.condition.toLowerCase()}</span>
                 </div>
               </div>
             </Link>
@@ -295,12 +295,12 @@ export default function ProductionSearchPage() {
       {/* Special Request Section */}
       <Card className="mt-8 p-6">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-blue-600" />
+          <div className="flex-shrink-0 w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-white/70" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">Can&apos;t find what you need?</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-lg font-semibold text-white">Can&apos;t find what you need?</h3>
+            <p className="text-sm text-white/50 mt-1">
               We can source specific vehicles that aren&apos;t listed on the platform. Tell us what you&apos;re looking for and our team will get back to you.
             </p>
             {!showSpecialRequest && !requestSent && (
@@ -310,10 +310,10 @@ export default function ProductionSearchPage() {
               </Button>
             )}
             {requestSent && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-medium text-green-800">Request sent! Our team will be in touch shortly.</p>
+              <div className="mt-3 p-3 bg-emerald-400/10 border border-emerald-400/20 rounded-lg">
+                <p className="text-sm font-medium text-emerald-400">Request sent! Our team will be in touch shortly.</p>
                 <button
-                  className="text-sm text-green-600 underline mt-1"
+                  className="text-sm text-emerald-400 underline mt-1"
                   onClick={() => { setRequestSent(false); setShowSpecialRequest(false); }}
                 >
                   Submit another request
@@ -323,11 +323,11 @@ export default function ProductionSearchPage() {
             {showSpecialRequest && !requestSent && (
               <div className="mt-4 space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    What vehicle are you looking for? <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-white/70 mb-1">
+                    What vehicle are you looking for? <span className="text-red-400">*</span>
                   </label>
                   <textarea
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
                     rows={3}
                     placeholder="e.g. 1970s muscle car, red Porsche 911, vintage VW Beetle, military vehicle..."
                     value={specialRequest.vehicleDescription}
@@ -335,8 +335,8 @@ export default function ProductionSearchPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Shoot dates <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-white/70 mb-1">
+                    Shoot dates <span className="text-red-400">*</span>
                   </label>
                   <Input
                     id="specialShootDates"
@@ -346,11 +346,11 @@ export default function ProductionSearchPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/70 mb-1">
                     Additional notes
                   </label>
                   <textarea
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
                     rows={2}
                     placeholder="Budget, location preferences, special requirements..."
                     value={specialRequest.additionalNotes}

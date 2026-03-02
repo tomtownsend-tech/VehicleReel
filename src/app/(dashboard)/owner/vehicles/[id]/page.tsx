@@ -130,28 +130,28 @@ export default function VehicleDetailPage() {
   }
 
   if (loading) {
-    return <div className="animate-pulse"><div className="h-8 bg-gray-200 rounded w-1/3 mb-4" /><div className="h-64 bg-gray-200 rounded" /></div>;
+    return <div className="animate-pulse"><div className="h-8 bg-gray-800 rounded w-1/3 mb-4" /><div className="h-64 bg-gray-800 rounded" /></div>;
   }
 
   if (!vehicle) {
-    return <p className="text-gray-500">Vehicle not found.</p>;
+    return <p className="text-white/50">Vehicle not found.</p>;
   }
 
   return (
     <div className="max-w-3xl mx-auto">
       <button
         onClick={() => router.push('/owner/vehicles')}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4"
       >
         <ArrowLeft className="h-4 w-4" /> Back to vehicles
       </button>
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h1>
-          <div className="flex items-center gap-2 mt-1 text-gray-500">
+          <div className="flex items-center gap-2 mt-1 text-white/50">
             <MapPin className="h-4 w-4" /> {vehicle.location}
           </div>
         </div>
@@ -170,35 +170,35 @@ export default function VehicleDetailPage() {
           return (
             <>
               {missingSlots.length > 0 && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <p className="text-sm text-amber-800 font-medium">
+                <div className="mb-4 bg-amber-400/10 border border-amber-400/20 rounded-lg p-3">
+                  <p className="text-sm text-amber-400 font-medium">
                     Missing required photo{missingSlots.length > 1 ? 's' : ''}: {missingSlots.join(', ')}
                   </p>
                 </div>
               )}
 
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Required Photos</h3>
+              <h3 className="text-sm font-medium text-white mb-2">Required Photos</h3>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
                 {REQUIRED_PHOTO_LABELS.map((label, i) => {
                   const photo = photosByOrder.get(i);
                   return (
                     <div key={label} className="relative">
                       {photo ? (
-                        <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+                        <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 group">
                           <img src={photo.url} alt={label} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-1 left-1 text-xs bg-white/90 text-gray-700 px-1.5 py-0.5 rounded font-medium">{label}</span>
+                          <span className="absolute bottom-1 left-1 text-xs bg-gray-900/90 text-white/70 px-1.5 py-0.5 rounded font-medium">{label}</span>
                           <button
                             onClick={() => deletePhoto(photo.id)}
                             disabled={deletingPhotoId === photo.id}
-                            className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
+                            className="absolute top-1 right-1 p-1 bg-gray-900/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-gray-900 transition-opacity"
                           >
-                            <X className="h-4 w-4 text-gray-600" />
+                            <X className="h-4 w-4 text-white/60" />
                           </button>
                         </div>
                       ) : (
-                        <label className={`flex flex-col items-center justify-center aspect-square border-2 border-dashed border-red-300 bg-red-50 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label className={`flex flex-col items-center justify-center aspect-square border-2 border-dashed border-red-400/30 bg-red-400/5 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                           <Upload className="h-5 w-5 text-red-400 mb-1" />
-                          <span className="text-xs text-red-500 font-medium">{label} *</span>
+                          <span className="text-xs text-red-400 font-medium">{label} *</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -213,23 +213,23 @@ export default function VehicleDetailPage() {
                 })}
               </div>
 
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Additional Photos</h3>
+              <h3 className="text-sm font-medium text-white mb-2">Additional Photos</h3>
               <div className="grid grid-cols-3 gap-2">
                 {extraPhotos.map((photo) => (
-                  <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
+                  <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 group">
                     <img src={photo.url} alt="" className="w-full h-full object-cover" />
                     <button
                       onClick={() => deletePhoto(photo.id)}
                       disabled={deletingPhotoId === photo.id}
-                      className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity"
+                      className="absolute top-1 right-1 p-1 bg-gray-900/80 rounded-full opacity-0 group-hover:opacity-100 hover:bg-gray-900 transition-opacity"
                     >
-                      <X className="h-4 w-4 text-gray-600" />
+                      <X className="h-4 w-4 text-white/60" />
                     </button>
                   </div>
                 ))}
-                <label className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <Upload className="h-5 w-5 text-gray-400 mb-1" />
-                  <span className="text-xs text-gray-500">{photoUploading ? 'Uploading...' : 'Add More'}</span>
+                <label className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${photoUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <Upload className="h-5 w-5 text-white/40 mb-1" />
+                  <span className="text-xs text-white/50">{photoUploading ? 'Uploading...' : 'Add More'}</span>
                   <input
                     type="file"
                     multiple
@@ -250,17 +250,17 @@ export default function VehicleDetailPage() {
         <CardHeader><h2 className="text-lg font-semibold">Details</h2></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div><dt className="text-gray-500">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
+            <div><dt className="text-white/50">Type</dt><dd className="font-medium capitalize">{vehicle.type.toLowerCase().replace('_', ' ')}</dd></div>
             {vehicle.driveSide && (
-              <div><dt className="text-gray-500">Drive</dt><dd className="font-medium">{vehicle.driveSide === 'LEFT' ? 'Left-Hand Drive' : 'Right-Hand Drive'}</dd></div>
+              <div><dt className="text-white/50">Drive</dt><dd className="font-medium">{vehicle.driveSide === 'LEFT' ? 'Left-Hand Drive' : 'Right-Hand Drive'}</dd></div>
             )}
-            <div><dt className="text-gray-500">Color</dt><dd className="font-medium">{vehicle.color}</dd></div>
-            <div><dt className="text-gray-500">Condition</dt><dd className="font-medium capitalize">{vehicle.condition.toLowerCase()}</dd></div>
-            {vehicle.mileage && <div><dt className="text-gray-500">Mileage</dt><dd className="font-medium">{vehicle.mileage.toLocaleString()} km</dd></div>}
+            <div><dt className="text-white/50">Color</dt><dd className="font-medium">{vehicle.color}</dd></div>
+            <div><dt className="text-white/50">Condition</dt><dd className="font-medium capitalize">{vehicle.condition.toLowerCase()}</dd></div>
+            {vehicle.mileage && <div><dt className="text-white/50">Mileage</dt><dd className="font-medium">{vehicle.mileage.toLocaleString()} km</dd></div>}
           </dl>
           {vehicle.specialFeatures.length > 0 && (
             <div className="mt-4">
-              <span className="text-sm text-gray-500">Special Features</span>
+              <span className="text-sm text-white/50">Special Features</span>
               <div className="flex flex-wrap gap-2 mt-1">
                 {vehicle.specialFeatures.map((f) => (
                   <Badge key={f}>{f}</Badge>
@@ -276,11 +276,11 @@ export default function VehicleDetailPage() {
         <CardHeader><h2 className="text-lg font-semibold">Documents</h2></CardHeader>
         <CardContent>
           {vehicle.documents.length === 0 ? (
-            <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+            <p className="text-sm text-white/50">No documents uploaded yet.</p>
           ) : (
             <div className="space-y-2">
               {vehicle.documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                   <span className="text-sm font-medium">{doc.type.replace('_', ' ')}</span>
                   <Badge variant={doc.status === 'APPROVED' ? 'success' : doc.status === 'FLAGGED' ? 'danger' : 'warning'}>
                     {doc.status.replace('_', ' ')}
@@ -299,9 +299,9 @@ export default function VehicleDetailPage() {
           <CardContent>
             <div className="space-y-2">
               {vehicle.bookings.map((b) => (
-                <div key={b.id} className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm">
+                <div key={b.id} className="flex items-center gap-2 p-3 bg-red-400/10 rounded-lg text-sm">
                   <Ban className="h-4 w-4 text-red-400 shrink-0" />
-                  <span className="text-red-600 font-medium">
+                  <span className="text-red-400 font-medium">
                     {new Date(b.startDate).toLocaleDateString('en-ZA')} — {new Date(b.endDate).toLocaleDateString('en-ZA')}
                   </span>
                   <Badge variant="danger">Booked</Badge>
@@ -324,7 +324,7 @@ export default function VehicleDetailPage() {
         </CardHeader>
         <CardContent>
           {showBlockForm && (
-            <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+            <div className="mb-4 p-4 bg-gray-800 rounded-lg space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <Input id="blockStart" label="Start Date" type="date" value={blockStart} onChange={(e) => setBlockStart(e.target.value)} />
                 <Input id="blockEnd" label="End Date" type="date" value={blockEnd} onChange={(e) => setBlockEnd(e.target.value)} />
@@ -337,21 +337,21 @@ export default function VehicleDetailPage() {
             </div>
           )}
           {vehicle.availability.filter((b) => !b.reason?.startsWith('Booked:')).length === 0 ? (
-            <p className="text-sm text-gray-500">No dates blocked. Your vehicle is available for all dates.</p>
+            <p className="text-sm text-white/50">No dates blocked. Your vehicle is available for all dates.</p>
           ) : (
             <div className="space-y-2">
               {vehicle.availability.filter((b) => !b.reason?.startsWith('Booked:')).map((block) => (
-                <div key={block.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={block.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                   <div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <Calendar className="h-4 w-4 text-white/40" />
                       <span className="font-medium">
                         {new Date(block.startDate).toLocaleDateString('en-ZA')} — {new Date(block.endDate).toLocaleDateString('en-ZA')}
                       </span>
                     </div>
-                    {block.reason && <p className="text-xs text-gray-500 ml-6 mt-0.5">{block.reason}</p>}
+                    {block.reason && <p className="text-xs text-white/50 ml-6 mt-0.5">{block.reason}</p>}
                   </div>
-                  <button onClick={() => removeBlock(block.id)} className="text-gray-400 hover:text-red-500">
+                  <button onClick={() => removeBlock(block.id)} className="text-white/40 hover:text-red-400">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -368,10 +368,10 @@ export default function VehicleDetailPage() {
           <CardContent>
             <div className="space-y-2">
               {vehicle.options.map((opt) => (
-                <div key={opt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                <div key={opt.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg text-sm">
                   <div>
                     <span className="font-medium">Position #{opt.queuePosition}</span>
-                    <span className="ml-2 text-gray-500">
+                    <span className="ml-2 text-white/50">
                       {new Date(opt.startDate).toLocaleDateString('en-ZA')} — {new Date(opt.endDate).toLocaleDateString('en-ZA')}
                     </span>
                   </div>

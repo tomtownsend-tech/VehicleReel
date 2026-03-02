@@ -63,14 +63,14 @@ export default function ConfirmOptionPage() {
     }
   }
 
-  if (!option) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
+  if (!option) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   // Pre-validate option eligibility
   if (option.status !== 'ACCEPTED') {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Option Not Eligible</h1>
-        <p className="text-gray-500 mb-4">This option is no longer in an accepted state (current status: {option.status.replace(/_/g, ' ')}).</p>
+        <h1 className="text-2xl font-bold text-white mb-2">Option Not Eligible</h1>
+        <p className="text-white/50 mb-4">This option is no longer in an accepted state (current status: {option.status.replace(/_/g, ' ')}).</p>
         <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
       </div>
     );
@@ -79,8 +79,8 @@ export default function ConfirmOptionPage() {
   if (option.queuePosition !== 1) {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Not First in Queue</h1>
-        <p className="text-gray-500 mb-4">Your option is at position #{option.queuePosition}. Only the first-position option can be confirmed.</p>
+        <h1 className="text-2xl font-bold text-white mb-2">Not First in Queue</h1>
+        <p className="text-white/50 mb-4">Your option is at position #{option.queuePosition}. Only the first-position option can be confirmed.</p>
         <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
       </div>
     );
@@ -89,8 +89,8 @@ export default function ConfirmOptionPage() {
   if (option.confirmationDeadlineAt && new Date() > new Date(option.confirmationDeadlineAt)) {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirmation Window Expired</h1>
-        <p className="text-gray-500 mb-4">The confirmation window for this option has passed.</p>
+        <h1 className="text-2xl font-bold text-white mb-2">Confirmation Window Expired</h1>
+        <p className="text-white/50 mb-4">The confirmation window for this option has passed.</p>
         <Button onClick={() => router.push('/production/options')}>Back to Options</Button>
       </div>
     );
@@ -99,32 +99,32 @@ export default function ConfirmOptionPage() {
   if (confirmed) {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
-        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-        <p className="text-gray-500">Redirecting to your booking...</p>
+        <CheckCircle className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h1>
+        <p className="text-white/50">Redirecting to your booking...</p>
       </div>
     );
   }
 
   return (
     <div className="max-w-lg mx-auto">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Confirm Booking</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Confirm Booking</h1>
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Booking Summary</h2></CardHeader>
         <CardContent>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between"><dt className="text-gray-500">Vehicle</dt><dd className="font-medium">{option.vehicle.year} {option.vehicle.make} {option.vehicle.model}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Location</dt><dd className="font-medium">{option.vehicle.location}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Owner</dt><dd className="font-medium">{option.vehicle.owner.name}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(option.startDate)} — {formatDate(option.endDate)}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div className="flex justify-between"><dt className="text-white/50">Vehicle</dt><dd className="font-medium">{option.vehicle.year} {option.vehicle.make} {option.vehicle.model}</dd></div>
+            <div className="flex justify-between"><dt className="text-white/50">Location</dt><dd className="font-medium">{option.vehicle.location}</dd></div>
+            <div className="flex justify-between"><dt className="text-white/50">Owner</dt><dd className="font-medium">{option.vehicle.owner.name}</dd></div>
+            <div className="flex justify-between"><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(option.startDate)} — {formatDate(option.endDate)}</dd></div>
+            <div className="flex justify-between"><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             {option.rateType === 'PER_DAY' && (
-              <div className="flex justify-between"><dt className="text-gray-500">Estimated Total</dt><dd className="font-medium">{formatCurrency(option.rateCents * Math.max(1, Math.ceil((new Date(option.endDate).getTime() - new Date(option.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1))}</dd></div>
+              <div className="flex justify-between"><dt className="text-white/50">Estimated Total</dt><dd className="font-medium">{formatCurrency(option.rateCents * Math.max(1, Math.ceil((new Date(option.endDate).getTime() - new Date(option.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1))}</dd></div>
             )}
           </dl>
         </CardContent>
@@ -132,7 +132,7 @@ export default function ConfirmOptionPage() {
 
       <Card>
         <CardContent className="pt-6 space-y-4">
-          {error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}
+          {error && <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3">{error}</div>}
 
           <Select
             id="logistics"

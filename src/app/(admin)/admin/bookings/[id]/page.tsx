@@ -107,19 +107,19 @@ export default function AdminBookingDetailPage() {
     }
   }
 
-  if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
+  if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
   const insuranceDoc = booking.documents?.[0] || null;
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => router.push('/admin/bookings')} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
+      <button onClick={() => router.push('/admin/bookings')} className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-white">
           {booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}
         </h1>
         <Badge variant={statusVariant[booking.status] || 'default'}>{booking.status}</Badge>
@@ -129,15 +129,15 @@ export default function AdminBookingDetailPage() {
       <Card className="mb-6">
         <CardContent className="py-4">
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-gray-500">Production</dt><dd className="font-medium">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
-            <div><dt className="text-gray-500">Owner</dt><dd className="font-medium">{booking.option.vehicle.owner.name}</dd></div>
-            <div><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
-            <div><dt className="text-gray-500">Rate</dt><dd className="font-medium">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
-            <div><dt className="text-gray-500">Owner Payout</dt><dd className="font-medium">{formatCurrency(booking.ownerPayoutCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
-            <div><dt className="text-gray-500">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers' : 'Vehicle collection'}</dd></div>
-            {booking.locationAddress && <div><dt className="text-gray-500">Shoot Location</dt><dd className="font-medium">{booking.locationAddress}</dd></div>}
-            {booking.locationPin && <div><dt className="text-gray-500">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">Open in Maps</a></dd></div>}
-            {booking.specialInstructions && <div className="col-span-2"><dt className="text-gray-500">Instructions</dt><dd className="font-medium">{booking.specialInstructions}</dd></div>}
+            <div><dt className="text-white/50">Production</dt><dd className="font-medium text-white">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
+            <div><dt className="text-white/50">Owner</dt><dd className="font-medium text-white">{booking.option.vehicle.owner.name}</dd></div>
+            <div><dt className="text-white/50">Dates</dt><dd className="font-medium text-white">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
+            <div><dt className="text-white/50">Rate</dt><dd className="font-medium text-white">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div><dt className="text-white/50">Owner Payout</dt><dd className="font-medium text-white">{formatCurrency(booking.ownerPayoutCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
+            <div><dt className="text-white/50">Logistics</dt><dd className="font-medium text-white">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers' : 'Vehicle collection'}</dd></div>
+            {booking.locationAddress && <div><dt className="text-white/50">Shoot Location</dt><dd className="font-medium text-white">{booking.locationAddress}</dd></div>}
+            {booking.locationPin && <div><dt className="text-white/50">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:underline text-sm">Open in Maps</a></dd></div>}
+            {booking.specialInstructions && <div className="col-span-2"><dt className="text-white/50">Instructions</dt><dd className="font-medium text-white">{booking.specialInstructions}</dd></div>}
           </dl>
         </CardContent>
       </Card>
@@ -149,8 +149,8 @@ export default function AdminBookingDetailPage() {
           {booking.coordinator ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">{booking.coordinator.name}</p>
-                <p className="text-xs text-gray-500">{booking.coordinator.email}</p>
+                <p className="text-sm font-medium text-white">{booking.coordinator.name}</p>
+                <p className="text-xs text-white/50">{booking.coordinator.email}</p>
               </div>
               <Badge variant="success">Assigned</Badge>
             </div>
@@ -159,7 +159,7 @@ export default function AdminBookingDetailPage() {
               <select
                 value={selectedCoordinator}
                 onChange={(e) => setSelectedCoordinator(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-white/15 rounded-lg text-sm bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
               >
                 <option value="">Select coordinator...</option>
                 {coordinators.map((c) => (
@@ -172,7 +172,7 @@ export default function AdminBookingDetailPage() {
             </div>
           )}
           {coordinators.length === 0 && !booking.coordinator && (
-            <p className="text-xs text-gray-400 mt-2">No coordinator users found. Promote a user to COORDINATOR role first.</p>
+            <p className="text-xs text-white/40 mt-2">No coordinator users found. Promote a user to COORDINATOR role first.</p>
           )}
         </CardContent>
       </Card>
@@ -187,9 +187,9 @@ export default function AdminBookingDetailPage() {
               const isCheckedIn = checkedDates.has(dateStr);
               const hasDetails = d.callTime || d.locationAddress || d.locationPin || d.notes;
               return (
-                <div key={d.id} className="border border-gray-200 rounded-lg p-3">
+                <div key={d.id} className="border border-white/10 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-900">{formatDate(d.date)}</span>
+                    <span className="text-sm font-semibold text-white">{formatDate(d.date)}</span>
                     {isCheckedIn ? (
                       <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
                     ) : (
@@ -198,18 +198,18 @@ export default function AdminBookingDetailPage() {
                   </div>
                   {hasDetails ? (
                     <dl className="space-y-1 text-sm mt-2">
-                      {d.callTime && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Call Time</dt><dd className="font-medium">{d.callTime}</dd></div>}
-                      {d.locationAddress && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Location</dt><dd className="font-medium">{d.locationAddress}</dd></div>}
-                      {d.locationPin && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Map Pin</dt><dd><a href={d.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">Open in Maps</a></dd></div>}
-                      {d.notes && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Notes</dt><dd className="font-medium">{d.notes}</dd></div>}
+                      {d.callTime && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Call Time</dt><dd className="font-medium text-white">{d.callTime}</dd></div>}
+                      {d.locationAddress && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Location</dt><dd className="font-medium text-white">{d.locationAddress}</dd></div>}
+                      {d.locationPin && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Map Pin</dt><dd><a href={d.locationPin} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:underline text-sm">Open in Maps</a></dd></div>}
+                      {d.notes && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Notes</dt><dd className="font-medium text-white">{d.notes}</dd></div>}
                     </dl>
                   ) : (
-                    <p className="text-xs text-gray-400 mt-1">No details provided yet</p>
+                    <p className="text-xs text-white/40 mt-1">No details provided yet</p>
                   )}
                 </div>
               );
             })}
-            {booking.dailyDetails.length === 0 && <p className="text-sm text-gray-500">No daily details available.</p>}
+            {booking.dailyDetails.length === 0 && <p className="text-sm text-white/50">No daily details available.</p>}
           </div>
         </CardContent>
       </Card>
@@ -221,20 +221,20 @@ export default function AdminBookingDetailPage() {
           {insuranceDoc ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-500" />
+                <FileText className="h-4 w-4 text-white/50" />
                 <span className="text-sm font-medium">{insuranceDoc.fileName}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={insuranceDoc.status === 'APPROVED' ? 'success' : insuranceDoc.status === 'FLAGGED' ? 'danger' : 'warning'}>
                   {insuranceDoc.status}
                 </Badge>
-                <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No insurance document uploaded.</p>
+            <p className="text-sm text-white/50">No insurance document uploaded.</p>
           )}
         </CardContent>
       </Card>
@@ -245,8 +245,8 @@ export default function AdminBookingDetailPage() {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">All days have been checked in.</p>
-                <p className="text-xs text-gray-500">Mark this booking as completed to finalize.</p>
+                <p className="text-sm font-medium text-white">All days have been checked in.</p>
+                <p className="text-xs text-white/50">Mark this booking as completed to finalize.</p>
               </div>
               <Button onClick={markCompleted} loading={completing}>
                 Mark as Completed

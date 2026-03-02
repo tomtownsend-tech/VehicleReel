@@ -39,16 +39,16 @@ export default function CoordinatorBookingsPage() {
   }, []);
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">My Bookings</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-20 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings ({bookings.length})</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">My Bookings ({bookings.length})</h1>
       {bookings.length === 0 ? (
         <div className="text-center py-12">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No bookings assigned to you yet.</p>
+          <Calendar className="h-12 w-12 text-white/30 mx-auto mb-3" />
+          <p className="text-white/50">No bookings assigned to you yet.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -60,32 +60,32 @@ export default function CoordinatorBookingsPage() {
 
             return (
               <Link key={b.id} href={`/coordinator/bookings/${b.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card className="hover:border-white/20 transition-colors cursor-pointer">
                   <CardContent className="py-3">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-white">
                             {b.option.vehicle.year} {b.option.vehicle.make} {b.option.vehicle.model}
                           </span>
                           <Badge variant={statusVariant[b.status] || 'default'}>{b.status}</Badge>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-white/50">
                           {b.productionUser.name}{b.productionUser.companyName && ` (${b.productionUser.companyName})`}
                           {' · Owner: '}{b.option.vehicle.owner.name}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-white/50">
                           {formatDate(b.startDate)} — {formatDate(b.endDate)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <div className="flex items-center gap-1" title="Check-in progress">
                           {checkedIn === totalDays ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <CheckCircle className="h-4 w-4 text-emerald-400" />
                           ) : (
-                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                            <AlertCircle className="h-4 w-4 text-amber-400" />
                           )}
-                          <span className="text-gray-600">{checkedIn}/{totalDays}</span>
+                          <span className="text-white/60">{checkedIn}/{totalDays}</span>
                         </div>
                         <Badge variant={insuranceApproved ? 'success' : hasInsurance ? 'warning' : 'danger'}>
                           {insuranceApproved ? 'Insured' : hasInsurance ? 'Pending' : 'No Insurance'}

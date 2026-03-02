@@ -77,10 +77,10 @@ function ChatThread({ bookingId, thread, label, session }: { bookingId: string; 
       <CardHeader><h3 className="text-sm font-semibold">{label}</h3></CardHeader>
       <CardContent>
         <div className="h-52 overflow-y-auto mb-3 space-y-2">
-          {messages.length === 0 && <p className="text-xs text-gray-400 text-center py-6">No messages yet</p>}
+          {messages.length === 0 && <p className="text-xs text-white/40 text-center py-6">No messages yet</p>}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender.id === session.user.id ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg px-3 py-1.5 ${msg.sender.id === session.user.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+              <div className={`max-w-[80%] rounded-lg px-3 py-1.5 ${msg.sender.id === session.user.id ? 'bg-white text-gray-900' : 'bg-white/10 text-white'}`}>
                 <p className="text-[10px] font-medium opacity-70">{msg.sender.name}</p>
                 <p className="text-sm">{msg.content}</p>
                 <p className="text-[10px] opacity-50">{new Date(msg.createdAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}</p>
@@ -95,7 +95,7 @@ function ChatThread({ bookingId, thread, label, session }: { bookingId: string; 
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMsg()}
             placeholder="Type a message..."
-            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-1.5 border border-white/15 rounded-lg text-sm bg-white/5 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
           />
           <Button size="sm" onClick={sendMsg} loading={sending} disabled={!newMessage.trim()}>
             <Send className="h-3 w-3" />
@@ -119,19 +119,19 @@ export default function CoordinatorBookingDetailPage() {
       .catch(() => {});
   }, [params.id]);
 
-  if (!booking || !session) return <div className="animate-pulse"><div className="h-64 bg-gray-200 rounded" /></div>;
+  if (!booking || !session) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
   const insuranceDoc = booking.documents?.[0] || null;
 
   return (
     <div className="max-w-5xl mx-auto">
-      <button onClick={() => router.push('/coordinator/bookings')} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4">
+      <button onClick={() => router.push('/coordinator/bookings')} className="flex items-center gap-2 text-sm text-white/60 hover:text-white mb-4">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-white">
           {booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model}
         </h1>
         <Badge variant="success">{booking.status}</Badge>
@@ -142,13 +142,13 @@ export default function CoordinatorBookingDetailPage() {
         <CardHeader><h2 className="text-lg font-semibold">Booking Details</h2></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-gray-500">Production</dt><dd className="font-medium">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
-            <div><dt className="text-gray-500">Owner</dt><dd className="font-medium">{booking.option.vehicle.owner.name}</dd></div>
-            <div><dt className="text-gray-500">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
-            <div><dt className="text-gray-500">Vehicle Location</dt><dd className="font-medium">{booking.option.vehicle.location}</dd></div>
-            {booking.locationAddress && <div><dt className="text-gray-500">Shoot Location</dt><dd className="font-medium">{booking.locationAddress}</dd></div>}
-            {booking.locationPin && <div><dt className="text-gray-500">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">Open in Maps</a></dd></div>}
-            {booking.specialInstructions && <div className="col-span-2"><dt className="text-gray-500">Special Instructions</dt><dd className="font-medium">{booking.specialInstructions}</dd></div>}
+            <div><dt className="text-white/50">Production</dt><dd className="font-medium text-white">{booking.productionUser.name}{booking.productionUser.companyName && ` (${booking.productionUser.companyName})`}</dd></div>
+            <div><dt className="text-white/50">Owner</dt><dd className="font-medium text-white">{booking.option.vehicle.owner.name}</dd></div>
+            <div><dt className="text-white/50">Dates</dt><dd className="font-medium text-white">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
+            <div><dt className="text-white/50">Vehicle Location</dt><dd className="font-medium text-white">{booking.option.vehicle.location}</dd></div>
+            {booking.locationAddress && <div><dt className="text-white/50">Shoot Location</dt><dd className="font-medium text-white">{booking.locationAddress}</dd></div>}
+            {booking.locationPin && <div><dt className="text-white/50">Location Pin</dt><dd><a href={booking.locationPin} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:underline text-sm">Open in Maps</a></dd></div>}
+            {booking.specialInstructions && <div className="col-span-2"><dt className="text-white/50">Special Instructions</dt><dd className="font-medium text-white">{booking.specialInstructions}</dd></div>}
           </dl>
         </CardContent>
       </Card>
@@ -163,9 +163,9 @@ export default function CoordinatorBookingDetailPage() {
               const isCheckedIn = checkedDates.has(dateStr);
               const hasDetails = d.callTime || d.locationAddress || d.locationPin || d.notes;
               return (
-                <div key={d.id} className="border border-gray-200 rounded-lg p-3">
+                <div key={d.id} className="border border-white/10 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-900">{formatDate(d.date)}</span>
+                    <span className="text-sm font-semibold text-white">{formatDate(d.date)}</span>
                     {isCheckedIn ? (
                       <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
                     ) : (
@@ -174,13 +174,13 @@ export default function CoordinatorBookingDetailPage() {
                   </div>
                   {hasDetails ? (
                     <dl className="space-y-1 text-sm mt-2">
-                      {d.callTime && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Call Time</dt><dd className="font-medium">{d.callTime}</dd></div>}
-                      {d.locationAddress && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Location</dt><dd className="font-medium">{d.locationAddress}</dd></div>}
-                      {d.locationPin && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Map Pin</dt><dd><a href={d.locationPin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">Open in Maps</a></dd></div>}
-                      {d.notes && <div className="flex gap-2"><dt className="text-gray-500 w-24 flex-shrink-0">Notes</dt><dd className="font-medium">{d.notes}</dd></div>}
+                      {d.callTime && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Call Time</dt><dd className="font-medium text-white">{d.callTime}</dd></div>}
+                      {d.locationAddress && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Location</dt><dd className="font-medium text-white">{d.locationAddress}</dd></div>}
+                      {d.locationPin && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Map Pin</dt><dd><a href={d.locationPin} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:underline text-sm">Open in Maps</a></dd></div>}
+                      {d.notes && <div className="flex gap-2"><dt className="text-white/50 w-24 flex-shrink-0">Notes</dt><dd className="font-medium text-white">{d.notes}</dd></div>}
                     </dl>
                   ) : (
-                    <p className="text-xs text-gray-400 mt-1">No details provided yet</p>
+                    <p className="text-xs text-white/40 mt-1">No details provided yet</p>
                   )}
                 </div>
               );
@@ -196,20 +196,20 @@ export default function CoordinatorBookingDetailPage() {
           {insuranceDoc ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-500" />
+                <FileText className="h-4 w-4 text-white/50" />
                 <span className="text-sm font-medium">{insuranceDoc.fileName}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={insuranceDoc.status === 'APPROVED' ? 'success' : insuranceDoc.status === 'FLAGGED' ? 'danger' : 'warning'}>
                   {insuranceDoc.status}
                 </Badge>
-                <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                <a href={insuranceDoc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No insurance document uploaded yet.</p>
+            <p className="text-sm text-white/50">No insurance document uploaded yet.</p>
           )}
         </CardContent>
       </Card>

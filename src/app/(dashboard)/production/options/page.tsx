@@ -46,19 +46,19 @@ export default function ProductionOptionsPage() {
   }, []);
 
   if (loading) {
-    return <div><h1 className="text-2xl font-bold text-gray-900 mb-6">My Options</h1><div className="space-y-4">{[1, 2].map((i) => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div></div>;
+    return <div><h1 className="text-2xl font-bold text-white mb-6">My Options</h1><div className="space-y-4">{[1, 2].map((i) => <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Options</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">My Options</h1>
 
       {options.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No options placed yet</h3>
-          <p className="text-gray-500 mb-4">Search for vehicles and place your first option.</p>
-          <Link href="/production/search" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+        <div className="bg-gray-900 rounded-xl border border-white/10 p-12 text-center">
+          <FileText className="h-12 w-12 text-white/30 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">No options placed yet</h3>
+          <p className="text-white/50 mb-4">Search for vehicles and place your first option.</p>
+          <Link href="/production/search" className="text-white/70 hover:text-white font-medium text-sm">
             Search vehicles
           </Link>
         </div>
@@ -69,23 +69,23 @@ export default function ProductionOptionsPage() {
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="h-16 w-24 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                    <div className="h-16 w-24 rounded-lg bg-gray-800 overflow-hidden flex-shrink-0">
                       {opt.vehicle.photos[0]?.url ? (
                         <img src={opt.vehicle.photos[0].url} alt={`${opt.vehicle.year} ${opt.vehicle.make} ${opt.vehicle.model}`} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center text-gray-300 text-xs">No photo</div>
+                        <div className="h-full w-full flex items-center justify-center text-white/30 text-xs">No photo</div>
                       )}
                     </div>
                     <div>
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-white">
                         {opt.vehicle.year} {opt.vehicle.make} {opt.vehicle.model}
                       </span>
                       <Badge variant={statusVariant[opt.status] || 'default'}>
                         {OPTION_STATUS_LABELS[opt.status] || opt.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-white/60">
                       <span>{formatDate(opt.startDate)} — {formatDate(opt.endDate)}</span>
                       <span>
                         {formatCurrency(opt.rateCents)}
@@ -94,13 +94,13 @@ export default function ProductionOptionsPage() {
                       <span>Position #{opt.queuePosition}</span>
                     </div>
                     {opt.status === 'PENDING_RESPONSE' && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-orange-600">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-amber-400">
                         <Clock className="h-3 w-3" />
                         Owner must respond by {new Date(opt.responseDeadlineAt).toLocaleString('en-ZA')}
                       </div>
                     )}
                     {opt.status === 'ACCEPTED' && opt.confirmationDeadlineAt && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-blue-600">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-white/70">
                         <Clock className="h-3 w-3" />
                         Confirm by {new Date(opt.confirmationDeadlineAt).toLocaleString('en-ZA')}
                       </div>
@@ -110,14 +110,14 @@ export default function ProductionOptionsPage() {
                   <div className="flex gap-2">
                     {opt.status === 'ACCEPTED' && opt.queuePosition === 1 && (
                       <Link href={`/production/options/${opt.id}/confirm`}>
-                        <button className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700">
+                        <button className="px-4 py-2 rounded-lg bg-emerald-400 text-gray-900 text-sm font-medium hover:bg-emerald-300">
                           Confirm
                         </button>
                       </Link>
                     )}
                     {opt.booking && (
                       <Link href={`/production/bookings/${opt.booking.id}`}>
-                        <button className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        <button className="px-4 py-2 rounded-lg bg-white text-gray-900 text-sm font-medium hover:bg-gray-200">
                           View Booking
                         </button>
                       </Link>
