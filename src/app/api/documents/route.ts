@@ -135,6 +135,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Notify owner when insurance is uploaded for their booking
+    if (type === 'INSURANCE' && bookingId) {
+      const { safeNotify } = await import('@/lib/services/notification');
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { option: { include: { vehicle: { select: { make: true, model: true } } } } },
+      });
+      if (booking) {
+        const vName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+        await safeNotify({
+          userId: booking.ownerId,
+          type: 'INSURANCE_REMINDER',
+          title: 'Insurance Uploaded',
+          message: `Insurance has been uploaded for your ${vName} booking and is being reviewed.`,
+          data: { bookingId: booking.id, documentId: document.id },
+        });
+      }
+    }
+
     return NextResponse.json(document, { status: 201 });
   } catch (err) {
     console.error('Document upload handler error:', err);

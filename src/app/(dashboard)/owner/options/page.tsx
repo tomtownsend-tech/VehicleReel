@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Clock } from 'lucide-react';
+import { FileText, Clock, ChevronRight } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { OPTION_STATUS_LABELS } from '@/lib/constants';
 
 interface OptionItem {
@@ -24,6 +25,7 @@ interface OptionItem {
   usageDescription: string | null;
   vehicle: { make: string; model: string; year: number; photos: { url: string }[] };
   productionUser: { name: string; email: string; companyName: string | null };
+  booking: { id: string; status: string } | null;
 }
 
 const statusVariant: Record<string, 'warning' | 'success' | 'danger' | 'info' | 'default'> = {
@@ -39,6 +41,7 @@ const statusVariant: Record<string, 'warning' | 'success' | 'danger' | 'info' | 
 };
 
 export default function OwnerOptionsPage() {
+  const router = useRouter();
   const [options, setOptions] = useState<OptionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +81,12 @@ export default function OwnerOptionsPage() {
       ) : (
         <div className="space-y-4">
           {options.map((opt) => (
-            <Card key={opt.id}>
+            <div
+              key={opt.id}
+              className={opt.booking ? 'cursor-pointer' : ''}
+              onClick={() => opt.booking && router.push(`/owner/bookings/${opt.booking.id}`)}
+            >
+            <Card className={opt.booking ? 'hover:border-blue-300 transition-colors' : ''}>
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
                   <div>
@@ -127,14 +135,18 @@ export default function OwnerOptionsPage() {
                     )}
                   </div>
                   {opt.status === 'PENDING_RESPONSE' && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <Button size="sm" onClick={() => handleAction(opt.id, 'accept')}>Accept</Button>
                       <Button size="sm" variant="outline" onClick={() => handleAction(opt.id, 'decline')}>Decline</Button>
                     </div>
                   )}
+                  {opt.booking && (
+                    <ChevronRight className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+                  )}
                 </div>
               </CardContent>
             </Card>
+            </div>
           ))}
         </div>
       )}

@@ -7,7 +7,7 @@ import { documentFlaggedEmail } from './email';
 export async function reviewDocument(documentId: string) {
   const document = await prisma.document.findUnique({
     where: { id: documentId },
-    include: { user: true, vehicle: true },
+    include: { user: true, vehicle: true, booking: true },
   });
 
   if (!document) throw new Error('Document not found');
@@ -111,7 +111,7 @@ export async function reviewDocument(documentId: string) {
         type: 'DOCUMENT_FLAGGED',
         title: 'Document Rejected',
         message: flagReason,
-        data: { documentId, documentType: document.type },
+        data: { documentId, documentType: document.type, ...(document.bookingId ? { bookingId: document.bookingId } : {}) },
         emailContent: documentFlaggedEmail(document.user.name, docTypeLabel, flagReason),
       });
     } else {
@@ -120,8 +120,38 @@ export async function reviewDocument(documentId: string) {
         type: 'DOCUMENT_APPROVED',
         title: 'Document Approved',
         message: `Your ${docTypeLabel} has been approved.`,
-        data: { documentId, documentType: document.type },
+        data: { documentId, documentType: document.type, ...(document.bookingId ? { bookingId: document.bookingId } : {}) },
       });
+    }
+
+    // For insurance documents, also notify the vehicle owner
+    if (document.type === 'INSURANCE' && document.booking) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: document.booking.id },
+        include: {
+          option: { include: { vehicle: { select: { make: true, model: true } } } },
+        },
+      });
+      if (booking) {
+        const vName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+        if (newStatus === 'APPROVED') {
+          await safeNotify({
+            userId: booking.ownerId,
+            type: 'DOCUMENT_APPROVED',
+            title: 'Insurance Approved',
+            message: `The vehicle insurance for your ${vName} booking has been approved.`,
+            data: { bookingId: booking.id, documentId },
+          });
+        } else {
+          await safeNotify({
+            userId: booking.ownerId,
+            type: 'DOCUMENT_FLAGGED',
+            title: 'Insurance Flagged',
+            message: `The vehicle insurance uploaded for your ${vName} booking was flagged. The production user has been notified to re-upload.`,
+            data: { bookingId: booking.id, documentId },
+          });
+        }
+      }
     }
 
     // Check if all user documents are approved — activate listing/user
