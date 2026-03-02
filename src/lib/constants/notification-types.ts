@@ -21,4 +21,5 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, { title: string; icon: str
   BOOKING_PAYMENT_READY: { title: 'Payment Ready', icon: 'CreditCard' },
   SHOOT_DETAILS_UPDATED: { title: 'Shoot Details Updated', icon: 'MapPin' },
   VEHICLE_CHECKED_IN: { title: 'Vehicle Checked In', icon: 'CheckCircle' },
+  SPECIAL_REQUEST: { title: 'Special Request', icon: 'Sparkles' },
 };

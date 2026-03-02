@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/services/email';
 import { specialVehicleRequestEmail } from '@/lib/services/email';
+import { safeNotify } from '@/lib/services/notification';
 import { z } from 'zod';
 
 const specialRequestSchema = z.object({
@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
   });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  // Get all admin users to email
+  // Get all admin users
   const admins = await prisma.user.findMany({
-    where: { role: 'ADMIN', emailNotifications: true },
-    select: { email: true },
+    where: { role: 'ADMIN' },
+    select: { id: true, email: true, emailNotifications: true },
   });
 
   const emailContent = specialVehicleRequestEmail(
@@ -47,9 +47,22 @@ export async function POST(request: NextRequest) {
     parsed.data.additionalNotes,
   );
 
-  // Send email to all admins
+  // Send email and in-app notification to all admins
   for (const admin of admins) {
-    await sendEmail({ to: admin.email, ...emailContent });
+    await safeNotify({
+      userId: admin.id,
+      type: 'SPECIAL_REQUEST',
+      title: 'Special Vehicle Request',
+      message: `${user.name} is looking for: ${parsed.data.vehicleDescription}`,
+      data: {
+        productionUserId: session.user.id,
+        productionUserName: user.name,
+        productionUserEmail: user.email,
+        vehicleDescription: parsed.data.vehicleDescription,
+        shootDates: parsed.data.shootDates,
+      },
+      emailContent,
+    });
   }
 
   return NextResponse.json({ success: true });

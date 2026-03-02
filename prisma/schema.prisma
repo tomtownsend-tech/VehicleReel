@@ -126,6 +126,7 @@ enum NotificationType {
   BOOKING_PAYMENT_READY
   SHOOT_DETAILS_UPDATED
   VEHICLE_CHECKED_IN
+  SPECIAL_REQUEST
 }
 
 enum MessageThread {
