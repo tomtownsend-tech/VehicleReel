@@ -42,6 +42,7 @@ function LoginForm() {
           const session = await res.json();
           const role = session?.user?.role;
           if (role === 'ADMIN') router.push('/admin/analytics');
+          else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
           else if (role === 'OWNER') router.push('/owner/vehicles');
           else if (role === 'PRODUCTION') router.push('/production/search');
           else router.push('/');
