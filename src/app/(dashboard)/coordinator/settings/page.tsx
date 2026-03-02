@@ -41,19 +41,19 @@ export default function CoordinatorSettingsPage() {
         <CardContent>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-white/50">Name</dt>
+              <dt className="text-white/60">Name</dt>
               <dd className="font-medium text-white">{session?.user?.name}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-white/50">Email</dt>
+              <dt className="text-white/60">Email</dt>
               <dd className="font-medium text-white">{session?.user?.email}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-white/50">Account Type</dt>
+              <dt className="text-white/60">Account Type</dt>
               <dd className="font-medium text-white">Coordinator</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-white/50">Status</dt>
+              <dt className="text-white/60">Status</dt>
               <dd><Badge variant={statusVariant[session?.user?.status || ''] || 'default'}>{session?.user?.status}</Badge></dd>
             </div>
           </dl>
@@ -66,7 +66,7 @@ export default function CoordinatorSettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">Email Notifications</p>
-              <p className="text-xs text-white/50">Receive email notifications for booking assignments and messages</p>
+              <p className="text-xs text-white/60">Receive email notifications for booking assignments and messages</p>
             </div>
             <Button
               size="sm"
