@@ -19,6 +19,9 @@ interface OptionItem {
   queuePosition: number;
   responseDeadlineAt: string;
   confirmationDeadlineAt: string | null;
+  usageTypes: string[];
+  precisionDriverRequired: boolean;
+  usageDescription: string | null;
   vehicle: { make: string; model: string; year: number; photos: { url: string }[] };
   productionUser: { name: string; email: string; companyName: string | null };
 }
@@ -99,6 +102,23 @@ export default function OwnerOptionsPage() {
                       </span>
                       <span>Queue #{opt.queuePosition}</span>
                     </div>
+                    {opt.usageTypes?.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {opt.usageTypes.map((type) => (
+                          <span key={type} className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                            {type}
+                          </span>
+                        ))}
+                        {opt.precisionDriverRequired && (
+                          <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                            Precision Driver
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {opt.usageDescription && (
+                      <p className="mt-1.5 text-sm text-gray-500 italic">&ldquo;{opt.usageDescription}&rdquo;</p>
+                    )}
                     {opt.status === 'PENDING_RESPONSE' && (
                       <div className="flex items-center gap-1 mt-1 text-xs text-orange-600">
                         <Clock className="h-3 w-3" />

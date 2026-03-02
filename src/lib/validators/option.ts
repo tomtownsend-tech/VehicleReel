@@ -9,6 +9,9 @@ export const createOptionSchema = z.object({
   endDate: z.string().refine((d) => !isNaN(Date.parse(d)), 'Invalid end date'),
   responseDeadlineHours: z.number().int().min(12).max(72),
   confirmationWindowHours: z.number().int().min(12).max(48),
+  usageTypes: z.array(z.string()).min(1, 'Select at least one usage type'),
+  precisionDriverRequired: z.boolean(),
+  usageDescription: z.string().optional(),
 }).refine((data) => {
   const start = toUTCDate(data.startDate);
   const end = toUTCDate(data.endDate);

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
-import { RESPONSE_DEADLINE_PRESETS, CONFIRMATION_WINDOW_PRESETS } from '@/lib/constants';
+import { RESPONSE_DEADLINE_PRESETS, CONFIRMATION_WINDOW_PRESETS, VEHICLE_USAGE_TYPES } from '@/lib/constants';
 import { ArrowLeft } from 'lucide-react';
 
 function PlaceOptionForm() {
@@ -27,6 +27,9 @@ function PlaceOptionForm() {
     endDate: '',
     responseDeadlineHours: '24',
     confirmationWindowHours: '24',
+    usageTypes: [] as string[],
+    precisionDriverRequired: false,
+    usageDescription: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,6 +70,9 @@ function PlaceOptionForm() {
           endDate: form.endDate,
           responseDeadlineHours: parseInt(form.responseDeadlineHours),
           confirmationWindowHours: parseInt(form.confirmationWindowHours),
+          usageTypes: form.usageTypes,
+          precisionDriverRequired: form.precisionDriverRequired,
+          usageDescription: form.usageDescription || undefined,
         }),
       });
 
@@ -177,6 +183,58 @@ function PlaceOptionForm() {
               value={form.confirmationWindowHours}
               onChange={(e) => updateField('confirmationWindowHours', e.target.value)}
             />
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Vehicle Usage</h3>
+
+              <div className="space-y-2 mb-4">
+                <label className="text-sm text-gray-600">How will the vehicle be used? *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {VEHICLE_USAGE_TYPES.map((type) => (
+                    <label key={type} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.usageTypes.includes(type)}
+                        onChange={(e) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            usageTypes: e.target.checked
+                              ? [...prev.usageTypes, type]
+                              : prev.usageTypes.filter((t) => t !== type),
+                          }));
+                        }}
+                        className="rounded border-gray-300 text-black focus:ring-black"
+                      />
+                      {type}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm mb-4">
+                <input
+                  type="checkbox"
+                  checked={form.precisionDriverRequired}
+                  onChange={(e) => setForm((prev) => ({ ...prev, precisionDriverRequired: e.target.checked }))}
+                  className="rounded border-gray-300 text-black focus:ring-black"
+                />
+                Precision driver required
+              </label>
+
+              <div>
+                <label htmlFor="usageDescription" className="block text-sm text-gray-600 mb-1">
+                  Storyboard / Description (optional)
+                </label>
+                <textarea
+                  id="usageDescription"
+                  rows={3}
+                  value={form.usageDescription}
+                  onChange={(e) => setForm((prev) => ({ ...prev, usageDescription: e.target.value }))}
+                  placeholder="Describe how the vehicle will be used in the scene..."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:ring-1 focus:ring-black"
+                />
+              </div>
+            </div>
 
             <Button type="submit" className="w-full" loading={loading}>
               Place Option

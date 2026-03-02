@@ -23,6 +23,15 @@ export const OPTION_STATUS_LABELS: Record<string, string> = {
   DECLINED_ADMIN: 'Declined (Admin)',
 };
 
+export const VEHICLE_USAGE_TYPES = [
+  'Stunt',
+  'Stationary',
+  'Driving',
+  'Background/Extra',
+  'Chase',
+  'Precision Driving',
+] as const;
+
 export const ACTIVE_OPTION_STATUSES = ['PENDING_RESPONSE', 'ACCEPTED'] as const;
 export const TERMINAL_OPTION_STATUSES = [
   'CONFIRMED', 'DECLINED_BY_OWNER', 'EXPIRED_RESPONSE',

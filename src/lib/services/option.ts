@@ -13,6 +13,9 @@ export async function placeOption({
   endDate,
   responseDeadlineHours,
   confirmationWindowHours,
+  usageTypes,
+  precisionDriverRequired,
+  usageDescription,
 }: {
   vehicleId: string;
   productionUserId: string;
@@ -22,6 +25,9 @@ export async function placeOption({
   endDate: string;
   responseDeadlineHours: number;
   confirmationWindowHours: number;
+  usageTypes: string[];
+  precisionDriverRequired: boolean;
+  usageDescription?: string;
 }) {
   const start = toUTCDate(startDate);
   const end = toUTCDate(endDate);
@@ -93,6 +99,9 @@ export async function placeOption({
         responseDeadlineAt,
         queuePosition,
         status: 'PENDING_RESPONSE',
+        usageTypes,
+        precisionDriverRequired,
+        usageDescription,
       },
       include: {
         vehicle: { include: { owner: { select: { id: true, name: true, email: true } } } },

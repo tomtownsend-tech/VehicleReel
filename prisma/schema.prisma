@@ -267,6 +267,9 @@ model Option {
   confirmationWindowHours Int
   responseDeadlineAt      DateTime
   confirmationDeadlineAt  DateTime?
+  usageTypes              String[]
+  precisionDriverRequired Boolean      @default(false)
+  usageDescription        String?
   queuePosition           Int
   acceptedAt              DateTime?
   promotedAt              DateTime?
