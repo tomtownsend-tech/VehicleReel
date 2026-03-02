@@ -39,9 +39,15 @@ export default function NewVehiclePage() {
     driveSide: '',
   });
 
-  // Photos
-  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  // Required photo slots
+  const REQUIRED_PHOTO_LABELS = ['Front', 'Back', 'Left', 'Right', 'Interior'] as const;
+  const [requiredPhotos, setRequiredPhotos] = useState<Record<string, { file: File; preview: string } | null>>({
+    Front: null, Back: null, Left: null, Right: null, Interior: null,
+  });
+
+  // Additional optional photos
+  const [extraPhotoFiles, setExtraPhotoFiles] = useState<File[]>([]);
+  const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
 
   // Documents
   const [documents, setDocuments] = useState<{ type: string; file: File | null; uploaded: boolean }[]>([
@@ -88,36 +94,55 @@ export default function NewVehiclePage() {
     }
   }
 
-  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleRequiredPhotoSelect(label: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImage(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setRequiredPhotos((prev) => ({ ...prev, [label]: { file: compressed, preview: ev.target?.result as string } }));
+    };
+    reader.readAsDataURL(compressed);
+  }
+
+  async function handleExtraPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const rawFiles = Array.from(e.target.files || []);
     const compressed = await Promise.all(rawFiles.map((f) => compressImage(f)));
-    setPhotoFiles((prev) => [...prev, ...compressed]);
+    setExtraPhotoFiles((prev) => [...prev, ...compressed]);
     compressed.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setPhotoPreviews((prev) => [...prev, ev.target?.result as string]);
+        setExtraPreviews((prev) => [...prev, ev.target?.result as string]);
       };
       reader.readAsDataURL(file);
     });
   }
 
-  function removePhoto(index: number) {
-    setPhotoFiles((prev) => prev.filter((_, i) => i !== index));
-    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+  function removeExtraPhoto(index: number) {
+    setExtraPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+    setExtraPreviews((prev) => prev.filter((_, i) => i !== index));
   }
 
+  const allRequiredPhotosAdded = REQUIRED_PHOTO_LABELS.every((label) => requiredPhotos[label] !== null);
+
   async function handlePhotosSubmit() {
-    if (!vehicleId || photoFiles.length === 0) {
-      setStep('documents');
+    if (!vehicleId) return;
+    if (!allRequiredPhotosAdded) {
+      setError('Please upload all 5 required photos before continuing.');
       return;
     }
 
     setError('');
     setLoading(true);
     try {
-      // Upload photos one at a time to stay within Vercel body size limits
+      // Upload required photos first (in order), then extras
+      const allFiles: File[] = [
+        ...REQUIRED_PHOTO_LABELS.map((label) => requiredPhotos[label]!.file),
+        ...extraPhotoFiles,
+      ];
+
       let failures = 0;
-      for (const file of photoFiles) {
+      for (const file of allFiles) {
         const formData = new FormData();
         formData.append('photos', file);
         const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
@@ -324,42 +349,87 @@ export default function NewVehiclePage() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <p className="text-sm text-gray-600">
-              Upload photos of your vehicle. More photos help production teams make decisions.
+              Upload photos of your vehicle. The 5 required angles help production teams evaluate your vehicle.
             </p>
-            <p className="text-xs text-gray-400">
-              Suggested: Front, Back, Left Side, Right Side, Interior Forward, Interior Backward, Engine Bay, Boot/Trunk
-            </p>
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-              <Upload className="h-8 w-8 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-500">Click to upload photos</span>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoSelect}
-              />
-            </label>
-            {photoPreviews.length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {photoPreviews.map((preview, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
-                    <img src={preview} alt="" className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => removePhoto(i)}
-                      className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white"
-                    >
-                      <X className="h-4 w-4 text-gray-600" />
-                    </button>
-                  </div>
-                ))}
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Required Photos</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {REQUIRED_PHOTO_LABELS.map((label) => {
+                  const photo = requiredPhotos[label];
+                  return (
+                    <div key={label} className="relative">
+                      <label className={`flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed cursor-pointer transition-colors overflow-hidden ${
+                        photo ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                      }`}>
+                        {photo ? (
+                          <img src={photo.preview} alt={label} className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">{label} *</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleRequiredPhotoSelect(label, e)}
+                        />
+                      </label>
+                      {photo && (
+                        <button
+                          onClick={() => setRequiredPhotos((prev) => ({ ...prev, [label]: null }))}
+                          className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white z-10"
+                        >
+                          <X className="h-3 w-3 text-gray-600" />
+                        </button>
+                      )}
+                      {photo && (
+                        <span className="absolute bottom-1 left-1 text-xs bg-white/90 text-gray-700 px-1.5 py-0.5 rounded font-medium">{label}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Additional Photos (optional)</h3>
+              <p className="text-xs text-gray-400 mb-3">Engine bay, boot/trunk, detail shots, etc.</p>
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                <span className="text-sm text-gray-500">Click to upload more photos</span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleExtraPhotoSelect}
+                />
+              </label>
+              {extraPreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mt-3">
+                  {extraPreviews.map((preview, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                      <img src={preview} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeExtraPhoto(i)}
+                        className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white"
+                      >
+                        <X className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('details')} className="flex-1">
                 Back
               </Button>
-              <Button onClick={handlePhotosSubmit} loading={loading} className="flex-1">
+              <Button onClick={handlePhotosSubmit} loading={loading} disabled={!allRequiredPhotosAdded} className="flex-1">
                 Next: Documents
               </Button>
             </div>
