@@ -123,7 +123,7 @@ export default function ProductionSearchPage() {
       {/* Filters */}
       {showFilters && (
         <div className="bg-gray-900 rounded-xl border border-white/10 p-4 mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <Select
               id="type"
               options={VEHICLE_TYPES.map((t) => ({ value: t.value, label: t.label }))}
@@ -180,23 +180,21 @@ export default function ProductionSearchPage() {
               onChange={(e) => updateFilter('endDate', e.target.value)}
               placeholder="End date"
             />
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                id="yearMin"
-                type="number"
-                value={filters.yearMin}
-                onChange={(e) => updateFilter('yearMin', e.target.value)}
-                placeholder="Year from"
-              />
-              <Input
-                id="yearMax"
-                type="number"
-                value={filters.yearMax}
-                onChange={(e) => updateFilter('yearMax', e.target.value)}
-                placeholder="Year to"
-              />
-            </div>
-            <div className="col-span-2 md:col-span-4">
+            <Input
+              id="yearMin"
+              type="number"
+              value={filters.yearMin}
+              onChange={(e) => updateFilter('yearMin', e.target.value)}
+              placeholder="Year from"
+            />
+            <Input
+              id="yearMax"
+              type="number"
+              value={filters.yearMax}
+              onChange={(e) => updateFilter('yearMax', e.target.value)}
+              placeholder="Year to"
+            />
+            <div className="sm:col-span-2 md:col-span-4">
               <Input
                 id="specialFeatures"
                 value={filters.specialFeatures}
