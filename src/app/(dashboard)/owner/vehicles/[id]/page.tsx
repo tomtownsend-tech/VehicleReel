@@ -301,7 +301,7 @@ export default function VehicleDetailPage() {
               {vehicle.bookings.map((b) => (
                 <div key={b.id} className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm">
                   <Ban className="h-4 w-4 text-red-400 shrink-0" />
-                  <span className="line-through text-gray-500">
+                  <span className="text-red-600 font-medium">
                     {new Date(b.startDate).toLocaleDateString('en-ZA')} — {new Date(b.endDate).toLocaleDateString('en-ZA')}
                   </span>
                   <Badge variant="danger">Booked</Badge>
