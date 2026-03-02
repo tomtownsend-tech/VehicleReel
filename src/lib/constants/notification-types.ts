@@ -19,4 +19,6 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, { title: string; icon: str
   INSURANCE_OVERDUE: { title: 'Insurance Overdue', icon: 'AlertTriangle' },
   COORDINATOR_ASSIGNED: { title: 'Coordinator Assigned', icon: 'UserCheck' },
   BOOKING_PAYMENT_READY: { title: 'Payment Ready', icon: 'CreditCard' },
+  SHOOT_DETAILS_UPDATED: { title: 'Shoot Details Updated', icon: 'MapPin' },
+  VEHICLE_CHECKED_IN: { title: 'Vehicle Checked In', icon: 'CheckCircle' },
 };

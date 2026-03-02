@@ -211,6 +211,29 @@ export async function checkInDay(bookingId: string, date: string, productionUser
     data: { bookingId, date: checkDate, checkedInBy: productionUserId },
   });
 
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+  const dateDisplay = format(checkDate, 'MMM d, yyyy');
+
+  // Notify owner of check-in
+  await safeNotify({
+    userId: booking.ownerId,
+    type: 'VEHICLE_CHECKED_IN',
+    title: 'Vehicle Checked In',
+    message: `Your ${vehicleName} has been checked in for ${dateDisplay}.`,
+    data: { bookingId },
+  });
+
+  // Notify coordinator of check-in
+  if (booking.coordinatorId) {
+    await safeNotify({
+      userId: booking.coordinatorId,
+      type: 'VEHICLE_CHECKED_IN',
+      title: 'Vehicle Checked In',
+      message: `The ${vehicleName} has been checked in for ${dateDisplay}.`,
+      data: { bookingId },
+    });
+  }
+
   // Check if all days are now checked in
   const totalDays = booking.dailyDetails.length;
   const checkedInCount = booking.checkIns.length + 1; // +1 for the one we just created
@@ -221,7 +244,6 @@ export async function checkInDay(bookingId: string, date: string, productionUser
     });
 
     if (booking.coordinatorId) {
-      const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
       await safeNotify({
         userId: booking.coordinatorId,
         type: 'BOOKING_PAYMENT_READY',
@@ -245,7 +267,10 @@ export async function updateBookingDetails(
     days?: { date: string; callTime?: string; locationAddress?: string; locationPin?: string; notes?: string }[];
   }
 ) {
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { option: { include: { vehicle: { select: { make: true, model: true } } } } },
+  });
   if (!booking) throw new Error('Booking not found');
   if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
 
@@ -272,6 +297,27 @@ export async function updateBookingDetails(
         },
       });
     }
+  }
+
+  // Notify owner
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+  await safeNotify({
+    userId: booking.ownerId,
+    type: 'SHOOT_DETAILS_UPDATED',
+    title: 'Shoot Details Updated',
+    message: `Shoot details have been updated for your ${vehicleName} booking.`,
+    data: { bookingId },
+  });
+
+  // Notify coordinator if assigned
+  if (booking.coordinatorId) {
+    await safeNotify({
+      userId: booking.coordinatorId,
+      type: 'SHOOT_DETAILS_UPDATED',
+      title: 'Shoot Details Updated',
+      message: `Shoot details have been updated for the ${vehicleName} booking.`,
+      data: { bookingId },
+    });
   }
 
   return prisma.booking.findUnique({
