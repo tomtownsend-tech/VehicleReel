@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Car, Filter, X } from 'lucide-react';
+import { Search, MapPin, Car, Filter, X, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { VEHICLE_TYPES, COLORS, LOCATIONS, DRIVE_SIDES } from '@/lib/constants';
 
 interface Vehicle {
@@ -29,6 +30,10 @@ export default function ProductionSearchPage() {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [total, setTotal] = useState(0);
+  const [showSpecialRequest, setShowSpecialRequest] = useState(false);
+  const [specialRequest, setSpecialRequest] = useState({ vehicleDescription: '', shootDates: '', additionalNotes: '' });
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   const [filters, setFilters] = useState({
     type: '',
@@ -80,6 +85,26 @@ export default function ProductionSearchPage() {
         {count === 1 ? '1st option pending' : `${count} options pending`}
       </Badge>
     );
+  }
+
+  async function handleSpecialRequest() {
+    if (!specialRequest.vehicleDescription || !specialRequest.shootDates) return;
+    setSubmittingRequest(true);
+    try {
+      const res = await fetch('/api/vehicles/special-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(specialRequest),
+      });
+      if (res.ok) {
+        setRequestSent(true);
+        setSpecialRequest({ vehicleDescription: '', shootDates: '', additionalNotes: '' });
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSubmittingRequest(false);
+    }
   }
 
   return (
@@ -266,6 +291,90 @@ export default function ProductionSearchPage() {
           ))}
         </div>
       )}
+
+      {/* Special Request Section */}
+      <Card className="mt-8 p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900">Can&apos;t find what you need?</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              We can source specific vehicles that aren&apos;t listed on the platform. Tell us what you&apos;re looking for and our team will get back to you.
+            </p>
+            {!showSpecialRequest && !requestSent && (
+              <Button className="mt-3" onClick={() => setShowSpecialRequest(true)}>
+                <Send className="h-4 w-4 mr-2" />
+                Submit a Special Request
+              </Button>
+            )}
+            {requestSent && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-green-800">Request sent! Our team will be in touch shortly.</p>
+                <button
+                  className="text-sm text-green-600 underline mt-1"
+                  onClick={() => { setRequestSent(false); setShowSpecialRequest(false); }}
+                >
+                  Submit another request
+                </button>
+              </div>
+            )}
+            {showSpecialRequest && !requestSent && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    What vehicle are you looking for? <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="e.g. 1970s muscle car, red Porsche 911, vintage VW Beetle, military vehicle..."
+                    value={specialRequest.vehicleDescription}
+                    onChange={(e) => setSpecialRequest(prev => ({ ...prev, vehicleDescription: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Shoot dates <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="specialShootDates"
+                    placeholder="e.g. March 15-18, 2026"
+                    value={specialRequest.shootDates}
+                    onChange={(e) => setSpecialRequest(prev => ({ ...prev, shootDates: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional notes
+                  </label>
+                  <textarea
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={2}
+                    placeholder="Budget, location preferences, special requirements..."
+                    value={specialRequest.additionalNotes}
+                    onChange={(e) => setSpecialRequest(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSpecialRequest}
+                    loading={submittingRequest}
+                    disabled={!specialRequest.vehicleDescription || !specialRequest.shootDates}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Request
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowSpecialRequest(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

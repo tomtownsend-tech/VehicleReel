@@ -177,6 +177,38 @@ export function insuranceOverdueEmail(productionName: string, vehicleName: strin
   };
 }
 
+export function specialVehicleRequestEmail(
+  productionName: string,
+  productionEmail: string,
+  productionPhone: string | null,
+  companyName: string | null,
+  vehicleDescription: string,
+  shootDates: string,
+  additionalNotes: string,
+) {
+  return {
+    subject: `Special Vehicle Request from ${escapeHtml(productionName)}`,
+    html: `
+      <h2>Special Vehicle Request</h2>
+      <p>A production user has requested a vehicle that may not be listed on VehicleReel.</p>
+      <h3>Requester</h3>
+      <ul>
+        <li><strong>Name:</strong> ${escapeHtml(productionName)}</li>
+        <li><strong>Email:</strong> ${escapeHtml(productionEmail)}</li>
+        ${productionPhone ? `<li><strong>Phone:</strong> ${escapeHtml(productionPhone)}</li>` : ''}
+        ${companyName ? `<li><strong>Company:</strong> ${escapeHtml(companyName)}</li>` : ''}
+      </ul>
+      <h3>Vehicle Details</h3>
+      <ul>
+        <li><strong>Description:</strong> ${escapeHtml(vehicleDescription)}</li>
+        <li><strong>Shoot Dates:</strong> ${escapeHtml(shootDates)}</li>
+      </ul>
+      ${additionalNotes ? `<h3>Additional Notes</h3><p>${escapeHtml(additionalNotes)}</p>` : ''}
+      <p style="margin-top:16px;font-size:12px;color:#6b7280;">This request was submitted via the VehicleReel search page.</p>
+    `,
+  };
+}
+
 export function messageReceivedEmail(userName: string, senderName: string, vehicleName: string) {
   return {
     subject: `New message about ${escapeHtml(vehicleName)}`,
