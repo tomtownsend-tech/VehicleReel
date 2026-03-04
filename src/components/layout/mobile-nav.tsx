@@ -4,8 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Bell } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -50,9 +51,7 @@ export function MobileNav() {
           VehicleReel
         </Link>
         <div className="flex items-center gap-2">
-          <Link href={`/${role?.toLowerCase()}/settings`} className="p-2 text-white/60">
-            <Bell className="h-5 w-5" />
-          </Link>
+          <NotificationBell />
           <button onClick={() => setOpen(!open)} className="p-2 text-white/60">
             {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
