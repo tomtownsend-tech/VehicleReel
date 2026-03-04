@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { specialVehicleRequestEmail } from '@/lib/services/email';
+import { specialVehicleRequestEmail, sendEmail } from '@/lib/services/email';
 import { safeNotify } from '@/lib/services/notification';
 import { z } from 'zod';
+
+const ADMIN_EMAIL = 'vehiclereel@gmail.com';
 
 const specialRequestSchema = z.object({
   vehicleDescription: z.string().min(1, 'Vehicle description is required').max(1000),
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
     parsed.data.additionalNotes,
   );
 
-  // Send email and in-app notification to all admins
+  // Send in-app notification to all admins
   for (const admin of admins) {
     await safeNotify({
       userId: admin.id,
@@ -62,8 +64,18 @@ export async function POST(request: NextRequest) {
         shootDates: parsed.data.shootDates,
         additionalNotes: parsed.data.additionalNotes,
       },
-      emailContent,
     });
+  }
+
+  // Always send email to the monitored admin inbox
+  try {
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: emailContent.subject,
+      html: emailContent.html,
+    });
+  } catch (e) {
+    console.error('Failed to send special request email:', e);
   }
 
   return NextResponse.json({ success: true });
