@@ -32,6 +32,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           status: user.status,
+          isTestAccount: user.isTestAccount,
         };
       },
     }),
@@ -42,6 +43,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as unknown as { role: UserRole }).role;
         token.status = (user as unknown as { status: UserStatus }).status;
+        token.isTestAccount = (user as unknown as { isTestAccount: boolean }).isTestAccount;
         token.lastRefresh = Date.now();
       }
 
@@ -51,11 +53,12 @@ export const authOptions: NextAuthOptions = {
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { status: true, role: true },
+            select: { status: true, role: true, isTestAccount: true },
           });
           if (freshUser) {
             token.status = freshUser.status;
             token.role = freshUser.role;
+            token.isTestAccount = freshUser.isTestAccount;
           }
           token.lastRefresh = Date.now();
         } catch {
@@ -70,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.status = token.status;
+        session.user.isTestAccount = token.isTestAccount;
       }
       return session;
     },

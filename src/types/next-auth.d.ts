@@ -9,6 +9,7 @@ declare module 'next-auth' {
       name: string;
       role: UserRole;
       status: UserStatus;
+      isTestAccount: boolean;
     };
   }
 
@@ -18,6 +19,7 @@ declare module 'next-auth' {
     name: string;
     role: UserRole;
     status: UserStatus;
+    isTestAccount: boolean;
   }
 }
 
@@ -26,5 +28,6 @@ declare module 'next-auth/jwt' {
     id: string;
     role: UserRole;
     status: UserStatus;
+    isTestAccount: boolean;
   }
 }

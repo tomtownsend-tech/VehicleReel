@@ -144,6 +144,7 @@ model User {
   status                UserStatus     @default(PENDING_VERIFICATION)
   companyName           String?
   emailNotifications    Boolean        @default(true)
+  isTestAccount         Boolean        @default(false)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
@@ -451,4 +452,16 @@ model ProjectOption {
   @@id([projectId, optionId])
   @@index([optionId])
   @@map("project_options")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@map("password_reset_tokens")
 }

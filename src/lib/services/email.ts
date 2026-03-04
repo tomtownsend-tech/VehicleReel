@@ -209,6 +209,19 @@ export function specialVehicleRequestEmail(
   };
 }
 
+export function passwordResetEmail(userName: string, resetUrl: string) {
+  return {
+    subject: 'Reset your VehicleReel password',
+    html: `
+      <h2>Password Reset</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>We received a request to reset your password. Click the link below to set a new password:</p>
+      <p><a href="${resetUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">This link expires in 1 hour. If you didn&apos;t request this, you can safely ignore this email.</p>
+    `,
+  };
+}
+
 export function messageReceivedEmail(userName: string, senderName: string, vehicleName: string) {
   return {
     subject: `New message about ${escapeHtml(vehicleName)}`,

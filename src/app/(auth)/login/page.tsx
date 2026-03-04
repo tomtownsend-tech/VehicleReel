@@ -17,6 +17,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const callbackUrl = searchParams.get('callbackUrl');
+  const resetSuccess = searchParams.get('reset') === 'success';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,6 +59,11 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {resetSuccess && (
+        <div className="bg-green-400/10 text-green-400 text-sm rounded-lg p-3">
+          Password reset successfully. Sign in with your new password.
+        </div>
+      )}
       {error && (
         <div className="bg-red-400/10 text-red-400 text-sm rounded-lg p-3">
           {error}
@@ -83,6 +89,12 @@ function LoginForm() {
         placeholder="••••••••"
         required
       />
+
+      <div className="flex justify-end">
+        <Link href="/forgot-password" className="text-xs text-white/50 hover:text-white/80">
+          Forgot password?
+        </Link>
+      </div>
 
       <Button type="submit" className="w-full" loading={loading}>
         Sign in
