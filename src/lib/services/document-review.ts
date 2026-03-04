@@ -190,11 +190,11 @@ export async function reviewDocument(documentId: string) {
   }
 }
 
-async function checkAndActivateUser(userId: string, vehicleId: string | null) {
+export async function checkAndActivateUser(userId: string, vehicleId: string | null) {
   // Fetch user role to determine required documents
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { role: true, status: true },
   });
   if (!user) return;
 
@@ -206,8 +206,9 @@ async function checkAndActivateUser(userId: string, vehicleId: string | null) {
       ? ['SA_ID', 'COMPANY_REGISTRATION']
       : ['SA_ID', 'DRIVERS_LICENSE'];
 
+  // Personal doc types can be uploaded with or without a vehicleId — match by type only
   const personalDocs = await prisma.document.findMany({
-    where: { userId, type: { in: requiredTypes }, vehicleId: null },
+    where: { userId, type: { in: requiredTypes } },
   });
 
   // Check each required type has at least one approved document
@@ -215,15 +216,14 @@ async function checkAndActivateUser(userId: string, vehicleId: string | null) {
     personalDocs.some((d) => d.type === type && d.status === 'APPROVED')
   );
 
-  if (allPersonalApproved) {
-    // Activate user
+  if (allPersonalApproved && user.status !== 'VERIFIED') {
     await prisma.user.update({
       where: { id: userId },
       data: { status: 'VERIFIED' },
     });
   }
 
-  // Check vehicle docs (only relevant for owners)
+  // Activate vehicle if vehicle registration is approved and user is verified
   if (vehicleId) {
     const vehicleDocs = await prisma.document.findMany({
       where: { vehicleId, type: 'VEHICLE_REGISTRATION' },
@@ -231,7 +231,7 @@ async function checkAndActivateUser(userId: string, vehicleId: string | null) {
     const vehicleDocsApproved = vehicleDocs.length > 0 &&
       vehicleDocs.every((d) => d.status === 'APPROVED');
 
-    if (allPersonalApproved && vehicleDocsApproved) {
+    if ((allPersonalApproved || user.status === 'VERIFIED') && vehicleDocsApproved) {
       await prisma.vehicle.update({
         where: { id: vehicleId },
         data: { status: 'ACTIVE' },

@@ -20,6 +20,6 @@ export default async function QRLandingPage() {
     }
   }
 
-  // New user - route to register (no role pre-selected so they create their profile first)
-  redirect('/register');
+  // New user - route to landing page
+  redirect('/');
 }

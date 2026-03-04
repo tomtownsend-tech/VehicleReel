@@ -1,7 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let _supabase: SupabaseClient | null = null;
-let _supabaseClient: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
@@ -11,14 +10,4 @@ export function getSupabase(): SupabaseClient {
     );
   }
   return _supabase;
-}
-
-export function getSupabaseClient(): SupabaseClient {
-  if (!_supabaseClient) {
-    _supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _supabaseClient;
 }

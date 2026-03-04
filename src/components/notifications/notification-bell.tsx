@@ -73,10 +73,17 @@ export function NotificationBell() {
     const data = n.data as Record<string, string> | undefined;
     if (!data) return null;
     if (n.type === 'SPECIAL_REQUEST') return '/admin/special-requests';
+    if (userRole === 'ADMIN') {
+      if (data.documentId) return '/admin/documents';
+      if (data.bookingId) return `/admin/bookings/${data.bookingId}`;
+      if (data.vehicleId) return `/admin/vehicles/${data.vehicleId}`;
+      return null;
+    }
     const prefix = userRole === 'COORDINATOR' ? '/coordinator' : userRole === 'PRODUCTION' ? '/production' : '/owner';
     if (data.bookingId) return `${prefix}/bookings/${data.bookingId}`;
     if (data.optionId) return `${prefix}/options`;
     if (data.vehicleId) return `${prefix}/vehicles/${data.vehicleId}`;
+    if (data.documentId) return `${prefix}/settings`;
     return null;
   }
 

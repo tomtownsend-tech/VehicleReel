@@ -209,6 +209,20 @@ export function specialVehicleRequestEmail(
   };
 }
 
+export function pendingDocumentReminderEmail(userName: string, missingDocuments: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+  return {
+    subject: 'Complete your VehicleReel verification',
+    html: `
+      <h2>Document Upload Reminder</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>Your VehicleReel account is almost ready! Please upload your <strong>${escapeHtml(missingDocuments)}</strong> to complete verification.</p>
+      <p><a href="${baseUrl}/owner/settings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Documents</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+    `,
+  };
+}
+
 export function passwordResetEmail(userName: string, resetUrl: string) {
   return {
     subject: 'Reset your VehicleReel password',

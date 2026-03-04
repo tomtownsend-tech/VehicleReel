@@ -53,7 +53,7 @@ export async function PATCH(
       : ['SA_ID', 'DRIVERS_LICENSE'];
 
     const personalApproved = requiredTypes.every((type) =>
-      allUserDocs.some((d) => d.type === type && !d.vehicleId && d.status === 'APPROVED')
+      allUserDocs.some((d) => d.type === type && d.status === 'APPROVED')
     );
 
     if (personalApproved) {
@@ -67,7 +67,8 @@ export async function PATCH(
       const vehicleDocs = allUserDocs.filter(
         (d) => d.vehicleId === document.vehicleId && d.type === 'VEHICLE_REGISTRATION'
       );
-      if (personalApproved && vehicleDocs.every((d) => d.status === 'APPROVED')) {
+      const userIsVerified = personalApproved || docUser?.role === 'OWNER' && (await prisma.user.findUnique({ where: { id: document.userId }, select: { status: true } }))?.status === 'VERIFIED';
+      if (userIsVerified && vehicleDocs.length > 0 && vehicleDocs.every((d) => d.status === 'APPROVED')) {
         await prisma.vehicle.update({
           where: { id: document.vehicleId },
           data: { status: 'ACTIVE' },
