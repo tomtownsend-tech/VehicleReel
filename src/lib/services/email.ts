@@ -28,7 +28,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
 }
 
 export function optionPlacedEmail(ownerName: string, vehicleName: string, productionUser: string, rate: string, dates: string, deadline: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `New option on your ${escapeHtml(vehicleName)}`,
     html: `
@@ -120,7 +120,7 @@ export function documentStatusEmail(userName: string, docType: string, status: s
 }
 
 export function documentFlaggedEmail(userName: string, docType: string, reason: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `Document rejected: ${escapeHtml(docType)}`,
     html: `
@@ -148,7 +148,7 @@ export function documentExpiringEmail(userName: string, docType: string, expiryD
 }
 
 export function insuranceReminderEmail(productionName: string, vehicleName: string, deadlineDate: string, bookingId: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `Insurance required for ${escapeHtml(vehicleName)} booking`,
     html: `
@@ -163,7 +163,7 @@ export function insuranceReminderEmail(productionName: string, vehicleName: stri
 }
 
 export function insuranceOverdueEmail(productionName: string, vehicleName: string, bookingId: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.vercel.app';
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `URGENT: Insurance overdue for ${escapeHtml(vehicleName)} booking`,
     html: `

@@ -2,19 +2,19 @@
   "crons": [
     {
       "path": "/api/cron/expire-options",
-      "schedule": "0 0 * * *"
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/expire-documents",
-      "schedule": "0 6 * * *"
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/review-queue",
-      "schedule": "0 12 * * *"
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/insurance-reminders",
-      "schedule": "0 8 * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }
