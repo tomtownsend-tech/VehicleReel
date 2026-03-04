@@ -151,13 +151,22 @@ export default function NewVehiclePage() {
         });
         if (!res.ok) failures++;
       }
+
+      // Verify server-side that at least 5 photos were saved
+      const checkRes = await fetch(`/api/vehicles/${vehicleId}/photos/count`);
+      const { count } = await checkRes.json();
+
+      if (count < 5) {
+        setError(`Only ${count} of 5 required photos uploaded successfully. Please re-upload the missing ones.`);
+        return;
+      }
+
       if (failures > 0) {
-        setError(`${failures} photo(s) failed to upload. You can try again later from the vehicle detail page.`);
+        setError(`${failures} extra photo(s) failed, but all required photos are uploaded. Continuing...`);
       }
       setStep('documents');
     } catch {
-      setError('Photo upload failed. You can try again later from the vehicle detail page.');
-      setStep('documents');
+      setError('Photo upload failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,28 +179,47 @@ export default function NewVehiclePage() {
   }
 
   async function handleFinish() {
+    if (!vehicleId) return;
     setLoading(true);
     setError('');
+
+    // Final server-side check: vehicle must have at least 5 photos
+    try {
+      const checkRes = await fetch(`/api/vehicles/${vehicleId}/photos/count`);
+      const { count } = await checkRes.json();
+      if (count < 5) {
+        setError('Your vehicle needs at least 5 photos. Please go back and upload them.');
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError('Could not verify photos. Please try again.');
+      setLoading(false);
+      return;
+    }
+
     try {
       // Upload all pending documents
       const pending = documents.filter((d) => d.file && !d.uploaded);
-      const results = await Promise.allSettled(
-        pending.map(async (doc) => {
-          if (!doc.file || !vehicleId) return;
-          const formData = new FormData();
-          formData.append('file', doc.file);
-          formData.append('type', doc.type);
-          formData.append('vehicleId', vehicleId);
-          const res = await fetch('/api/documents', { method: 'POST', body: formData });
-          if (!res.ok) {
-            const data = await res.json().catch(() => null);
-            throw new Error(data?.error || 'Upload failed');
-          }
-        })
-      );
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        setError(`${failed.length} document(s) failed to upload. You can retry from settings later.`);
+      if (pending.length > 0) {
+        const results = await Promise.allSettled(
+          pending.map(async (doc) => {
+            if (!doc.file || !vehicleId) return;
+            const formData = new FormData();
+            formData.append('file', doc.file);
+            formData.append('type', doc.type);
+            formData.append('vehicleId', vehicleId);
+            const res = await fetch('/api/documents', { method: 'POST', body: formData });
+            if (!res.ok) {
+              const data = await res.json().catch(() => null);
+              throw new Error(data?.error || 'Upload failed');
+            }
+          })
+        );
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          setError(`${failed.length} document(s) failed to upload. You can retry from settings later.`);
+        }
       }
     } catch {
       // Continue to redirect even if some uploads fail
@@ -442,7 +470,7 @@ export default function NewVehiclePage() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <p className="text-sm text-white/60">
-              Upload your verification documents. These will be reviewed to activate your listing.
+              Upload your verification documents to activate your listing. You can skip this and upload them later from Settings.
             </p>
             {documents.map((doc, i) => (
               <div key={doc.type} className="border border-white/10 rounded-lg p-4">
@@ -479,7 +507,7 @@ export default function NewVehiclePage() {
                 Back
               </Button>
               <Button onClick={handleFinish} loading={loading} className="flex-1">
-                Submit for Review
+                {documents.some((d) => d.file) ? 'Upload & Finish' : 'Finish'}
               </Button>
             </div>
           </CardContent>
