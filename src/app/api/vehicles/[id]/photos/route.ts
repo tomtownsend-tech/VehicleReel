@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSupabase } from '@/lib/supabase';
+import { detectAndBlurPlates } from '@/lib/services/plate-blur';
 
 export const runtime = 'nodejs';
 
@@ -58,9 +59,14 @@ export async function POST(
       const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
 
       const buffer = Buffer.from(await file.arrayBuffer());
+
+      // Detect and blur license plates
+      const { processedBuffer, hasPlates } = await detectAndBlurPlates(buffer);
+
+      // Upload processed (blurred) image as public photo
       const { error } = await supabase.storage
         .from('vehicle-photos')
-        .upload(path, buffer, { contentType });
+        .upload(path, processedBuffer, { contentType });
 
       if (error) {
         console.error('Supabase upload error:', error);
@@ -71,12 +77,31 @@ export async function POST(
         .from('vehicle-photos')
         .getPublicUrl(path);
 
+      // If plates were found, also upload original for owner/admin viewing
+      let originalUrl: string | null = null;
+      if (hasPlates) {
+        const originalPath = `vehicles/${params.id}/originals/${Date.now()}-${i}.${ext}`;
+        const { error: origError } = await supabase.storage
+          .from('vehicle-photos')
+          .upload(originalPath, buffer, { contentType });
+
+        if (!origError) {
+          const { data: origUrlData } = supabase.storage
+            .from('vehicle-photos')
+            .getPublicUrl(originalPath);
+          originalUrl = origUrlData.publicUrl;
+        } else {
+          console.error('Original photo upload error:', origError);
+        }
+      }
+
       const photoOrder = orderOverride !== null ? parseInt(orderOverride as string) : existingCount + i;
 
       const photo = await prisma.vehiclePhoto.create({
         data: {
           vehicleId: params.id,
           url: urlData.publicUrl,
+          originalUrl,
           order: photoOrder,
         },
       });
@@ -116,8 +141,14 @@ export async function DELETE(
     }
 
     const path = photo.url.split('/vehicle-photos/')[1];
-    if (path) {
-      await supabase.storage.from('vehicle-photos').remove([path]);
+    const pathsToDelete: string[] = [];
+    if (path) pathsToDelete.push(path);
+    if (photo.originalUrl) {
+      const origPath = photo.originalUrl.split('/vehicle-photos/')[1];
+      if (origPath) pathsToDelete.push(origPath);
+    }
+    if (pathsToDelete.length > 0) {
+      await supabase.storage.from('vehicle-photos').remove(pathsToDelete);
     }
 
     await prisma.vehiclePhoto.delete({ where: { id: photoId } });

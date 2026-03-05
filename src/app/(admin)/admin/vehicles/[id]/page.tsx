@@ -21,7 +21,7 @@ interface Vehicle {
   location: string;
   status: string;
   owner: { id: string; name: string; email: string; phone: string | null };
-  photos: { id: string; url: string; order: number }[];
+  photos: { id: string; url: string; originalUrl: string | null; order: number }[];
   documents: { id: string; type: string; status: string }[];
   availability: { id: string; startDate: string; endDate: string; reason: string | null }[];
   options: { id: string; status: string; startDate: string; endDate: string; queuePosition: number }[];
@@ -110,7 +110,7 @@ export default function AdminVehicleDetailPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
           {vehicle.photos.map((photo) => (
             <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-gray-800">
-              <img src={photo.url} alt="" className="w-full h-full object-cover" />
+              <img src={photo.originalUrl || photo.url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}
         </div>

@@ -22,7 +22,7 @@ interface Vehicle {
   specialFeatures: string[];
   location: string;
   status: string;
-  photos: { id: string; url: string; order: number }[];
+  photos: { id: string; url: string; originalUrl: string | null; order: number }[];
   documents: { id: string; type: string; status: string }[];
   availability: { id: string; startDate: string; endDate: string; reason: string | null }[];
   bookings: { id: string; startDate: string; endDate: string }[];
@@ -212,7 +212,7 @@ export default function VehicleDetailPage() {
                     <div key={label} className="relative">
                       {photo ? (
                         <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 group">
-                          <img src={photo.url} alt={label} className="w-full h-full object-cover" />
+                          <img src={photo.originalUrl || photo.url} alt={label} className="w-full h-full object-cover" />
                           <span className="absolute bottom-1 left-1 text-xs bg-gray-900/90 text-white/70 px-1.5 py-0.5 rounded font-medium">{label}</span>
                           <button
                             onClick={() => deletePhoto(photo.id)}
@@ -244,7 +244,7 @@ export default function VehicleDetailPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {extraPhotos.map((photo) => (
                   <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 group">
-                    <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                    <img src={photo.originalUrl || photo.url} alt="" className="w-full h-full object-cover" />
                     <button
                       onClick={() => deletePhoto(photo.id)}
                       disabled={deletingPhotoId === photo.id}

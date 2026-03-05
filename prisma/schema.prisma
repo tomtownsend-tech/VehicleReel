@@ -251,11 +251,12 @@ model Vehicle {
 }
 
 model VehiclePhoto {
-  id        String   @id @default(cuid())
-  vehicleId String
-  url       String
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  vehicleId   String
+  url         String
+  originalUrl String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
 
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
