@@ -38,20 +38,27 @@ export async function createNotification({
     },
   });
 
-  // Send email if user has email notifications enabled
-  if (emailContent) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, emailNotifications: true },
-    });
+  // Always send email for non-admin users (use provided template or auto-generate)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, emailNotifications: true, role: true, name: true },
+  });
 
-    if (user?.emailNotifications) {
-      await sendEmail({
-        to: user.email,
-        subject: emailContent.subject,
-        html: emailContent.html,
-      });
-    }
+  if (user?.emailNotifications && user.role !== 'ADMIN') {
+    const email = emailContent || {
+      subject: `VehicleReel: ${title}`,
+      html: `
+        <h2>${title}</h2>
+        <p>Hi ${user.name || 'there'},</p>
+        <p>${message}</p>
+        <p style="margin-top:16px;font-size:12px;color:#6b7280;">Log in to <a href="${process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za'}">VehicleReel</a> for more details.</p>
+      `,
+    };
+    await sendEmail({
+      to: user.email,
+      subject: email.subject,
+      html: email.html,
+    });
   }
 
   return notification;
