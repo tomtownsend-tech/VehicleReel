@@ -29,7 +29,16 @@ export async function reviewDocument(documentId: string) {
     const response = await fetch(document.fileUrl);
     const buffer = await response.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
-    const mimeType = document.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg';
+    const ext = document.fileName.split('.').pop()?.toLowerCase();
+    const mimeMap: Record<string, string> = {
+      pdf: 'application/pdf',
+      png: 'image/png',
+      webp: 'image/webp',
+      gif: 'image/gif',
+      heic: 'image/heic',
+      heif: 'image/heif',
+    };
+    const mimeType = mimeMap[ext || ''] || 'image/jpeg';
 
     const result = await model.generateContent([
       prompt,
