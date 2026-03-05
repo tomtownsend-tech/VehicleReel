@@ -5,7 +5,7 @@ import { todayUTC } from '@/lib/utils/date';
 import { safeNotify } from '@/lib/services/notification';
 import { pendingDocumentReminderEmail } from '@/lib/services/email';
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
