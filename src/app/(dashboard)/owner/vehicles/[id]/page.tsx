@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X, Ban } from 'lucide-react';
+import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X, Ban, FileUp, Check, Loader2 } from 'lucide-react';
 import { compressImage } from '@/lib/utils/compress-image';
 
 interface Vehicle {
@@ -47,6 +47,7 @@ export default function VehicleDetailPage() {
   const [showBlockForm, setShowBlockForm] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [docUploading, setDocUploading] = useState<string | null>(null);
 
   const REQUIRED_PHOTO_LABELS = ['Front', 'Back', 'Left', 'Right', 'Interior'] as const;
 
@@ -126,6 +127,34 @@ export default function VehicleDetailPage() {
       setVehicle((prev) =>
         prev ? { ...prev, availability: prev.availability.filter((b) => b.id !== blockId) } : prev
       );
+    }
+  }
+
+  const REQUIRED_DOC_TYPES = [
+    { type: 'SA_ID', label: 'South African ID' },
+    { type: 'DRIVERS_LICENSE', label: "Driver's License" },
+    { type: 'VEHICLE_REGISTRATION', label: 'Vehicle Registration' },
+  ] as const;
+
+  async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !vehicle) return;
+    setDocUploading(docType);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', docType);
+      formData.append('vehicleId', vehicle.id);
+      const res = await fetch('/api/documents', { method: 'POST', body: formData });
+      if (res.ok) {
+        const doc = await res.json();
+        setVehicle((prev) =>
+          prev ? { ...prev, documents: [...prev.documents, { id: doc.id, type: doc.type, status: doc.status }] } : prev
+        );
+      }
+    } finally {
+      setDocUploading(null);
+      e.target.value = '';
     }
   }
 
@@ -275,20 +304,53 @@ export default function VehicleDetailPage() {
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Documents</h2></CardHeader>
         <CardContent>
-          {vehicle.documents.length === 0 ? (
-            <p className="text-sm text-white/50">No documents uploaded yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {vehicle.documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                  <span className="text-sm font-medium">{doc.type.replace('_', ' ')}</span>
-                  <Badge variant={doc.status === 'APPROVED' ? 'success' : doc.status === 'FLAGGED' ? 'danger' : 'warning'}>
-                    {doc.status.replace('_', ' ')}
-                  </Badge>
+          <div className="space-y-3">
+            {REQUIRED_DOC_TYPES.map(({ type, label }) => {
+              const existing = vehicle.documents.filter((d) => d.type === type);
+              const approved = existing.find((d) => d.status === 'APPROVED');
+              const pending = existing.find((d) => d.status === 'PENDING_REVIEW');
+              const flagged = existing.find((d) => d.status === 'FLAGGED');
+              const canUpload = !approved && !pending;
+
+              return (
+                <div key={type} className="border border-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-white">{label}</span>
+                    {approved ? (
+                      <Badge variant="success">
+                        <Check className="h-3 w-3 mr-1" /> Approved
+                      </Badge>
+                    ) : pending ? (
+                      <Badge variant="warning">Pending Review</Badge>
+                    ) : flagged ? (
+                      <Badge variant="danger">Flagged</Badge>
+                    ) : (
+                      <Badge variant="default">Not Uploaded</Badge>
+                    )}
+                  </div>
+                  {flagged && (
+                    <p className="text-xs text-red-400 mt-1">This document was flagged. Please re-upload.</p>
+                  )}
+                  {canUpload && (
+                    <label className={`mt-3 flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-white/15 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${docUploading === type ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {docUploading === type ? (
+                        <><Loader2 className="h-4 w-4 text-white/50 animate-spin" /><span className="text-sm text-white/50">Uploading...</span></>
+                      ) : (
+                        <><FileUp className="h-4 w-4 text-white/50" /><span className="text-sm text-white/50">Upload {label}</span></>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        onChange={(e) => handleDocUpload(type, e)}
+                        disabled={docUploading === type}
+                      />
+                    </label>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 
