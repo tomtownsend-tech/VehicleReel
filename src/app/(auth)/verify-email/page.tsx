@@ -33,12 +33,12 @@ function VerifyEmailContent() {
       }
       setStatus('success');
       // Refresh the session so emailVerified updates in the JWT
-      await update();
+      const updated = await update();
       // Redirect to role-based dashboard after a brief pause
       setTimeout(() => {
-        const role = session?.user?.role;
-        if (role === 'OWNER') router.push('/owner/vehicles');
-        else if (role === 'PRODUCTION') router.push('/production/search');
+        const role = updated?.user?.role || session?.user?.role;
+        if (role === 'OWNER') router.push('/owner/vehicles/new');
+        else if (role === 'PRODUCTION') router.push('/production/documents');
         else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
         else if (role === 'ADMIN') router.push('/admin/analytics');
         else router.push('/');
