@@ -75,6 +75,18 @@ export function MobileNav() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href="/faq"
+            onClick={() => setOpen(false)}
+            className={cn(
+              'block px-3 py-2 rounded-lg text-sm font-medium',
+              pathname === '/faq'
+                ? 'bg-white/10 text-white'
+                : 'text-white/60 hover:bg-white/5'
+            )}
+          >
+            FAQ
+          </Link>
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5"

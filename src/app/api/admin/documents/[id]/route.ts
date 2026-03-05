@@ -30,7 +30,7 @@ export async function PATCH(
   const docTypeLabels: Record<string, string> = {
     SA_ID: 'South African ID',
     DRIVERS_LICENSE: "Driver's License",
-    VEHICLE_REGISTRATION: 'Vehicle Registration',
+    VEHICLE_REGISTRATION: 'Vehicle License Disk',
     COMPANY_REGISTRATION: 'Company Registration',
   };
   const docLabel = docTypeLabels[document.type] || document.type;

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     SA_ID: 'South African ID',
     DRIVERS_LICENSE: "Driver's License",
     COMPANY_REGISTRATION: 'Company Registration',
-    VEHICLE_REGISTRATION: 'Vehicle Registration',
+    VEHICLE_REGISTRATION: 'Vehicle License Disk',
   };
 
   for (const user of incompleteUsers) {
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         }
         const hasApprovedReg = vehicle.documents.some((d) => d.status === 'APPROVED');
         if (!hasApprovedReg) {
-          actionItems.push(`Upload Vehicle Registration for your ${vName}`);
+          actionItems.push(`Upload Vehicle License Disk for your ${vName}`);
         }
       }
     }

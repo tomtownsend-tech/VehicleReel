@@ -131,9 +131,7 @@ export default function VehicleDetailPage() {
   }
 
   const REQUIRED_DOC_TYPES = [
-    { type: 'SA_ID', label: 'South African ID' },
-    { type: 'DRIVERS_LICENSE', label: "Driver's License" },
-    { type: 'VEHICLE_REGISTRATION', label: 'Vehicle Registration' },
+    { type: 'VEHICLE_REGISTRATION', label: 'Vehicle License Disk' },
   ] as const;
 
   async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>) {

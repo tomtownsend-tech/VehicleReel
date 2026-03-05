@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Car, Search, FileText, Calendar, Settings, LogOut,
-  Users, BarChart3, Shield, BookOpen, Sparkles, FolderOpen,
+  Users, BarChart3, Shield, BookOpen, Sparkles, FolderOpen, HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -78,6 +78,18 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-white/10">
+        <Link
+          href="/faq"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 mb-2 rounded-lg text-sm font-medium transition-colors',
+            pathname === '/faq'
+              ? 'bg-white/10 text-white'
+              : 'text-white/60 hover:bg-white/5 hover:text-white'
+          )}
+        >
+          <HelpCircle className="h-5 w-5" />
+          FAQ
+        </Link>
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
             <span className="text-sm font-medium text-white">

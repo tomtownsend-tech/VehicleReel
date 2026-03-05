@@ -55,12 +55,12 @@ Respond in JSON format:
   "recommendation": "APPROVE" or "FLAG"
 }`,
 
-  VEHICLE_REGISTRATION: `You are reviewing a document that should be a South African Vehicle Registration document.
+  VEHICLE_REGISTRATION: `You are reviewing a document that should be a South African Vehicle License Disk.
 
-CRITICAL FIRST CHECK: Determine if this is actually a vehicle registration document. If it is any other type of document (driver's license, ID book, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+CRITICAL FIRST CHECK: Determine if this is actually a vehicle license disk. If it is any other type of document (driver's license, ID book, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
 
 Then analyze:
-1. Is this actually a vehicle registration document?
+1. Is this actually a vehicle license disk?
 2. Is the document clearly readable?
 3. Does it appear authentic?
 4. Extract: vehicle make, model, year, registration number, owner name, expiry date.
@@ -147,7 +147,7 @@ Respond in JSON format:
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   SA_ID: 'South African ID',
   DRIVERS_LICENSE: "Driver's License",
-  VEHICLE_REGISTRATION: 'Vehicle Registration',
+  VEHICLE_REGISTRATION: 'Vehicle License Disk',
   COMPANY_REGISTRATION: 'Company Registration',
   INSURANCE: 'Vehicle Insurance',
 };

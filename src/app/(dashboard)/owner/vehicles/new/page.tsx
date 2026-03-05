@@ -51,8 +51,6 @@ export default function NewVehiclePage() {
 
   // Documents
   const [documents, setDocuments] = useState<{ type: string; file: File | null; uploaded: boolean }[]>([
-    { type: 'SA_ID', file: null, uploaded: false },
-    { type: 'DRIVERS_LICENSE', file: null, uploaded: false },
     { type: 'VEHICLE_REGISTRATION', file: null, uploaded: false },
   ]);
 
@@ -232,9 +230,7 @@ export default function NewVehiclePage() {
   const stepIndex = STEPS.findIndex((s) => s.key === step);
 
   const docLabels: Record<string, string> = {
-    SA_ID: 'South African ID',
-    DRIVERS_LICENSE: "Driver's License",
-    VEHICLE_REGISTRATION: 'Vehicle Registration',
+    VEHICLE_REGISTRATION: 'Vehicle License Disk',
   };
 
   return (
