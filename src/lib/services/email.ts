@@ -223,6 +223,23 @@ export function pendingDocumentReminderEmail(userName: string, missingDocuments:
   };
 }
 
+export function setupReminderEmail(userName: string, actionItems: string[], role: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+  const dashboardUrl = role === 'PRODUCTION' ? `${baseUrl}/production/documents` : `${baseUrl}/owner/vehicles`;
+  const itemsHtml = actionItems.map((item) => `<li style="margin-bottom:6px;">${escapeHtml(item)}</li>`).join('');
+  return {
+    subject: 'Finish setting up your VehicleReel profile',
+    html: `
+      <h2>Complete Your Setup</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>Your VehicleReel account still needs a few things before it&rsquo;s fully active. Here&rsquo;s what&rsquo;s outstanding:</p>
+      <ul style="padding-left:20px;color:#374151;">${itemsHtml}</ul>
+      <p><a href="${dashboardUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Complete Setup</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+    `,
+  };
+}
+
 export function emailVerificationEmail(userName: string, verifyUrl: string) {
   return {
     subject: 'Verify your VehicleReel email',
