@@ -10,6 +10,7 @@ declare module 'next-auth' {
       role: UserRole;
       status: UserStatus;
       isTestAccount: boolean;
+      emailVerified: boolean;
     };
   }
 
@@ -20,6 +21,7 @@ declare module 'next-auth' {
     role: UserRole;
     status: UserStatus;
     isTestAccount: boolean;
+    emailVerified: boolean;
   }
 }
 
@@ -29,5 +31,6 @@ declare module 'next-auth/jwt' {
     role: UserRole;
     status: UserStatus;
     isTestAccount: boolean;
+    emailVerified: boolean;
   }
 }

@@ -43,6 +43,7 @@ async function main() {
         role: u.role,
         status: 'VERIFIED',
         isTestAccount: true,
+        emailVerified: true,
       },
     });
     console.log(`Created ${u.role}: ${u.email}`);

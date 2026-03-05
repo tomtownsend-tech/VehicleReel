@@ -17,6 +17,12 @@ export default withAuth(
       return NextResponse.redirect(url);
     }
 
+    // Email verification gate — must verify email before accessing any dashboard
+    // Skip for ADMIN role (always seeded test accounts)
+    if (token.emailVerified === false && token.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/verify-email', req.url));
+    }
+
     // Admin routes
     if (pathname.startsWith('/admin') && token.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/login', req.url));

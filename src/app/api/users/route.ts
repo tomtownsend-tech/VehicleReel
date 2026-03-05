@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { registerSchema } from '@/lib/validators/auth';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { sendEmail, emailVerificationEmail } from '@/lib/services/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +55,21 @@ export async function POST(request: NextRequest) {
         status: true,
       },
     });
+
+    // Send verification email
+    const token = crypto.randomUUID();
+    await prisma.emailVerificationToken.create({
+      data: {
+        email: user.email,
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+    const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
+    const { subject, html } = emailVerificationEmail(user.name, verifyUrl);
+    await sendEmail({ to: user.email, subject, html });
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {

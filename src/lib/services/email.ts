@@ -223,6 +223,19 @@ export function pendingDocumentReminderEmail(userName: string, missingDocuments:
   };
 }
 
+export function emailVerificationEmail(userName: string, verifyUrl: string) {
+  return {
+    subject: 'Verify your VehicleReel email',
+    html: `
+      <h2>Verify Your Email</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>Welcome to VehicleReel! Please verify your email address by clicking the button below:</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Verify Email</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">This link expires in 24 hours. If you didn&apos;t create this account, you can safely ignore this email.</p>
+    `,
+  };
+}
+
 export function passwordResetEmail(userName: string, resetUrl: string) {
   return {
     subject: 'Reset your VehicleReel password',

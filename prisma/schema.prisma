@@ -143,6 +143,7 @@ model User {
   role                  UserRole
   status                UserStatus     @default(PENDING_VERIFICATION)
   companyName           String?
+  emailVerified         Boolean        @default(false)
   emailNotifications    Boolean        @default(true)
   isTestAccount         Boolean        @default(false)
   createdAt             DateTime       @default(now())
@@ -464,4 +465,16 @@ model PasswordResetToken {
   @@index([email])
   @@index([token])
   @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@map("email_verification_tokens")
 }
