@@ -36,12 +36,12 @@ function VerifyEmailContent() {
       const updated = await update();
       // Redirect to role-based dashboard after a brief pause
       setTimeout(() => {
-        const role = updated?.user?.role || session?.user?.role;
-        if (role === 'OWNER') router.push('/owner/vehicles/new');
-        else if (role === 'PRODUCTION') router.push('/production/documents');
+        const role = data.role || updated?.user?.role || session?.user?.role;
+        if (role === 'OWNER') router.push('/owner/settings');
+        else if (role === 'PRODUCTION') router.push('/production/settings');
         else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
         else if (role === 'ADMIN') router.push('/admin/analytics');
-        else router.push('/');
+        else router.push('/login');
         router.refresh();
       }, 1500);
     } catch {
