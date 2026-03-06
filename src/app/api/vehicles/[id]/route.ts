@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getSupabase } from '@/lib/supabase';
 import { updateVehicleSchema } from '@/lib/validators/vehicle';
 
 export async function GET(
@@ -86,6 +87,28 @@ export async function DELETE(
   if (vehicle.ownerId !== session.user.id && session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  // Clean up storage files
+  const photos = await prisma.vehiclePhoto.findMany({
+    where: { vehicleId: params.id },
+    select: { url: true, originalUrl: true },
+  });
+  const documents = await prisma.document.findMany({
+    where: { vehicleId: params.id },
+    select: { fileUrl: true },
+  });
+
+  const supabase = getSupabase();
+  const photoPaths = photos.flatMap((p) => {
+    const paths: string[] = [];
+    if (p.url) paths.push(p.url.split('/vehicle-photos/')[1]);
+    if (p.originalUrl) paths.push(p.originalUrl.split('/vehicle-photos/')[1]);
+    return paths;
+  }).filter(Boolean);
+  const docPaths = documents.map((d) => d.fileUrl.split('/documents/')[1]).filter(Boolean);
+
+  if (photoPaths.length > 0) await supabase.storage.from('vehicle-photos').remove(photoPaths);
+  if (docPaths.length > 0) await supabase.storage.from('documents').remove(docPaths);
 
   await prisma.vehicle.delete({ where: { id: params.id } });
   return NextResponse.json({ success: true });

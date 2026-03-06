@@ -49,6 +49,9 @@ export default function VehicleDetailPage() {
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [docUploading, setDocUploading] = useState<string | null>(null);
   const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
+  const [showDeleteVehicle, setShowDeleteVehicle] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deletingVehicle, setDeletingVehicle] = useState(false);
 
   const REQUIRED_PHOTO_LABELS = ['Front', 'Back', 'Left', 'Right', 'Interior'] as const;
 
@@ -146,6 +149,18 @@ export default function VehicleDetailPage() {
   const VEHICLE_DOC_TYPES = [
     { type: 'VEHICLE_REGISTRATION', label: 'Vehicle License Disk' },
   ] as const;
+
+  async function handleDeleteVehicle() {
+    setDeletingVehicle(true);
+    try {
+      const res = await fetch(`/api/vehicles/${params.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push('/owner/vehicles');
+      }
+    } finally {
+      setDeletingVehicle(false);
+    }
+  }
 
   async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>, isPersonal = false) {
     const file = e.target.files?.[0];
@@ -481,7 +496,7 @@ export default function VehicleDetailPage() {
 
       {/* Active Options */}
       {vehicle.options.length > 0 && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader><h2 className="text-lg font-semibold">Active Options</h2></CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -501,6 +516,45 @@ export default function VehicleDetailPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Danger Zone */}
+      <Card className="border-red-400/20">
+        <CardHeader><h2 className="text-lg font-semibold text-red-400">Danger Zone</h2></CardHeader>
+        <CardContent>
+          <p className="text-sm text-white/60 mb-3">Permanently delete this vehicle, its photos, documents, and all associated data. This action cannot be undone.</p>
+          <Button variant="outline" className="border-red-400/40 text-red-400 hover:bg-red-400/10" onClick={() => setShowDeleteVehicle(true)}>
+            Delete Vehicle
+          </Button>
+        </CardContent>
+      </Card>
+
+      {showDeleteVehicle && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-white mb-2">Delete Vehicle</h3>
+            <p className="text-sm text-white/60 mb-4">
+              This will permanently delete your <span className="font-semibold text-white">{vehicle.year} {vehicle.make} {vehicle.model}</span> and all its data. Type <span className="font-mono font-bold text-red-400">DELETE</span> to confirm.
+            </p>
+            <Input
+              id="deleteVehicleConfirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="Type DELETE to confirm"
+            />
+            <div className="flex gap-2 mt-4">
+              <Button variant="outline" className="flex-1" onClick={() => { setShowDeleteVehicle(false); setDeleteConfirm(''); }}>Cancel</Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                disabled={deleteConfirm !== 'DELETE'}
+                loading={deletingVehicle}
+                onClick={handleDeleteVehicle}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
