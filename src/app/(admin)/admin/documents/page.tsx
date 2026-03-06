@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,14 @@ interface DocumentItem {
 }
 
 export default function AdminDocumentsPage() {
+  return (
+    <Suspense fallback={<div><h1 className="text-2xl font-bold text-white mb-6">Document Review</h1><div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />)}</div></div>}>
+      <DocumentsContent />
+    </Suspense>
+  );
+}
+
+function DocumentsContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
