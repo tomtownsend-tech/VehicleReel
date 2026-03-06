@@ -225,7 +225,7 @@ export function pendingDocumentReminderEmail(userName: string, missingDocuments:
 
 export function setupReminderEmail(userName: string, actionItems: string[], role: string) {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
-  const dashboardUrl = role === 'PRODUCTION' ? `${baseUrl}/production/documents` : `${baseUrl}/owner/vehicles`;
+  const dashboardUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
   const itemsHtml = actionItems.map((item) => `<li style="margin-bottom:6px;">${escapeHtml(item)}</li>`).join('');
   return {
     subject: 'Finish setting up your VehicleReel profile',
@@ -262,6 +262,28 @@ export function passwordResetEmail(userName: string, resetUrl: string) {
       <p>We received a request to reset your password. Click the link below to set a new password:</p>
       <p><a href="${resetUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">This link expires in 1 hour. If you didn&apos;t request this, you can safely ignore this email.</p>
+    `,
+  };
+}
+
+export function welcomeSetupEmail(userName: string, role: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+  const settingsUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
+  const docsNeeded = role === 'PRODUCTION'
+    ? 'SA ID / Passport and Company Registration'
+    : 'SA ID / Passport and Driver&rsquo;s License';
+  return {
+    subject: 'Welcome to VehicleReel — Upload your documents to get verified',
+    html: `
+      <h2>Welcome to VehicleReel!</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>Your email is verified. To complete your account setup and get verified, please upload the following documents:</p>
+      <ul style="padding-left:20px;color:#374151;">
+        <li style="margin-bottom:6px;">${docsNeeded}</li>
+      </ul>
+      <p>You can upload these from your Settings page:</p>
+      <p><a href="${settingsUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Documents</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
   };
 }

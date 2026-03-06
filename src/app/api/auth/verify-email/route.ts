@@ -3,7 +3,8 @@ import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { sendEmail, emailVerificationEmail } from '@/lib/services/email';
+import { sendEmail, emailVerificationEmail, welcomeSetupEmail } from '@/lib/services/email';
+import { safeNotify } from '@/lib/services/notification';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,12 +26,27 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Verification link has expired. Please request a new one.' }, { status: 400 });
       }
 
-      await prisma.user.update({
+      const user = await prisma.user.update({
         where: { email: verificationToken.email },
         data: { emailVerified: true },
+        select: { id: true, name: true, role: true },
       });
 
       await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
+
+      // Send welcome notification prompting document upload
+      if (user.role === 'OWNER' || user.role === 'PRODUCTION') {
+        const docsNeeded = user.role === 'PRODUCTION'
+          ? 'SA ID / Passport and Company Registration'
+          : 'SA ID / Passport and Driver\'s License';
+        await safeNotify({
+          userId: user.id,
+          type: 'DOCUMENT_EXPIRING',
+          title: 'Upload your documents to get verified',
+          message: `Please upload your ${docsNeeded} in Settings to complete your account setup.`,
+          emailContent: welcomeSetupEmail(user.name, user.role),
+        });
+      }
 
       return NextResponse.json({ success: true });
     }
