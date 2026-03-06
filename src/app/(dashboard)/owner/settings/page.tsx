@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { FileUp, Check, Loader2 } from 'lucide-react';
+
+const PERSONAL_DOC_TYPES = [
+  { type: 'SA_ID', label: 'SA ID / Passport' },
+  { type: 'DRIVERS_LICENSE', label: "Driver's License" },
+] as const;
 
 export default function OwnerSettingsPage() {
   const { data: session, update } = useSession();
@@ -18,6 +24,37 @@ export default function OwnerSettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
+  const [docUploading, setDocUploading] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/documents?limit=50')
+      .then((r) => r.json())
+      .then((res) => {
+        const personal = (res.data || []).filter((d: { type: string }) => d.type === 'SA_ID' || d.type === 'DRIVERS_LICENSE');
+        setPersonalDocs(personal);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocUploading(docType);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', docType);
+      const res = await fetch('/api/documents', { method: 'POST', body: formData });
+      if (res.ok) {
+        const doc = await res.json();
+        setPersonalDocs((prev) => [...prev, { id: doc.id, type: doc.type, status: doc.status }]);
+      }
+    } finally {
+      setDocUploading(null);
+      e.target.value = '';
+    }
+  }
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -146,6 +183,50 @@ export default function OwnerSettingsPage() {
             >
               {emailNotifications ? 'On' : 'Off'}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader><h2 className="text-lg font-semibold">Personal Documents</h2></CardHeader>
+        <CardContent>
+          <p className="text-xs text-white/50 mb-4">Upload your SA ID / Passport and Driver&apos;s License to get verified. These are required before your vehicles can go live.</p>
+          <div className="space-y-3">
+            {PERSONAL_DOC_TYPES.map(({ type, label }) => {
+              const existing = personalDocs.filter((d) => d.type === type);
+              const approved = existing.find((d) => d.status === 'APPROVED');
+              const pending = existing.find((d) => d.status === 'PENDING_REVIEW');
+              const flagged = existing.find((d) => d.status === 'FLAGGED');
+              const canUpload = !approved && !pending;
+
+              return (
+                <div key={type} className="border border-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-white">{label}</span>
+                    {approved ? (
+                      <Badge variant="success"><Check className="h-3 w-3 mr-1" /> Approved</Badge>
+                    ) : pending ? (
+                      <Badge variant="warning">Pending Review</Badge>
+                    ) : flagged ? (
+                      <Badge variant="danger">Flagged</Badge>
+                    ) : (
+                      <Badge variant="default">Not Uploaded</Badge>
+                    )}
+                  </div>
+                  {flagged && <p className="text-xs text-red-400 mt-1">This document was flagged. Please re-upload.</p>}
+                  {canUpload && (
+                    <label className={`mt-3 flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-white/15 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${docUploading === type ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {docUploading === type ? (
+                        <><Loader2 className="h-4 w-4 text-white/50 animate-spin" /><span className="text-sm text-white/50">Uploading...</span></>
+                      ) : (
+                        <><FileUp className="h-4 w-4 text-white/50" /><span className="text-sm text-white/50">Upload {label}</span></>
+                      )}
+                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => handleDocUpload(type, e)} disabled={docUploading === type} />
+                    </label>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
