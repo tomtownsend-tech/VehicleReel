@@ -72,9 +72,9 @@ export default function AdminUsersPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {user.status === 'PENDING_VERIFICATION' && user.role === 'OWNER' && (
+                  {user.status === 'PENDING_VERIFICATION' && (
                     <Link
-                      href="/admin/documents"
+                      href={`/admin/documents?userId=${user.id}`}
                       className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/15"
                     >
                       Review Documents

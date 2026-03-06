@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,17 +20,20 @@ interface DocumentItem {
 }
 
 export default function AdminDocumentsPage() {
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('userId');
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
 
   useEffect(() => {
-    fetch('/api/admin/documents')
+    const url = userId ? `/api/admin/documents?userId=${userId}` : '/api/admin/documents';
+    fetch(url)
       .then((r) => r.json())
       .then((res) => setDocuments(res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [userId]);
 
   async function handleManualReview(docId: string, action: 'APPROVED' | 'FLAGGED') {
     const res = await fetch(`/api/admin/documents/${docId}`, {
@@ -53,7 +58,18 @@ export default function AdminDocumentsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Document Review</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-white">Document Review</h1>
+        {userId && (
+          <>
+            <span className="text-white/50">—</span>
+            <span className="text-white/60 text-lg">{documents[0]?.user.name || 'User'}</span>
+            <Link href="/admin/documents" className="text-sm text-white/40 hover:text-white/60 ml-2">
+              View all
+            </Link>
+          </>
+        )}
+      </div>
 
       <div className="flex gap-2 mb-6">
         {['ALL', 'PENDING_REVIEW', 'FLAGGED', 'APPROVED', 'EXPIRED'].map((f) => (

@@ -13,8 +13,12 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
 
+  const userId = searchParams.get('userId');
+  const where = userId ? { userId } : {};
+
   const [documents, total] = await Promise.all([
     prisma.document.findMany({
+      where,
       include: {
         user: { select: { id: true, name: true, email: true } },
         reviews: {
@@ -26,7 +30,7 @@ export async function GET(request: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.document.count(),
+    prisma.document.count({ where }),
   ]);
 
   return NextResponse.json({
