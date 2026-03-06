@@ -48,6 +48,7 @@ export default function VehicleDetailPage() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [docUploading, setDocUploading] = useState<string | null>(null);
+  const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
 
   const REQUIRED_PHOTO_LABELS = ['Front', 'Back', 'Left', 'Right', 'Interior'] as const;
 
@@ -56,6 +57,13 @@ export default function VehicleDetailPage() {
       .then((r) => r.json())
       .then(setVehicle)
       .finally(() => setLoading(false));
+    fetch('/api/documents?limit=50')
+      .then((r) => r.json())
+      .then((res) => {
+        const personal = (res.data || []).filter((d: { type: string }) => d.type === 'SA_ID' || d.type === 'DRIVERS_LICENSE');
+        setPersonalDocs(personal);
+      })
+      .catch(() => {});
   }, [params.id]);
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>, slotOrder?: number) {
@@ -130,11 +138,16 @@ export default function VehicleDetailPage() {
     }
   }
 
-  const REQUIRED_DOC_TYPES = [
+  const PERSONAL_DOC_TYPES = [
+    { type: 'SA_ID', label: 'SA ID / Passport' },
+    { type: 'DRIVERS_LICENSE', label: "Driver's License" },
+  ] as const;
+
+  const VEHICLE_DOC_TYPES = [
     { type: 'VEHICLE_REGISTRATION', label: 'Vehicle License Disk' },
   ] as const;
 
-  async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleDocUpload(docType: string, e: React.ChangeEvent<HTMLInputElement>, isPersonal = false) {
     const file = e.target.files?.[0];
     if (!file || !vehicle) return;
     setDocUploading(docType);
@@ -142,13 +155,19 @@ export default function VehicleDetailPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', docType);
-      formData.append('vehicleId', vehicle.id);
+      if (!isPersonal) {
+        formData.append('vehicleId', vehicle.id);
+      }
       const res = await fetch('/api/documents', { method: 'POST', body: formData });
       if (res.ok) {
         const doc = await res.json();
-        setVehicle((prev) =>
-          prev ? { ...prev, documents: [...prev.documents, { id: doc.id, type: doc.type, status: doc.status }] } : prev
-        );
+        if (isPersonal) {
+          setPersonalDocs((prev) => [...prev, { id: doc.id, type: doc.type, status: doc.status }]);
+        } else {
+          setVehicle((prev) =>
+            prev ? { ...prev, documents: [...prev.documents, { id: doc.id, type: doc.type, status: doc.status }] } : prev
+          );
+        }
       }
     } finally {
       setDocUploading(null);
@@ -302,8 +321,47 @@ export default function VehicleDetailPage() {
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Documents</h2></CardHeader>
         <CardContent>
+          <h3 className="text-sm font-medium text-white/70 mb-2">Personal Documents</h3>
+          <div className="space-y-3 mb-4">
+            {PERSONAL_DOC_TYPES.map(({ type, label }) => {
+              const existing = personalDocs.filter((d) => d.type === type);
+              const approved = existing.find((d) => d.status === 'APPROVED');
+              const pending = existing.find((d) => d.status === 'PENDING_REVIEW');
+              const flagged = existing.find((d) => d.status === 'FLAGGED');
+              const canUpload = !approved && !pending;
+
+              return (
+                <div key={type} className="border border-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-white">{label}</span>
+                    {approved ? (
+                      <Badge variant="success"><Check className="h-3 w-3 mr-1" /> Approved</Badge>
+                    ) : pending ? (
+                      <Badge variant="warning">Pending Review</Badge>
+                    ) : flagged ? (
+                      <Badge variant="danger">Flagged</Badge>
+                    ) : (
+                      <Badge variant="default">Not Uploaded</Badge>
+                    )}
+                  </div>
+                  {flagged && <p className="text-xs text-red-400 mt-1">This document was flagged. Please re-upload.</p>}
+                  {canUpload && (
+                    <label className={`mt-3 flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-white/15 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${docUploading === type ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {docUploading === type ? (
+                        <><Loader2 className="h-4 w-4 text-white/50 animate-spin" /><span className="text-sm text-white/50">Uploading...</span></>
+                      ) : (
+                        <><FileUp className="h-4 w-4 text-white/50" /><span className="text-sm text-white/50">Upload {label}</span></>
+                      )}
+                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => handleDocUpload(type, e, true)} disabled={docUploading === type} />
+                    </label>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <h3 className="text-sm font-medium text-white/70 mb-2">Vehicle Documents</h3>
           <div className="space-y-3">
-            {REQUIRED_DOC_TYPES.map(({ type, label }) => {
+            {VEHICLE_DOC_TYPES.map(({ type, label }) => {
               const existing = vehicle.documents.filter((d) => d.type === type);
               const approved = existing.find((d) => d.status === 'APPROVED');
               const pending = existing.find((d) => d.status === 'PENDING_REVIEW');

@@ -50,8 +50,10 @@ export default function NewVehiclePage() {
   const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
 
   // Documents
-  const [documents, setDocuments] = useState<{ type: string; file: File | null; uploaded: boolean }[]>([
-    { type: 'VEHICLE_REGISTRATION', file: null, uploaded: false },
+  const [documents, setDocuments] = useState<{ type: string; file: File | null; uploaded: boolean; isPersonal: boolean }[]>([
+    { type: 'SA_ID', file: null, uploaded: false, isPersonal: true },
+    { type: 'DRIVERS_LICENSE', file: null, uploaded: false, isPersonal: true },
+    { type: 'VEHICLE_REGISTRATION', file: null, uploaded: false, isPersonal: false },
   ]);
 
   function updateDetail(field: string, value: string) {
@@ -206,7 +208,10 @@ export default function NewVehiclePage() {
             const formData = new FormData();
             formData.append('file', doc.file);
             formData.append('type', doc.type);
-            formData.append('vehicleId', vehicleId);
+            // Personal docs (SA_ID, DRIVERS_LICENSE) don't get a vehicleId
+            if (!doc.isPersonal) {
+              formData.append('vehicleId', vehicleId);
+            }
             const res = await fetch('/api/documents', { method: 'POST', body: formData });
             if (!res.ok) {
               const data = await res.json().catch(() => null);
@@ -230,6 +235,8 @@ export default function NewVehiclePage() {
   const stepIndex = STEPS.findIndex((s) => s.key === step);
 
   const docLabels: Record<string, string> = {
+    SA_ID: 'SA ID / Passport',
+    DRIVERS_LICENSE: "Driver's License",
     VEHICLE_REGISTRATION: 'Vehicle License Disk',
   };
 
@@ -466,38 +473,60 @@ export default function NewVehiclePage() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <p className="text-sm text-white/60">
-              Upload your verification documents to activate your listing. You can skip this and upload them later from Settings.
+              Upload your verification documents to activate your listing. You can skip this and upload them later from your vehicle page.
             </p>
-            {documents.map((doc, i) => (
-              <div key={doc.type} className="border border-white/10 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-white">{docLabels[doc.type]}</span>
-                  {doc.uploaded && (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Uploaded
-                    </span>
+            <h3 className="text-sm font-medium text-white">Personal Documents</h3>
+            {documents.map((doc, i) => {
+              if (i === 2) {
+                return (
+                  <div key="vehicle-header">
+                    <h3 className="text-sm font-medium text-white mt-2">Vehicle Documents</h3>
+                    <div className="border border-white/10 rounded-lg p-4 mt-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-white">{docLabels[doc.type]}</span>
+                        {doc.uploaded && (
+                          <span className="text-xs text-emerald-400 flex items-center gap-1">
+                            <Check className="h-3 w-3" /> Uploaded
+                          </span>
+                        )}
+                      </div>
+                      {!doc.uploaded && (
+                        <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:border-white/40 transition-colors">
+                          {doc.file ? (
+                            <span className="text-sm text-white/70">{doc.file.name}</span>
+                          ) : (
+                            <span className="text-sm text-white/40">Click to select file</span>
+                          )}
+                          <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleDocSelect(i, f); }} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={doc.type} className="border border-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-white">{docLabels[doc.type]}</span>
+                    {doc.uploaded && (
+                      <span className="text-xs text-emerald-400 flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Uploaded
+                      </span>
+                    )}
+                  </div>
+                  {!doc.uploaded && (
+                    <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:border-white/40 transition-colors">
+                      {doc.file ? (
+                        <span className="text-sm text-white/70">{doc.file.name}</span>
+                      ) : (
+                        <span className="text-sm text-white/40">Click to select file</span>
+                      )}
+                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleDocSelect(i, f); }} />
+                    </label>
                   )}
                 </div>
-                {!doc.uploaded && (
-                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:border-white/40 transition-colors">
-                    {doc.file ? (
-                      <span className="text-sm text-white/70">{doc.file.name}</span>
-                    ) : (
-                      <span className="text-sm text-white/40">Click to select file</span>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleDocSelect(i, f);
-                      }}
-                    />
-                  </label>
-                )}
-              </div>
-            ))}
+              );
+            })}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('photos')} className="flex-1">
                 Back
