@@ -289,11 +289,32 @@ export function passwordResetEmail(userName: string, resetUrl: string) {
 export function welcomeSetupEmail(userName: string, role: string) {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   const settingsUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
+  const faqUrl = `${baseUrl}/faq`;
   const docsNeeded = role === 'PRODUCTION'
     ? 'SA ID / Passport and Company Registration'
     : 'SA ID / Passport and Driver&rsquo;s License';
+
+  const faqSummaries = [
+    { q: 'What documents do I need?', a: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : 'SA ID + Driver&rsquo;s License, plus a Vehicle License Disk for each vehicle.' },
+    { q: 'How long does verification take?', a: 'Documents are reviewed automatically by AI, usually within minutes.' },
+    { q: 'What vehicle types are supported?', a: 'Cars, Racing Cars, Bikes, Motorbikes, Scooters, Boats, Planes, and Jet Skis.' },
+    { q: 'What is an &ldquo;option&rdquo;?', a: 'A hold request on a vehicle for specific dates &mdash; like &ldquo;first dibs,&rdquo; not yet a confirmed booking.' },
+    { q: 'Can multiple companies option the same vehicle?', a: 'Yes. Options queue up first-come-first-served and auto-promote if one falls through.' },
+    { q: 'Will I get email notifications?', a: 'Yes &mdash; for options, bookings, and documents. You can customise these in Settings.' },
+    { q: 'How are my documents protected?', a: 'Encrypted, access-controlled cloud storage. Only you and authorised admins can view them.' },
+    { q: 'Is VehicleReel POPIA compliant?', a: 'Yes. We only collect what&rsquo;s needed and you can request deletion at any time.' },
+  ];
+
+  const faqHtml = faqSummaries
+    .map(({ q, a }) => `
+      <tr>
+        <td style="padding:8px 12px;vertical-align:top;font-weight:600;color:#1f2937;white-space:nowrap;">${q}</td>
+        <td style="padding:8px 12px;color:#4b5563;">${a}</td>
+      </tr>`)
+    .join('');
+
   return {
-    subject: 'Welcome to VehicleReel — Upload your documents to get verified',
+    subject: 'Welcome to VehicleReel — Get started in minutes',
     html: `
       <h2>Welcome to VehicleReel!</h2>
       <p>Hi ${escapeHtml(userName)},</p>
@@ -301,8 +322,16 @@ export function welcomeSetupEmail(userName: string, role: string) {
       <ul style="padding-left:20px;color:#374151;">
         <li style="margin-bottom:6px;">${docsNeeded}</li>
       </ul>
-      <p>You can upload these from your Settings page:</p>
       <p><a href="${settingsUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Documents</a></p>
+
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+
+      <h3 style="margin-bottom:12px;color:#1f2937;">Quick answers to common questions</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        ${faqHtml}
+      </table>
+      <p style="margin-top:16px;"><a href="${faqUrl}" style="color:#2563eb;font-weight:600;text-decoration:none;">View all FAQs &rarr;</a></p>
+
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
   };
