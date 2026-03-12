@@ -5,8 +5,8 @@ import { todayUTC } from '@/lib/utils/date';
 import { safeNotify } from '@/lib/services/notification';
 import { setupReminderEmail } from '@/lib/services/email';
 
-// Reminder schedule: send on Day 1, Day 3, Day 7 after signup
-const REMINDER_THRESHOLDS_HOURS = [24, 72, 168] as const;
+// Reminder schedule: send on Day 1, Day 3, Day 7, Day 14, Day 30 after signup
+const REMINDER_THRESHOLDS_HOURS = [24, 72, 168, 336, 720] as const;
 const MAX_REMINDERS = REMINDER_THRESHOLDS_HOURS.length;
 
 export async function GET(request: NextRequest) {

@@ -32,7 +32,10 @@ export default function ProductionSettingsPage() {
   const [emailError, setEmailError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteReasonText, setDeleteReasonText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [setupReminderCount, setSetupReminderCount] = useState(0);
   const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
   const [docUploading, setDocUploading] = useState<string | null>(null);
 
@@ -41,6 +44,7 @@ export default function ProductionSettingsPage() {
       .then((r) => r.json())
       .then((prefs) => {
         if (prefs.emailNotifications !== undefined) setEmailNotifications(prefs.emailNotifications);
+        if (prefs.setupReminderCount !== undefined) setSetupReminderCount(prefs.setupReminderCount);
         setCategoryPrefs({
           emailOptionsBookings: prefs.emailOptionsBookings ?? true,
           emailDocuments: prefs.emailDocuments ?? true,
@@ -84,7 +88,14 @@ export default function ProductionSettingsPage() {
   async function handleDeleteAccount() {
     setDeleting(true);
     try {
-      const res = await fetch('/api/users/delete', { method: 'DELETE' });
+      const body = deleteReason
+        ? JSON.stringify({ reasonCategory: deleteReason, reasonText: deleteReason === 'other' ? deleteReasonText : undefined })
+        : undefined;
+      const res = await fetch('/api/users/delete', {
+        method: 'DELETE',
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body,
+      });
       if (res.ok) {
         await signOut({ callbackUrl: '/login' });
       }
@@ -302,6 +313,18 @@ export default function ProductionSettingsPage() {
         </CardContent>
       </Card>
 
+      {setupReminderCount >= 5 && (
+        <div id="changed-my-mind"><Card className="mb-6 border-amber-400/30 bg-amber-950/20">
+          <CardHeader><h2 className="text-lg font-semibold text-amber-400">Changed Your Mind?</h2></CardHeader>
+          <CardContent>
+            <p className="text-sm text-white/60 mb-3">If VehicleReel isn&apos;t for you, that&apos;s okay. You can close your account and we&apos;ll remove all your data.</p>
+            <Button variant="outline" className="border-amber-400/40 text-amber-400 hover:bg-amber-400/10" onClick={() => setShowDeleteModal(true)}>
+              I Changed My Mind
+            </Button>
+          </CardContent>
+        </Card></div>
+      )}
+
       <Card className="border-red-400/20">
         <CardHeader><h2 className="text-lg font-semibold text-red-400">Danger Zone</h2></CardHeader>
         <CardContent>
@@ -316,15 +339,44 @@ export default function ProductionSettingsPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-xl p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-white mb-2">Delete Account</h3>
-            <p className="text-sm text-white/60 mb-4">This will permanently delete your account and all data. Type <span className="font-mono font-bold text-red-400">DELETE</span> to confirm.</p>
-            <Input
-              id="deleteConfirm"
-              value={deleteConfirm}
-              onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder="Type DELETE to confirm"
-            />
+            <p className="text-sm text-white/60 mb-4">This will permanently delete your account and all data.</p>
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="deleteReason" className="text-xs text-white/50 block mb-1">Why are you leaving? (optional)</label>
+                <select
+                  id="deleteReason"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="too_complicated">Too complicated</option>
+                  <option value="dont_want_to_share">Don&apos;t want to share my vehicle</option>
+                  <option value="concerned_about_insurance">Concerned about insurance</option>
+                  <option value="changed_my_mind">Changed my mind</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              {deleteReason === 'other' && (
+                <Input
+                  id="deleteReasonText"
+                  value={deleteReasonText}
+                  onChange={(e) => setDeleteReasonText(e.target.value)}
+                  placeholder="Tell us more (optional)"
+                />
+              )}
+              <div>
+                <label htmlFor="deleteConfirm" className="text-xs text-white/50 block mb-1">Type <span className="font-mono font-bold text-red-400">DELETE</span> to confirm</label>
+                <Input
+                  id="deleteConfirm"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="Type DELETE to confirm"
+                />
+              </div>
+            </div>
             <div className="flex gap-2 mt-4">
-              <Button variant="outline" className="flex-1" onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); }}>Cancel</Button>
+              <Button variant="outline" className="flex-1" onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); setDeleteReason(''); setDeleteReasonText(''); }}>Cancel</Button>
               <Button
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 disabled={deleteConfirm !== 'DELETE'}

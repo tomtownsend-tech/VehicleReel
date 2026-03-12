@@ -231,12 +231,18 @@ export function setupReminderEmail(userName: string, actionItems: string[], role
   const subjects: Record<number, string> = {
     1: 'Finish setting up your VehicleReel profile',
     2: 'Reminder: Your VehicleReel setup is incomplete',
-    3: 'Final reminder: Complete your VehicleReel setup',
+    3: 'Your VehicleReel setup is still incomplete',
+    4: 'We noticed you haven\'t completed your VehicleReel setup',
+    5: 'Final reminder: Complete your setup or close your account',
   };
   const subject = (reminderNumber && subjects[reminderNumber]) || subjects[1];
 
-  const urgencyNote = reminderNumber === 3
-    ? '<p style="color:#dc2626;font-weight:600;">This is your final reminder. Please complete your setup to keep your account active.</p>'
+  const urgencyNote = reminderNumber === 5
+    ? '<p style="color:#dc2626;font-weight:600;">This is your final reminder. If you no longer wish to use VehicleReel, you can close your account below.</p>'
+    : '';
+
+  const changedMyMindLink = reminderNumber === 5
+    ? `<p style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;"><a href="${dashboardUrl}#changed-my-mind" style="color:#6b7280;font-size:13px;">I changed my mind &mdash; close my account</a></p>`
     : '';
 
   return {
@@ -249,6 +255,7 @@ export function setupReminderEmail(userName: string, actionItems: string[], role
       <ul style="padding-left:20px;color:#374151;">${itemsHtml}</ul>
       <p><a href="${dashboardUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Complete Setup</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
+      ${changedMyMindLink}
     `,
   };
 }

@@ -1,10 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSupabase } from '@/lib/supabase';
 
-export async function DELETE() {
+const VALID_REASON_CATEGORIES = [
+  'too_complicated',
+  'dont_want_to_share',
+  'concerned_about_insurance',
+  'changed_my_mind',
+  'other',
+] as const;
+
+export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,6 +23,34 @@ export async function DELETE() {
   }
 
   const userId = session.user.id;
+
+  // Parse optional deletion reason from request body
+  let reasonCategory: string | undefined;
+  let reasonText: string | undefined;
+  try {
+    const body = await request.json();
+    if (body.reasonCategory && VALID_REASON_CATEGORIES.includes(body.reasonCategory)) {
+      reasonCategory = body.reasonCategory;
+    }
+    if (typeof body.reasonText === 'string') {
+      reasonText = body.reasonText.slice(0, 500);
+    }
+  } catch {
+    // No body or invalid JSON — reason is optional
+  }
+
+  // Log the deletion reason before deleting the user
+  if (reasonCategory) {
+    await prisma.deletionLog.create({
+      data: {
+        email: session.user.email!,
+        role: session.user.role as 'OWNER' | 'PRODUCTION' | 'COORDINATOR',
+        reasonCategory,
+        reasonText: reasonText || null,
+      },
+    });
+  }
+
   const supabase = getSupabase();
 
   // Gather storage paths for cleanup

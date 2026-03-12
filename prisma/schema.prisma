@@ -462,6 +462,17 @@ model ProjectOption {
   @@map("project_options")
 }
 
+model DeletionLog {
+  id             String   @id @default(cuid())
+  email          String
+  role           UserRole
+  reasonCategory String
+  reasonText     String?
+  createdAt      DateTime @default(now())
+
+  @@map("deletion_logs")
+}
+
 model PasswordResetToken {
   id        String   @id @default(cuid())
   email     String

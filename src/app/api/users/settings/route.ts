@@ -16,6 +16,7 @@ export async function GET() {
       emailMessages: true,
       emailShootLogistics: true,
       emailListings: true,
+      setupReminderCount: true,
     },
   });
 
