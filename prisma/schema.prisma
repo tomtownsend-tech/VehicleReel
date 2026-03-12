@@ -127,6 +127,7 @@ enum NotificationType {
   SHOOT_DETAILS_UPDATED
   VEHICLE_CHECKED_IN
   SPECIAL_REQUEST
+  BOOKING_CANCELLED
 }
 
 enum MessageThread {
@@ -335,6 +336,9 @@ model Booking {
   locationAddress     String?
   locationPin         String?
   specialInstructions String?
+  cancellationReason  String?
+  cancellationFeePct  Int?
+  cancelledAt         DateTime?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 

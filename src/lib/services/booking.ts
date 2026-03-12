@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { format, subHours } from 'date-fns';
+import { format, subHours, differenceInHours } from 'date-fns';
 import { safeNotify } from './notification';
-import { bookingConfirmedEmail, optionDeclinedEmail, insuranceReminderEmail } from './email';
+import { bookingConfirmedEmail, optionDeclinedEmail, insuranceReminderEmail, bookingCancelledEmail } from './email';
 
 export async function confirmBooking(optionId: string, productionUserId: string, logistics: 'VEHICLE_COLLECTION' | 'OWNER_DELIVERY') {
   // Create booking and update option in a transaction (validation inside tx to prevent races)
@@ -324,4 +324,101 @@ export async function updateBookingDetails(
     where: { id: bookingId },
     include: { dailyDetails: { orderBy: { date: 'asc' } }, checkIns: true },
   });
+}
+
+function getCancellationFeePct(startDate: Date): number {
+  const hoursUntilShoot = differenceInHours(startDate, new Date());
+  if (hoursUntilShoot >= 48) return 0;
+  if (hoursUntilShoot >= 24) return 50;
+  return 100;
+}
+
+export async function cancelBooking(bookingId: string, productionUserId: string, reason: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      option: {
+        include: {
+          vehicle: {
+            include: { owner: { select: { id: true, name: true, email: true } } },
+          },
+        },
+      },
+      productionUser: { select: { id: true, name: true, email: true, companyName: true } },
+      coordinator: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!booking) throw new Error('Booking not found');
+  if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
+  if (booking.status !== 'CONFIRMED') throw new Error('Only confirmed bookings can be cancelled');
+
+  const feePct = getCancellationFeePct(new Date(booking.startDate));
+
+  const updated = await prisma.$transaction(async (tx) => {
+    // Cancel the booking
+    const cancelled = await tx.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: 'CANCELLED',
+        cancellationReason: reason,
+        cancellationFeePct: feePct,
+        cancelledAt: new Date(),
+      },
+    });
+
+    // Remove the availability block that was created on confirmation
+    await tx.availabilityBlock.deleteMany({
+      where: {
+        vehicleId: booking.vehicleId,
+        reason: `Booked: ${bookingId}`,
+      },
+    });
+
+    return cancelled;
+  });
+
+  // Send notifications
+  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
+  const datesDisplay = `${format(booking.startDate, 'MMM d, yyyy')} - ${format(booking.endDate, 'MMM d, yyyy')}`;
+  const cancelledByName = booking.productionUser.companyName || booking.productionUser.name;
+
+  // Notify owner
+  await safeNotify({
+    userId: booking.option.vehicle.owner.id,
+    type: 'BOOKING_CANCELLED',
+    title: 'Booking Cancelled',
+    message: `The booking for your ${vehicleName} (${datesDisplay}) has been cancelled by ${cancelledByName}.`,
+    data: { bookingId, vehicleId: booking.vehicleId },
+    emailContent: bookingCancelledEmail(
+      booking.option.vehicle.owner.name, vehicleName, datesDisplay, cancelledByName,
+      reason, feePct, booking.rateCents, booking.rateType,
+    ),
+  });
+
+  // Notify production user (confirmation)
+  await safeNotify({
+    userId: productionUserId,
+    type: 'BOOKING_CANCELLED',
+    title: 'Booking Cancelled',
+    message: `Your booking for ${vehicleName} (${datesDisplay}) has been cancelled.`,
+    data: { bookingId, vehicleId: booking.vehicleId },
+    emailContent: bookingCancelledEmail(
+      booking.productionUser.name, vehicleName, datesDisplay, cancelledByName,
+      reason, feePct, booking.rateCents, booking.rateType,
+    ),
+  });
+
+  // Notify coordinator if assigned
+  if (booking.coordinator) {
+    await safeNotify({
+      userId: booking.coordinator.id,
+      type: 'BOOKING_CANCELLED',
+      title: 'Booking Cancelled',
+      message: `The ${vehicleName} booking (${datesDisplay}) has been cancelled by ${cancelledByName}.`,
+      data: { bookingId, vehicleId: booking.vehicleId },
+    });
+  }
+
+  return updated;
 }

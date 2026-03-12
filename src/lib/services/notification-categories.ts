@@ -16,6 +16,7 @@ export const NOTIFICATION_CATEGORY_MAP: Record<NotificationType, EmailCategory> 
   BOOKING_CONFIRMED: 'emailOptionsBookings',
   BOOKING_COMPLETED: 'emailOptionsBookings',
   BOOKING_PAYMENT_READY: 'emailOptionsBookings',
+  BOOKING_CANCELLED: 'emailOptionsBookings',
 
   DOCUMENT_APPROVED: 'emailDocuments',
   DOCUMENT_FLAGGED: 'emailDocuments',

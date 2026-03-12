@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send, Upload, AlertTriangle, FileText, ExternalLink, CheckCircle, Clock, MapPin, Save, ChevronDown, ChevronUp, Copy } from 'lucide-react';
+import { ArrowLeft, Send, Upload, AlertTriangle, FileText, ExternalLink, CheckCircle, Clock, MapPin, Save, ChevronDown, ChevronUp, Copy, XCircle } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface InsuranceDocument {
@@ -79,6 +79,10 @@ export default function ProductionBookingDetailPage() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [savingDetails, setSavingDetails] = useState(false);
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   const hasCoordinator = !!booking?.coordinatorId;
   const insuranceDoc = booking?.documents?.[0] || null;
@@ -253,6 +257,38 @@ export default function ProductionBookingDetailPage() {
     }
   }
 
+  async function handleCancel() {
+    if (!booking || !cancelReason.trim()) return;
+    setCancelling(true);
+    setCancelError('');
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: cancelReason }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setBooking((prev) => prev ? { ...prev, status: updated.status } : prev);
+        setShowCancelModal(false);
+      } else {
+        const err = await res.json();
+        setCancelError(err.error || 'Cancellation failed');
+      }
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  function getCancellationFeeLabel(): string {
+    if (!booking) return '';
+    const shootStart = new Date(booking.startDate);
+    const hoursUntil = (shootStart.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntil >= 48) return 'No cancellation fee (48+ hours before shoot)';
+    if (hoursUntil >= 24) return '50% cancellation fee (24–48 hours before shoot)';
+    return '100% cancellation fee (less than 24 hours before shoot)';
+  }
+
   if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
@@ -267,7 +303,14 @@ export default function ProductionBookingDetailPage() {
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Booking Details</h1>
-        <Badge variant="success">{booking.status}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={booking.status === 'CANCELLED' ? 'danger' : 'success'}>{booking.status}</Badge>
+          {booking.status === 'CONFIRMED' && (
+            <Button size="sm" variant="outline" className="border-red-400/40 text-red-400 hover:bg-red-400/10" onClick={() => setShowCancelModal(true)}>
+              <XCircle className="h-4 w-4 mr-1" /> Cancel Booking
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Booking Summary */}
@@ -538,6 +581,44 @@ export default function ProductionBookingDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-white mb-2">Cancel Booking</h3>
+            <p className="text-sm text-white/60 mb-1">
+              {booking.option.vehicle.year} {booking.option.vehicle.make} {booking.option.vehicle.model} — {formatDate(booking.startDate)} to {formatDate(booking.endDate)}
+            </p>
+            <p className="text-sm font-medium text-amber-400 mb-4">{getCancellationFeeLabel()}</p>
+            {cancelError && <p className="text-xs text-red-400 mb-2">{cancelError}</p>}
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="cancelReason" className="text-xs text-white/50 block mb-1">Reason for cancellation</label>
+                <textarea
+                  id="cancelReason"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Please explain why you're cancelling..."
+                  rows={3}
+                  maxLength={500}
+                  className="w-full px-3 py-2 border border-white/15 bg-white/5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button variant="outline" className="flex-1" onClick={() => { setShowCancelModal(false); setCancelReason(''); setCancelError(''); }}>Back</Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                disabled={!cancelReason.trim()}
+                loading={cancelling}
+                onClick={handleCancel}
+              >
+                Confirm Cancellation
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

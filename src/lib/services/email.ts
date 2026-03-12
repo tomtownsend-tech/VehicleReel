@@ -105,6 +105,35 @@ export function bookingConfirmedEmail(userName: string, vehicleName: string, dat
   };
 }
 
+export function bookingCancelledEmail(
+  userName: string,
+  vehicleName: string,
+  dates: string,
+  cancelledByName: string,
+  reason: string,
+  feePct: number,
+  rateCents: number,
+  rateType: string,
+) {
+  const feeLabel = feePct === 0
+    ? 'No cancellation fee applies.'
+    : `A ${feePct}% cancellation fee (R${((rateCents * feePct) / 10000).toFixed(0)}${rateType === 'PER_DAY' ? '/day' : ''}) applies.`;
+
+  return {
+    subject: `Booking cancelled: ${escapeHtml(vehicleName)}`,
+    html: `
+      <h2>Booking Cancelled</h2>
+      <p>Hi ${escapeHtml(userName)},</p>
+      <p>The booking for <strong>${escapeHtml(vehicleName)}</strong> (${escapeHtml(dates)}) has been cancelled by ${escapeHtml(cancelledByName)}.</p>
+      <ul>
+        <li><strong>Reason:</strong> ${escapeHtml(reason)}</li>
+        <li><strong>Fee:</strong> ${feeLabel}</li>
+      </ul>
+      <p>Log in to VehicleReel for more details.</p>
+    `,
+  };
+}
+
 export function documentStatusEmail(userName: string, docType: string, status: string) {
   const statusMessage = status === 'APPROVED'
     ? 'has been approved. Your listing is now active!'
