@@ -95,6 +95,41 @@ const FAQ_SECTIONS: FAQSection[] = [
     ],
   },
   {
+    title: 'Payment, Insurance & Damages',
+    items: [
+      {
+        q: 'How does payment work?',
+        a: 'VehicleReel invoices the production company and pays out the vehicle owner. A full payment facility is being built for future iterations of the platform.',
+      },
+      {
+        q: 'Is my vehicle insured during a shoot?',
+        a: 'Yes. The production company is required to provide proof of insurance, which will be visible to the vehicle owner once the booking is confirmed and at least 48 hours before the shoot.',
+      },
+      {
+        q: 'How are losses and damages handled?',
+        a: 'The production company is liable for any losses or damages that occur during the shoot. All claims should be submitted directly to the production company.',
+      },
+    ],
+  },
+  {
+    title: 'Cancellations',
+    items: [
+      {
+        q: 'What if I booked my car but changed my mind?',
+        a: 'Only the production company can cancel a confirmed booking. The cancellation policy is as follows:\n\n• 48+ hours before the shoot: Free cancellation\n• 24–48 hours before the shoot: 50% cancellation fee\n• Less than 24 hours before the shoot: 100% fee (no refund)\n\nA cancellation reason is collected and both parties are notified.',
+      },
+    ],
+  },
+  {
+    title: 'Shoot Day Logistics',
+    items: [
+      {
+        q: 'How are shoot day arrangements handled?',
+        a: 'Shoot day details are managed through the platform and coordinated by the assigned coordinator. Each booking day includes call times, locations, addresses, and Google Maps pins — all visible to both the owner and production company.',
+      },
+    ],
+  },
+  {
     title: 'Projects',
     items: [
       {
