@@ -223,15 +223,28 @@ export function pendingDocumentReminderEmail(userName: string, missingDocuments:
   };
 }
 
-export function setupReminderEmail(userName: string, actionItems: string[], role: string) {
+export function setupReminderEmail(userName: string, actionItems: string[], role: string, reminderNumber?: number) {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   const dashboardUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
   const itemsHtml = actionItems.map((item) => `<li style="margin-bottom:6px;">${escapeHtml(item)}</li>`).join('');
+
+  const subjects: Record<number, string> = {
+    1: 'Finish setting up your VehicleReel profile',
+    2: 'Reminder: Your VehicleReel setup is incomplete',
+    3: 'Final reminder: Complete your VehicleReel setup',
+  };
+  const subject = (reminderNumber && subjects[reminderNumber]) || subjects[1];
+
+  const urgencyNote = reminderNumber === 3
+    ? '<p style="color:#dc2626;font-weight:600;">This is your final reminder. Please complete your setup to keep your account active.</p>'
+    : '';
+
   return {
-    subject: 'Finish setting up your VehicleReel profile',
+    subject,
     html: `
       <h2>Complete Your Setup</h2>
       <p>Hi ${escapeHtml(userName)},</p>
+      ${urgencyNote}
       <p>Your VehicleReel account still needs a few things before it&rsquo;s fully active. Here&rsquo;s what&rsquo;s outstanding:</p>
       <ul style="padding-left:20px;color:#374151;">${itemsHtml}</ul>
       <p><a href="${dashboardUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Complete Setup</a></p>

@@ -151,6 +151,7 @@ model User {
   emailShootLogistics   Boolean        @default(true)
   emailListings         Boolean        @default(true)
   isTestAccount         Boolean        @default(false)
+  setupReminderCount    Int            @default(0)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

@@ -5,6 +5,10 @@ import { todayUTC } from '@/lib/utils/date';
 import { safeNotify } from '@/lib/services/notification';
 import { setupReminderEmail } from '@/lib/services/email';
 
+// Reminder schedule: send on Day 1, Day 3, Day 7 after signup
+const REMINDER_THRESHOLDS_HOURS = [24, 72, 168] as const;
+const MAX_REMINDERS = REMINDER_THRESHOLDS_HOURS.length;
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -15,15 +19,14 @@ export async function GET(request: NextRequest) {
   const thirtyDaysFromNow = addDays(now, 30);
   const results = { setupReminders: 0, expired: 0, suspended: 0 };
 
-  // Send 24-hour setup reminder to users who registered > 24h ago and have outstanding items
-  const twentyFourHoursAgo = subHours(new Date(), 24);
+  // Send Day 1 / Day 3 / Day 7 setup reminders to users with outstanding items
   const incompleteUsers = await prisma.user.findMany({
     where: {
-      createdAt: { lte: twentyFourHoursAgo },
       role: { in: ['OWNER', 'PRODUCTION'] },
       isTestAccount: false,
+      setupReminderCount: { lt: MAX_REMINDERS },
     },
-    select: { id: true, name: true, email: true, role: true, status: true },
+    select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, setupReminderCount: true },
   });
 
   const docLabels: Record<string, string> = {
@@ -34,16 +37,10 @@ export async function GET(request: NextRequest) {
   };
 
   for (const user of incompleteUsers) {
-    // Check if we already sent a setup reminder in the last 24 hours
-    const recentReminder = await prisma.notification.findFirst({
-      where: {
-        userId: user.id,
-        type: 'DOCUMENT_EXPIRING',
-        title: 'Complete Your Setup',
-        createdAt: { gte: twentyFourHoursAgo },
-      },
-    });
-    if (recentReminder) continue;
+    // Check if enough time has passed for the next reminder
+    const thresholdHours = REMINDER_THRESHOLDS_HOURS[user.setupReminderCount];
+    const thresholdTime = subHours(new Date(), thresholdHours);
+    if (user.createdAt > thresholdTime) continue;
 
     const actionItems: string[] = [];
 
@@ -90,18 +87,32 @@ export async function GET(request: NextRequest) {
 
     // Only send if there are outstanding items
     if (actionItems.length > 0) {
+      const reminderNumber = user.setupReminderCount + 1;
       const summary = actionItems.length === 1
         ? actionItems[0]
         : `${actionItems.length} items to complete your setup`;
       await safeNotify({
         userId: user.id,
         type: 'DOCUMENT_EXPIRING',
-        title: 'Complete Your Setup',
+        title: `Complete Your Setup (Reminder ${reminderNumber} of ${MAX_REMINDERS})`,
         message: summary,
-        data: { actionItems },
-        emailContent: setupReminderEmail(user.name, actionItems, user.role),
+        data: { actionItems, reminderNumber },
+        emailContent: setupReminderEmail(user.name, actionItems, user.role, reminderNumber),
       });
+
+      // Increment the reminder count
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { setupReminderCount: reminderNumber },
+      });
+
       results.setupReminders++;
+    } else {
+      // User has completed setup — mark as done so we stop checking
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { setupReminderCount: MAX_REMINDERS },
+      });
     }
   }
 
