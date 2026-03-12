@@ -145,6 +145,11 @@ model User {
   companyName           String?
   emailVerified         Boolean        @default(false)
   emailNotifications    Boolean        @default(true)
+  emailOptionsBookings  Boolean        @default(true)
+  emailDocuments        Boolean        @default(true)
+  emailMessages         Boolean        @default(true)
+  emailShootLogistics   Boolean        @default(true)
+  emailListings         Boolean        @default(true)
   isTestAccount         Boolean        @default(false)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

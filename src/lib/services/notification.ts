@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NotificationType, Prisma } from '@prisma/client';
 import { sendEmail } from './email';
+import { NOTIFICATION_CATEGORY_MAP } from './notification-categories';
 
 interface CreateNotificationParams {
   userId: string;
@@ -41,10 +42,23 @@ export async function createNotification({
   // Always send email for non-admin users (use provided template or auto-generate)
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, emailNotifications: true, role: true, name: true },
+    select: {
+      email: true,
+      emailNotifications: true,
+      emailOptionsBookings: true,
+      emailDocuments: true,
+      emailMessages: true,
+      emailShootLogistics: true,
+      emailListings: true,
+      role: true,
+      name: true,
+    },
   });
 
-  if (user?.emailNotifications && user.role !== 'ADMIN') {
+  const categoryField = NOTIFICATION_CATEGORY_MAP[type];
+  const categoryEnabled = categoryField ? user?.[categoryField] !== false : true;
+
+  if (user?.emailNotifications && categoryEnabled && user.role !== 'ADMIN') {
     const email = emailContent || {
       subject: `VehicleReel: ${title}`,
       html: `

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, Check, Loader2 } from 'lucide-react';
+import { FileUp, Check, Loader2, Bell, BellOff } from 'lucide-react';
+import { ALL_EMAIL_CATEGORIES, EMAIL_CATEGORY_LABELS, EmailCategory } from '@/lib/services/notification-categories';
 
 const PERSONAL_DOC_TYPES = [
   { type: 'SA_ID', label: 'SA ID / Passport' },
@@ -16,7 +17,15 @@ const PERSONAL_DOC_TYPES = [
 export default function ProductionSettingsPage() {
   const { data: session, update } = useSession();
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [categoryPrefs, setCategoryPrefs] = useState<Record<EmailCategory, boolean>>({
+    emailOptionsBookings: true,
+    emailDocuments: true,
+    emailMessages: true,
+    emailShootLogistics: true,
+    emailListings: true,
+  });
   const [saving, setSaving] = useState(false);
+  const [savingCategory, setSavingCategory] = useState<string | null>(null);
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
@@ -26,6 +35,22 @@ export default function ProductionSettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
   const [docUploading, setDocUploading] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/users/settings')
+      .then((r) => r.json())
+      .then((prefs) => {
+        if (prefs.emailNotifications !== undefined) setEmailNotifications(prefs.emailNotifications);
+        setCategoryPrefs({
+          emailOptionsBookings: prefs.emailOptionsBookings ?? true,
+          emailDocuments: prefs.emailDocuments ?? true,
+          emailMessages: prefs.emailMessages ?? true,
+          emailShootLogistics: prefs.emailShootLogistics ?? true,
+          emailListings: prefs.emailListings ?? true,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/documents?limit=50')
@@ -79,6 +104,23 @@ export default function ProductionSettingsPage() {
       if (res.ok) setEmailNotifications(!emailNotifications);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function toggleCategory(category: EmailCategory) {
+    const newValue = !categoryPrefs[category];
+    setSavingCategory(category);
+    try {
+      const res = await fetch('/api/users/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [category]: newValue }),
+      });
+      if (res.ok) {
+        setCategoryPrefs((prev) => ({ ...prev, [category]: newValue }));
+      }
+    } finally {
+      setSavingCategory(null);
     }
   }
 
@@ -169,11 +211,14 @@ export default function ProductionSettingsPage() {
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Notifications</h2></CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-white">Email Notifications</p>
-              <p className="text-xs text-white/60">Receive email notifications for options, bookings, and messages</p>
+            <div className="flex items-center gap-2">
+              {emailNotifications ? <Bell className="h-4 w-4 text-blue-400" /> : <BellOff className="h-4 w-4 text-white/40" />}
+              <div>
+                <p className="text-sm font-medium text-white">Email Notifications</p>
+                <p className="text-xs text-white/60">Global on/off for all email notifications</p>
+              </div>
             </div>
             <Button
               size="sm"
@@ -184,6 +229,32 @@ export default function ProductionSettingsPage() {
               {emailNotifications ? 'On' : 'Off'}
             </Button>
           </div>
+
+          {emailNotifications && (
+            <div className="border-t border-white/10 pt-4 space-y-3">
+              <p className="text-xs text-white/50">Choose which types of emails you receive:</p>
+              {ALL_EMAIL_CATEGORIES.map((category) => {
+                const { label, description } = EMAIL_CATEGORY_LABELS[category];
+                const enabled = categoryPrefs[category];
+                return (
+                  <div key={category} className="flex items-center justify-between py-1">
+                    <div>
+                      <p className="text-sm text-white">{label}</p>
+                      <p className="text-xs text-white/50">{description}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={enabled ? 'primary' : 'outline'}
+                      onClick={() => toggleCategory(category)}
+                      loading={savingCategory === category}
+                    >
+                      {enabled ? 'On' : 'Off'}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
