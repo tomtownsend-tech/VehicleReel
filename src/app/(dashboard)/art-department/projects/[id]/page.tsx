@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MapPin, Users, Download, Link2, Check } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { downloadProjectImages } from '@/lib/utils/download-project';
+import { VehicleDetailModal } from '@/components/VehicleDetailModal';
 
 interface VehiclePhoto { url: string }
 
@@ -61,6 +62,7 @@ export default function ArtDepartmentProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const fetchProject = useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}`);
@@ -174,10 +176,10 @@ export default function ArtDepartmentProjectDetailPage() {
             const isBooked = option.booking?.status === 'CONFIRMED';
 
             return (
-              <Link
+              <div
                 key={po.optionId}
-                href={`/art-department/vehicles/${vehicle.id}`}
-                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden hover:border-white/20 transition-colors ${isDeclined ? 'opacity-50' : ''}`}
+                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden cursor-pointer hover:border-white/20 transition-colors ${isDeclined ? 'opacity-50' : ''}`}
+                onClick={() => setSelectedVehicleId(vehicle.id)}
               >
                 <div className="aspect-video bg-gray-800 relative">
                   {photo ? (
@@ -208,11 +210,13 @@ export default function ArtDepartmentProjectDetailPage() {
                     </Badge>
                   )}
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
       )}
+
+      <VehicleDetailModal vehicleId={selectedVehicleId} onClose={() => setSelectedVehicleId(null)} />
     </div>
   );
 }

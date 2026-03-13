@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, Link2, Plus, X, MapPin, Check, Users, UserPlus, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { downloadProjectImages } from '@/lib/utils/download-project';
+import { VehicleDetailModal } from '@/components/VehicleDetailModal';
 
 interface VehiclePhoto {
   url: string;
@@ -86,6 +87,7 @@ export default function ProjectDetailPage() {
   const [memberRole, setMemberRole] = useState<'COORDINATOR' | 'ART_DIRECTOR'>('ART_DIRECTOR');
   const [addingMember, setAddingMember] = useState(false);
   const [memberError, setMemberError] = useState('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const fetchProject = useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}`);
@@ -275,10 +277,11 @@ export default function ProjectDetailPage() {
             return (
               <div
                 key={po.optionId}
-                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden ${isDeclined ? 'opacity-50' : ''}`}
+                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden cursor-pointer hover:border-white/20 transition-colors ${isDeclined ? 'opacity-50' : ''}`}
+                onClick={() => setSelectedVehicleId(vehicle.id)}
               >
                 <button
-                  onClick={() => removeOption(po.optionId)}
+                  onClick={(e) => { e.stopPropagation(); removeOption(po.optionId); }}
                   className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
                   title="Remove from project"
                 >
@@ -390,6 +393,8 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </Modal>
+
+      <VehicleDetailModal vehicleId={selectedVehicleId} onClose={() => setSelectedVehicleId(null)} />
     </div>
   );
 }
