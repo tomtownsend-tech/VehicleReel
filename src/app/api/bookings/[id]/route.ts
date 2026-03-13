@@ -27,7 +27,6 @@ export async function GET(
         },
       },
       productionUser: { select: { id: true, name: true, email: true, phone: true, companyName: true } },
-      coordinator: { select: { id: true, name: true, email: true } },
       dailyDetails: { orderBy: { date: 'asc' } },
       checkIns: { orderBy: { date: 'asc' } },
       documents: {
@@ -39,10 +38,22 @@ export async function GET(
   });
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-  const isAuthorized = booking.ownerId === session.user.id
+
+  // Check authorization: owner, production user, admin, or project member (coordinator/art director)
+  let isAuthorized = booking.ownerId === session.user.id
     || booking.productionUserId === session.user.id
-    || booking.coordinatorId === session.user.id
     || session.user.role === 'ADMIN';
+  if (!isAuthorized) {
+    const membership = await prisma.projectMember.findFirst({
+      where: {
+        userId: session.user.id,
+        project: {
+          projectOptions: { some: { optionId: booking.optionId } },
+        },
+      },
+    });
+    isAuthorized = !!membership;
+  }
   if (!isAuthorized) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

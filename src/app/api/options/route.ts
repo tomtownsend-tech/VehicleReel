@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
     where.vehicle = { ownerId: session.user.id };
   } else if (session.user.role === 'PRODUCTION') {
     where.productionUserId = session.user.id;
+  } else if (session.user.role === 'ART_DEPARTMENT') {
+    // Art department sees options on projects they're allocated to
+    where.projectOptions = {
+      some: { project: { members: { some: { userId: session.user.id } } } },
+    };
   }
   // ADMIN sees all options (no filter)
 
@@ -58,8 +63,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.user.role !== 'PRODUCTION') {
-    return NextResponse.json({ error: 'Only production users can place options' }, { status: 403 });
+  if (session.user.role !== 'PRODUCTION' && session.user.role !== 'ART_DEPARTMENT') {
+    return NextResponse.json({ error: 'Only production or art department users can place options' }, { status: 403 });
   }
   if (session.user.status !== 'VERIFIED') {
     return NextResponse.json({ error: 'Account must be verified to place options' }, { status: 403 });
@@ -75,6 +80,32 @@ export async function POST(request: NextRequest) {
   try {
     const { projectId, ...optionData } = parsed.data;
 
+    // Art department users must specify a project they're allocated to
+    if (session.user.role === 'ART_DEPARTMENT') {
+      if (!projectId) {
+        return NextResponse.json({ error: 'Art department users must select a project when placing options' }, { status: 400 });
+      }
+      const membership = await prisma.projectMember.findUnique({
+        where: { projectId_userId: { projectId, userId: session.user.id } },
+        include: { project: { select: { productionUserId: true } } },
+      });
+      if (!membership) {
+        return NextResponse.json({ error: 'You are not allocated to this project' }, { status: 403 });
+      }
+
+      const option = await placeOption({
+        ...optionData,
+        productionUserId: membership.project.productionUserId,
+      });
+
+      await prisma.projectOption.create({
+        data: { projectId, optionId: option.id },
+      });
+
+      return NextResponse.json(option, { status: 201 });
+    }
+
+    // Production user flow
     const option = await placeOption({
       ...optionData,
       productionUserId: session.user.id,

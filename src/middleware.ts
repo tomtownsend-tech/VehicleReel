@@ -28,9 +28,15 @@ export default withAuth(
     // T&C consent gate — re-request if version changed
     // Skip for ADMIN role and allow access to settings (where re-consent form lives)
     if (token.tcVersion !== CURRENT_TC_VERSION && token.role !== 'ADMIN') {
-      const settingsPaths = ['/owner/settings', '/production/settings', '/coordinator/settings'];
+      const settingsPaths = ['/owner/settings', '/production/settings', '/coordinator/settings', '/art-department/settings'];
       if (!settingsPaths.some((p) => pathname.startsWith(p))) {
-        const settingsPath = token.role === 'OWNER' ? '/owner/settings' : token.role === 'PRODUCTION' ? '/production/settings' : '/coordinator/settings';
+        const settingsMap: Record<string, string> = {
+          OWNER: '/owner/settings',
+          PRODUCTION: '/production/settings',
+          COORDINATOR: '/coordinator/settings',
+          ART_DEPARTMENT: '/art-department/settings',
+        };
+        const settingsPath = settingsMap[token.role as string] || '/login';
         const url = new URL(`${settingsPath}?consent=required`, req.url);
         return NextResponse.redirect(url);
       }
@@ -76,6 +82,13 @@ export default withAuth(
       }
     }
 
+    // Art Department routes
+    if (pathname.startsWith('/art-department')) {
+      if (token.role !== 'ART_DEPARTMENT') {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+    }
+
     return NextResponse.next();
   },
   {
@@ -90,6 +103,7 @@ export const config = {
     '/owner/:path*',
     '/production/:path*',
     '/coordinator/:path*',
+    '/art-department/:path*',
     '/admin/:path*',
   ],
 };

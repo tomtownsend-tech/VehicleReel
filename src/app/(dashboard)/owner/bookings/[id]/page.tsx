@@ -29,13 +29,11 @@ interface Booking {
   endDate: string;
   logistics: string;
   status: string;
-  coordinatorId: string | null;
   locationAddress: string | null;
   locationPin: string | null;
   specialInstructions: string | null;
   option: { vehicle: { make: string; model: string; year: number; location: string } };
   productionUser: { name: string; email: string; phone: string | null; companyName: string | null };
-  coordinator: { id: string; name: string; email: string } | null;
   dailyDetails: DailyDetail[];
   checkIns: CheckIn[];
   documents: InsuranceDocument[];
@@ -58,7 +56,7 @@ export default function OwnerBookingDetailPage() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const hasCoordinator = !!booking?.coordinatorId;
+  const hasCoordinator = true; // Coordinators are now managed at project level
 
   useEffect(() => {
     fetch(`/api/bookings/${params.id}`)
@@ -132,7 +130,7 @@ export default function OwnerBookingDetailPage() {
             <div><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(booking.ownerPayoutCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             <div><dt className="text-white/50">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-white/50">Contact</dt><dd className="font-medium">{booking.productionUser.email}{booking.productionUser.phone && ` | ${booking.productionUser.phone}`}</dd></div>
-            {booking.coordinator && <div><dt className="text-white/50">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
+
           </dl>
         </CardContent>
       </Card>

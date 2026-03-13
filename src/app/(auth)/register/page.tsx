@@ -96,6 +96,15 @@ function RegisterForm() {
               <span className="font-medium text-white">Production</span>
               <span className="text-xs text-white/50 mt-1">Find vehicles</span>
             </button>
+            <button
+              type="button"
+              onClick={() => updateField('role', 'ART_DEPARTMENT')}
+              className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors sm:col-span-2"
+            >
+              <span className="text-2xl mb-1">🎨</span>
+              <span className="font-medium text-white">Art Department</span>
+              <span className="text-xs text-white/50 mt-1">Browse &amp; book for projects</span>
+            </button>
           </div>
         </div>
       )}
@@ -104,7 +113,7 @@ function RegisterForm() {
         <>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-white/60">
-              Registering as: <strong>{form.role === 'OWNER' ? 'Vehicle Owner' : 'Production'}</strong>
+              Registering as: <strong>{form.role === 'OWNER' ? 'Vehicle Owner' : form.role === 'ART_DEPARTMENT' ? 'Art Department' : 'Production'}</strong>
             </span>
             <button
               type="button"

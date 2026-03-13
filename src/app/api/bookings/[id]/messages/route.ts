@@ -8,6 +8,19 @@ import { MessageThread } from '@prisma/client';
 
 const VALID_THREADS: MessageThread[] = ['PRODUCTION_COORDINATOR', 'OWNER_COORDINATOR'];
 
+async function getBookingCoordinatorIds(bookingId: string, optionId: string): Promise<string[]> {
+  const members = await prisma.projectMember.findMany({
+    where: {
+      role: 'COORDINATOR',
+      project: {
+        projectOptions: { some: { optionId } },
+      },
+    },
+    select: { userId: true },
+  });
+  return members.map((m) => m.userId);
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -23,12 +36,14 @@ export async function GET(
 
   const thread = request.nextUrl.searchParams.get('thread') as MessageThread | null;
 
-  // If thread param provided, use new coordinator-based messaging
+  // If thread param provided, use coordinator-based messaging
   if (thread) {
     if (!VALID_THREADS.includes(thread)) {
       return NextResponse.json({ error: 'Invalid thread' }, { status: 400 });
     }
-    if (!booking.coordinatorId) {
+
+    const coordinatorIds = await getBookingCoordinatorIds(params.id, booking.optionId);
+    if (coordinatorIds.length === 0) {
       return NextResponse.json({ error: 'No coordinator assigned yet' }, { status: 409 });
     }
 
@@ -41,11 +56,9 @@ export async function GET(
     if (role === 'OWNER' && thread !== 'OWNER_COORDINATOR') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    // COORDINATOR can read both threads
-    if (role === 'COORDINATOR' && booking.coordinatorId !== userId) {
+    if (role === 'COORDINATOR' && !coordinatorIds.includes(userId)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    // Also allow the production user or owner of this booking by ID
     if (role !== 'COORDINATOR' && role !== 'ADMIN') {
       if (booking.productionUserId !== userId && booking.ownerId !== userId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -93,7 +106,6 @@ export async function POST(
 
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
 
-  // Block on cancelled or completed
   if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') {
     return NextResponse.json({ error: 'Cannot send messages on this booking.' }, { status: 403 });
   }
@@ -107,28 +119,29 @@ export async function POST(
 
   const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
 
-  // New threaded messaging
+  // Threaded messaging
   if (thread) {
     if (!VALID_THREADS.includes(thread)) {
       return NextResponse.json({ error: 'Invalid thread' }, { status: 400 });
     }
-    if (!booking.coordinatorId) {
+
+    const coordinatorIds = await getBookingCoordinatorIds(params.id, booking.optionId);
+    if (coordinatorIds.length === 0) {
       return NextResponse.json({ error: 'No coordinator assigned yet' }, { status: 409 });
     }
 
     const role = session.user.role;
     const userId = session.user.id;
 
-    // Validate sender can post to this thread
     if (thread === 'PRODUCTION_COORDINATOR') {
       if (role === 'OWNER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       if (role === 'PRODUCTION' && booking.productionUserId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      if (role === 'COORDINATOR' && booking.coordinatorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'COORDINATOR' && !coordinatorIds.includes(userId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     if (thread === 'OWNER_COORDINATOR') {
       if (role === 'PRODUCTION') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       if (role === 'OWNER' && booking.ownerId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      if (role === 'COORDINATOR' && booking.coordinatorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (role === 'COORDINATOR' && !coordinatorIds.includes(userId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const message = await prisma.message.create({
@@ -141,24 +154,30 @@ export async function POST(
       include: { sender: { select: { id: true, name: true } } },
     });
 
-    // Determine recipient for notification
-    let recipientId: string;
+    // Determine recipients for notification
     if (role === 'COORDINATOR') {
-      // Coordinator replying — notify the respective party
-      recipientId = thread === 'PRODUCTION_COORDINATOR' ? booking.productionUserId : booking.ownerId;
+      const recipientId = thread === 'PRODUCTION_COORDINATOR' ? booking.productionUserId : booking.ownerId;
+      await safeNotify({
+        userId: recipientId,
+        type: 'MESSAGE_RECEIVED',
+        title: 'New Message',
+        message: `${session.user.name} sent a message about the ${vehicleName} booking.`,
+        data: { bookingId: params.id },
+        emailContent: messageReceivedEmail('there', session.user.name || 'Someone', vehicleName),
+      });
     } else {
-      // Production or owner messaging — notify coordinator
-      recipientId = booking.coordinatorId;
+      // Production or owner messaging — notify all project coordinators
+      for (const coordId of coordinatorIds) {
+        await safeNotify({
+          userId: coordId,
+          type: 'MESSAGE_RECEIVED',
+          title: 'New Message',
+          message: `${session.user.name} sent a message about the ${vehicleName} booking.`,
+          data: { bookingId: params.id },
+          emailContent: messageReceivedEmail('there', session.user.name || 'Someone', vehicleName),
+        });
+      }
     }
-
-    await safeNotify({
-      userId: recipientId,
-      type: 'MESSAGE_RECEIVED',
-      title: 'New Message',
-      message: `${session.user.name} sent a message about the ${vehicleName} booking.`,
-      data: { bookingId: params.id },
-      emailContent: messageReceivedEmail('there', session.user.name || 'Someone', vehicleName),
-    });
 
     return NextResponse.json(message, { status: 201 });
   }

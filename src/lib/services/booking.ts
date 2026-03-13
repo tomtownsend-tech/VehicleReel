@@ -157,41 +157,24 @@ export async function confirmBooking(optionId: string, productionUserId: string,
   return booking;
 }
 
-export async function assignCoordinator(bookingId: string, coordinatorId: string, adminUserId: string) {
-  const coordinator = await prisma.user.findUnique({ where: { id: coordinatorId }, select: { role: true, name: true } });
-  if (!coordinator || coordinator.role !== 'COORDINATOR') throw new Error('User is not a coordinator');
-
-  const booking = await prisma.booking.update({
-    where: { id: bookingId },
-    data: { coordinatorId },
-    include: {
-      option: { include: { vehicle: { select: { make: true, model: true } } } },
-      productionUser: { select: { name: true } },
+/** Get all project coordinators for a booking (via option → projectOptions → project → members) */
+async function getProjectCoordinators(bookingId: string): Promise<string[]> {
+  const members = await prisma.projectMember.findMany({
+    where: {
+      role: 'COORDINATOR',
+      project: {
+        projectOptions: {
+          some: {
+            option: {
+              booking: { id: bookingId },
+            },
+          },
+        },
+      },
     },
+    select: { userId: true },
   });
-
-  await prisma.auditLog.create({
-    data: {
-      userId: adminUserId,
-      action: 'COORDINATOR_ASSIGNED',
-      entityType: 'BOOKING',
-      entityId: bookingId,
-      details: { coordinatorId, coordinatorName: coordinator.name },
-    },
-  });
-
-  const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
-  const datesDisplay = `${format(booking.startDate, 'MMM d, yyyy')} - ${format(booking.endDate, 'MMM d, yyyy')}`;
-
-  await safeNotify({
-    userId: coordinatorId,
-    type: 'COORDINATOR_ASSIGNED',
-    title: 'New Booking Assignment',
-    message: `You have been assigned to coordinate the ${vehicleName} booking (${datesDisplay}) for ${booking.productionUser.name}.`,
-    data: { bookingId },
-  });
-
-  return booking;
+  return members.map((m) => m.userId);
 }
 
 export async function checkInDay(bookingId: string, date: string, productionUserId: string) {
@@ -223,10 +206,11 @@ export async function checkInDay(bookingId: string, date: string, productionUser
     data: { bookingId },
   });
 
-  // Notify coordinator of check-in
-  if (booking.coordinatorId) {
+  // Notify project coordinators of check-in
+  const coordinatorIds = await getProjectCoordinators(bookingId);
+  for (const coordId of coordinatorIds) {
     await safeNotify({
-      userId: booking.coordinatorId,
+      userId: coordId,
       type: 'VEHICLE_CHECKED_IN',
       title: 'Vehicle Checked In',
       message: `The ${vehicleName} has been checked in for ${dateDisplay}.`,
@@ -243,9 +227,9 @@ export async function checkInDay(bookingId: string, date: string, productionUser
       data: { status: 'PAYMENT_READY' },
     });
 
-    if (booking.coordinatorId) {
+    for (const coordId of coordinatorIds) {
       await safeNotify({
-        userId: booking.coordinatorId,
+        userId: coordId,
         type: 'BOOKING_PAYMENT_READY',
         title: 'All Days Checked In',
         message: `All shoot days have been checked in for the ${vehicleName} booking. Payment is now ready.`,
@@ -272,7 +256,18 @@ export async function updateBookingDetails(
     include: { option: { include: { vehicle: { select: { make: true, model: true } } } } },
   });
   if (!booking) throw new Error('Booking not found');
-  if (booking.productionUserId !== userId && booking.coordinatorId !== userId) throw new Error('Not authorized');
+  // Allow production user, project coordinators, and project art directors
+  if (booking.productionUserId !== userId) {
+    const membership = await prisma.projectMember.findFirst({
+      where: {
+        userId,
+        project: {
+          projectOptions: { some: { option: { booking: { id: bookingId } } } },
+        },
+      },
+    });
+    if (!membership) throw new Error('Not authorized');
+  }
 
   // Update booking-level fields
   await prisma.booking.update({
@@ -313,15 +308,18 @@ export async function updateBookingDetails(
     data: { bookingId },
   });
 
-  // Notify coordinator if assigned
-  if (booking.coordinatorId) {
-    await safeNotify({
-      userId: booking.coordinatorId,
-      type: 'SHOOT_DETAILS_UPDATED',
-      title: 'Shoot Details Updated',
-      message: `Shoot details have been updated for the ${vehicleName} booking.`,
-      data: { bookingId },
-    });
+  // Notify project coordinators
+  const detailCoordinatorIds = await getProjectCoordinators(bookingId);
+  for (const coordId of detailCoordinatorIds) {
+    if (coordId !== userId) {
+      await safeNotify({
+        userId: coordId,
+        type: 'SHOOT_DETAILS_UPDATED',
+        title: 'Shoot Details Updated',
+        message: `Shoot details have been updated for the ${vehicleName} booking.`,
+        data: { bookingId },
+      });
+    }
   }
 
   return prisma.booking.findUnique({
@@ -349,7 +347,6 @@ export async function cancelBooking(bookingId: string, productionUserId: string,
         },
       },
       productionUser: { select: { id: true, name: true, email: true, companyName: true } },
-      coordinator: { select: { id: true, name: true } },
     },
   });
 
@@ -413,10 +410,11 @@ export async function cancelBooking(bookingId: string, productionUserId: string,
     ),
   });
 
-  // Notify coordinator if assigned
-  if (booking.coordinator) {
+  // Notify project coordinators
+  const cancelCoordinatorIds = await getProjectCoordinators(bookingId);
+  for (const coordId of cancelCoordinatorIds) {
     await safeNotify({
-      userId: booking.coordinator.id,
+      userId: coordId,
       type: 'BOOKING_CANCELLED',
       title: 'Booking Cancelled',
       message: `The ${vehicleName} booking (${datesDisplay}) has been cancelled by ${cancelledByName}.`,

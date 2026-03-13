@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { assignCoordinator } from '@/lib/services/booking';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -18,10 +17,19 @@ export async function GET(request: NextRequest) {
     prisma.booking.findMany({
       include: {
         option: {
-          include: { vehicle: { select: { make: true, model: true, year: true } } },
+          include: {
+            vehicle: { select: { make: true, model: true, year: true } },
+            projectOptions: {
+              include: {
+                project: {
+                  select: { id: true, name: true, members: { where: { role: 'COORDINATOR' }, include: { user: { select: { id: true, name: true } } } } },
+                },
+              },
+              take: 1,
+            },
+          },
         },
         productionUser: { select: { name: true, companyName: true } },
-        coordinator: { select: { id: true, name: true } },
         checkIns: true,
         dailyDetails: true,
       },
@@ -45,20 +53,10 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { bookingId, coordinatorId, action } = body;
+  const { bookingId, action } = body;
 
   if (!bookingId) {
     return NextResponse.json({ error: 'bookingId required' }, { status: 400 });
-  }
-
-  // Assign coordinator
-  if (coordinatorId) {
-    try {
-      const booking = await assignCoordinator(bookingId, coordinatorId, session.user.id);
-      return NextResponse.json(booking);
-    } catch (e: unknown) {
-      return NextResponse.json({ error: e instanceof Error ? e.message : 'Failed' }, { status: 400 });
-    }
   }
 
   // Complete booking

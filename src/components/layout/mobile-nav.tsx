@@ -23,6 +23,12 @@ export function MobileNav() {
         { href: '/admin/bookings', label: 'Bookings' },
         { href: '/admin/special-requests', label: 'Special Requests' },
       ]
+    : role === 'ART_DEPARTMENT'
+    ? [
+        { href: '/art-department/projects', label: 'My Projects' },
+        { href: '/art-department/vehicles', label: 'Browse Vehicles' },
+        { href: '/art-department/settings', label: 'Settings' },
+      ]
     : role === 'COORDINATOR'
     ? [
         { href: '/coordinator/bookings', label: 'My Bookings' },
@@ -42,7 +48,7 @@ export function MobileNav() {
         { href: '/production/settings', label: 'Settings' },
       ];
 
-  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'COORDINATOR' ? '/coordinator/bookings' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
+  const homeHref = role === 'ADMIN' ? '/admin/analytics' : role === 'ART_DEPARTMENT' ? '/art-department/projects' : role === 'COORDINATOR' ? '/coordinator/bookings' : role === 'OWNER' ? '/owner/vehicles' : '/production/search';
 
   return (
     <div className="lg:hidden">

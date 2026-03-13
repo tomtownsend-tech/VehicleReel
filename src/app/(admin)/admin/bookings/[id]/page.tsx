@@ -11,7 +11,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 interface DailyDetail { id: string; date: string; callTime: string | null; locationAddress: string | null; locationPin: string | null; notes: string | null }
 interface CheckIn { id: string; date: string; checkedInAt: string }
 interface InsuranceDoc { id: string; status: string; fileUrl: string; fileName: string }
-interface Coordinator { id: string; name: string; email: string }
+
 
 interface Booking {
   id: string;
@@ -22,13 +22,14 @@ interface Booking {
   endDate: string;
   logistics: string;
   status: string;
-  coordinatorId: string | null;
   locationAddress: string | null;
   locationPin: string | null;
   specialInstructions: string | null;
-  option: { vehicle: { make: string; model: string; year: number; location: string; owner: { name: string } } };
+  option: {
+    vehicle: { make: string; model: string; year: number; location: string; owner: { name: string } };
+    projectOptions?: { project: { id: string; name: string; members: { role: string; user: { id: string; name: string } }[] } }[];
+  };
   productionUser: { name: string; email: string; companyName: string | null };
-  coordinator: Coordinator | null;
   dailyDetails: DailyDetail[];
   checkIns: CheckIn[];
   documents: InsuranceDoc[];
@@ -45,9 +46,6 @@ export default function AdminBookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [booking, setBooking] = useState<Booking | null>(null);
-  const [coordinators, setCoordinators] = useState<{ id: string; name: string; email: string }[]>([]);
-  const [selectedCoordinator, setSelectedCoordinator] = useState('');
-  const [assigning, setAssigning] = useState(false);
   const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
@@ -55,35 +53,7 @@ export default function AdminBookingDetailPage() {
       .then((r) => r.json())
       .then((data) => { if (data && !data.error) setBooking(data); })
       .catch(() => {});
-
-    fetch('/api/admin/users/coordinators')
-      .then((r) => r.json())
-      .then((data) => setCoordinators(Array.isArray(data) ? data : []))
-      .catch(() => {});
   }, [params.id]);
-
-  async function assignCoordinator() {
-    if (!selectedCoordinator || !booking) return;
-    setAssigning(true);
-    try {
-      const res = await fetch('/api/admin/bookings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: booking.id, coordinatorId: selectedCoordinator }),
-      });
-      if (res.ok) {
-        // Refresh booking
-        const bookingRes = await fetch(`/api/bookings/${booking.id}`);
-        const updated = await bookingRes.json();
-        if (updated && !updated.error) setBooking(updated);
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to assign coordinator');
-      }
-    } finally {
-      setAssigning(false);
-    }
-  }
 
   async function markCompleted() {
     if (!booking) return;
@@ -142,38 +112,34 @@ export default function AdminBookingDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Coordinator Assignment */}
+      {/* Project Team */}
       <Card className="mb-6">
-        <CardHeader><h2 className="text-lg font-semibold">Coordinator</h2></CardHeader>
+        <CardHeader><h2 className="text-lg font-semibold">Project Team</h2></CardHeader>
         <CardContent>
-          {booking.coordinator ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white">{booking.coordinator.name}</p>
-                <p className="text-xs text-white/50">{booking.coordinator.email}</p>
+          {(() => {
+            const projectInfo = booking.option.projectOptions?.[0]?.project;
+            if (!projectInfo) return <p className="text-sm text-white/50">Not linked to a project.</p>;
+            const coordinators = projectInfo.members.filter((m) => m.role === 'COORDINATOR');
+            const artDirectors = projectInfo.members.filter((m) => m.role === 'ART_DIRECTOR');
+            return (
+              <div className="space-y-2">
+                <p className="text-sm text-white/60">Project: <span className="font-medium text-white">{projectInfo.name}</span></p>
+                {coordinators.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {coordinators.map((m) => <Badge key={m.user.id} variant="success">{m.user.name} (Coordinator)</Badge>)}
+                  </div>
+                )}
+                {artDirectors.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {artDirectors.map((m) => <Badge key={m.user.id} variant="default">{m.user.name} (Art Director)</Badge>)}
+                  </div>
+                )}
+                {coordinators.length === 0 && artDirectors.length === 0 && (
+                  <p className="text-xs text-white/40">No team members assigned. Production can manage team from the project page.</p>
+                )}
               </div>
-              <Badge variant="success">Assigned</Badge>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <select
-                value={selectedCoordinator}
-                onChange={(e) => setSelectedCoordinator(e.target.value)}
-                className="flex-1 px-3 py-2 border border-white/15 rounded-lg text-sm bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40"
-              >
-                <option value="">Select coordinator...</option>
-                {coordinators.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                ))}
-              </select>
-              <Button onClick={assignCoordinator} loading={assigning} disabled={!selectedCoordinator}>
-                Assign
-              </Button>
-            </div>
-          )}
-          {coordinators.length === 0 && !booking.coordinator && (
-            <p className="text-xs text-white/40 mt-2">No coordinator users found. Promote a user to COORDINATOR role first.</p>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 

@@ -9,8 +9,21 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Find all bookings on projects where this user is a coordinator member
   const bookings = await prisma.booking.findMany({
-    where: { coordinatorId: session.user.id },
+    where: {
+      option: {
+        projectOptions: {
+          some: {
+            project: {
+              members: {
+                some: { userId: session.user.id, role: 'COORDINATOR' },
+              },
+            },
+          },
+        },
+      },
+    },
     include: {
       option: {
         include: {
@@ -19,6 +32,10 @@ export async function GET() {
               owner: { select: { id: true, name: true } },
               photos: { take: 1, orderBy: { order: 'asc' } },
             },
+          },
+          projectOptions: {
+            include: { project: { select: { id: true, name: true } } },
+            take: 1,
           },
         },
       },

@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, Link2, Plus, X, MapPin, Check } from 'lucide-react';
+import { ArrowLeft, Download, Link2, Plus, X, MapPin, Check, Users, UserPlus, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { downloadProjectImages } from '@/lib/utils/download-project';
 
@@ -36,6 +37,12 @@ interface ProjectOption {
   option: OptionItem;
 }
 
+interface Member {
+  userId: string;
+  role: string;
+  user: { id: string; name: string; email: string; role: string };
+}
+
 interface Project {
   id: string;
   name: string;
@@ -44,6 +51,7 @@ interface Project {
   endDate: string;
   shareToken: string;
   projectOptions: ProjectOption[];
+  members: Member[];
 }
 
 interface AvailableOption {
@@ -73,6 +81,11 @@ export default function ProjectDetailPage() {
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberRole, setMemberRole] = useState<'COORDINATOR' | 'ART_DIRECTOR'>('ART_DIRECTOR');
+  const [addingMember, setAddingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
 
   const fetchProject = useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}`);
@@ -141,6 +154,38 @@ export default function ProjectDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function addMember() {
+    if (!memberEmail) return;
+    setAddingMember(true);
+    setMemberError('');
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: memberEmail, role: memberRole }),
+      });
+      if (res.ok) {
+        setMemberEmail('');
+        setMemberError('');
+        fetchProject();
+      } else {
+        const data = await res.json();
+        setMemberError(data.error || 'Failed to add member');
+      }
+    } finally {
+      setAddingMember(false);
+    }
+  }
+
+  async function removeMember(userId: string) {
+    await fetch(`/api/projects/${projectId}/members`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+    fetchProject();
+  }
+
   if (loading || !project) {
     return <div className="animate-pulse space-y-4"><div className="h-10 bg-gray-800 rounded w-48" /><div className="h-64 bg-gray-800 rounded-xl" /></div>;
   }
@@ -176,12 +221,40 @@ export default function ProjectDetailPage() {
             {copied ? <Check className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
             {copied ? 'Copied!' : 'Share Presentation'}
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowTeamModal(true)}>
+            <Users className="h-4 w-4 mr-1" />
+            Team ({project.members.length})
+          </Button>
           <Button size="sm" onClick={openAddModal}>
             <Plus className="h-4 w-4 mr-1" />
             Add Options
           </Button>
         </div>
       </div>
+
+      {/* Team Members */}
+      {project.members.length > 0 && (
+        <div className="mb-6 p-4 bg-gray-900 rounded-xl border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-4 w-4 text-white/50" />
+            <h3 className="text-sm font-medium text-white">Team Members</h3>
+          </div>
+          <div className="space-y-2">
+            {project.members.map((m) => (
+              <div key={m.userId} className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-white">{m.user.name}</span>
+                  <span className="text-white/40 ml-2">{m.user.email}</span>
+                  <Badge variant="default" className="ml-2 text-xs">{m.role === 'COORDINATOR' ? 'Coordinator' : 'Art Director'}</Badge>
+                </div>
+                <button onClick={() => removeMember(m.userId)} className="text-white/30 hover:text-red-400 p-1" title="Remove">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {project.projectOptions.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-white/15 rounded-xl">
@@ -240,6 +313,50 @@ export default function ProjectDetailPage() {
           })}
         </div>
       )}
+
+      <Modal open={showTeamModal} onClose={() => { setShowTeamModal(false); setMemberError(''); }} title="Manage Team">
+        <div className="space-y-4">
+          <p className="text-sm text-white/50">Add coordinators or art directors to this project by email.</p>
+          {memberError && <p className="text-sm text-red-400">{memberError}</p>}
+          <div className="flex gap-2">
+            <select
+              value={memberRole}
+              onChange={(e) => setMemberRole(e.target.value as 'COORDINATOR' | 'ART_DIRECTOR')}
+              className="px-3 py-2 border border-white/15 rounded-lg text-sm bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+            >
+              <option value="ART_DIRECTOR">Art Director</option>
+              <option value="COORDINATOR">Coordinator</option>
+            </select>
+            <Input
+              id="memberEmail"
+              type="email"
+              value={memberEmail}
+              onChange={(e) => setMemberEmail(e.target.value)}
+              placeholder="user@example.com"
+              className="flex-1"
+            />
+            <Button onClick={addMember} loading={addingMember} disabled={!memberEmail}>
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
+          {project.members.length > 0 && (
+            <div className="border-t border-white/10 pt-3 space-y-2">
+              {project.members.map((m) => (
+                <div key={m.userId} className="flex items-center justify-between text-sm p-2 rounded-lg bg-white/5">
+                  <div>
+                    <span className="text-white">{m.user.name}</span>
+                    <span className="text-white/40 ml-2 text-xs">{m.user.email}</span>
+                    <Badge variant="default" className="ml-2 text-xs">{m.role === 'COORDINATOR' ? 'Coordinator' : 'Art Director'}</Badge>
+                  </div>
+                  <button onClick={() => removeMember(m.userId)} className="text-white/30 hover:text-red-400 p-1">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
 
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Options to Project">
         {loadingOptions ? (

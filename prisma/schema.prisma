@@ -13,6 +13,7 @@ enum UserRole {
   PRODUCTION
   ADMIN
   COORDINATOR
+  ART_DEPARTMENT
 }
 
 enum UserStatus {
@@ -130,6 +131,11 @@ enum NotificationType {
   BOOKING_CANCELLED
 }
 
+enum ProjectMemberRole {
+  COORDINATOR
+  ART_DIRECTOR
+}
+
 enum MessageThread {
   PRODUCTION_COORDINATOR
   OWNER_COORDINATOR
@@ -163,12 +169,12 @@ model User {
   vehicles               Vehicle[]
   optionsAsProduction    Option[]       @relation("ProductionOptions")
   bookingsAsProduction   Booking[]      @relation("ProductionBookings")
-  bookingsAsCoordinator  Booking[]      @relation("CoordinatorBookings")
   sentMessages           Message[]      @relation("SentMessages")
   notifications          Notification[]
   auditLogs              AuditLog[]
   checkIns               BookingCheckIn[]
   projects               Project[]      @relation("ProductionProjects")
+  projectMemberships     ProjectMember[]
 
   @@map("users")
 }
@@ -328,7 +334,6 @@ model Booking {
   vehicleId           String
   ownerId             String
   productionUserId    String
-  coordinatorId       String?
   rateType            RateType
   rateCents           Int
   ownerPayoutCents    Int           @default(0)
@@ -347,7 +352,6 @@ model Booking {
 
   option           Option              @relation(fields: [optionId], references: [id])
   productionUser   User                @relation("ProductionBookings", fields: [productionUserId], references: [id])
-  coordinator      User?               @relation("CoordinatorBookings", fields: [coordinatorId], references: [id])
   messages         Message[]
   documents        Document[]
   dailyDetails     BookingDailyDetail[]
@@ -356,7 +360,6 @@ model Booking {
   @@index([vehicleId, status])
   @@index([ownerId])
   @@index([productionUserId])
-  @@index([coordinatorId])
   @@map("bookings")
 }
 
@@ -453,6 +456,7 @@ model Project {
 
   productionUser   User            @relation("ProductionProjects", fields: [productionUserId], references: [id], onDelete: Cascade)
   projectOptions   ProjectOption[]
+  members          ProjectMember[]
 
   @@index([productionUserId])
   @@map("projects")
@@ -469,6 +473,20 @@ model ProjectOption {
   @@id([projectId, optionId])
   @@index([optionId])
   @@map("project_options")
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  role      ProjectMemberRole
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
 }
 
 model DeletionLog {

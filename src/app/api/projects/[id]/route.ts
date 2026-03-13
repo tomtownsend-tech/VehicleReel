@@ -11,13 +11,10 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.user.role !== 'PRODUCTION') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
   const project = await prisma.project.findUnique({
     where: { id: params.id },
     include: {
+      productionUser: { select: { id: true, name: true, companyName: true } },
       projectOptions: {
         include: {
           option: {
@@ -27,14 +24,25 @@ export async function GET(
                   photos: { take: 1, orderBy: { order: 'asc' } },
                 },
               },
+              booking: { select: { id: true, status: true } },
             },
           },
         },
       },
+      members: {
+        include: { user: { select: { id: true, name: true, email: true, role: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
     },
   });
 
-  if (!project || project.productionUserId !== session.user.id) {
+  if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // Allow production owner, admin, or project members
+  const isOwner = project.productionUserId === session.user.id;
+  const isAdmin = session.user.role === 'ADMIN';
+  const isMember = project.members.some((m) => m.userId === session.user.id);
+  if (!isOwner && !isAdmin && !isMember) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 

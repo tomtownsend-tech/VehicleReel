@@ -38,13 +38,11 @@ interface Booking {
   logistics: string;
   status: string;
   shootDayHours: number;
-  coordinatorId: string | null;
   locationAddress: string | null;
   locationPin: string | null;
   specialInstructions: string | null;
   option: { vehicle: { make: string; model: string; year: number; location: string; owner: { name: string; email: string; phone: string | null } } };
   productionUser: { name: string };
-  coordinator: { id: string; name: string; email: string } | null;
   dailyDetails: DailyDetail[];
   checkIns: CheckIn[];
   documents: InsuranceDocument[];
@@ -86,7 +84,7 @@ export default function ProductionBookingDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
 
-  const hasCoordinator = !!booking?.coordinatorId;
+  const hasCoordinator = true; // Coordinators are now managed at project level
   const insuranceDoc = booking?.documents?.[0] || null;
   const insuranceDeadline = booking ? new Date(new Date(booking.startDate).getTime() - 24 * 60 * 60 * 1000) : null;
   const isPastDeadline = insuranceDeadline ? new Date() >= insuranceDeadline : false;
@@ -333,7 +331,7 @@ export default function ProductionBookingDetailPage() {
             <div><dt className="text-white/50">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
             <div><dt className="text-white/50">Shoot Day</dt><dd className="font-medium">{booking.shootDayHours}-hour day{booking.shootDayHours === 12 ? ' (7-day payment terms)' : ''}</dd></div>
             <div><dt className="text-white/50">Owner Contact</dt><dd className="font-medium">{booking.option.vehicle.owner.email}{booking.option.vehicle.owner.phone && ` | ${booking.option.vehicle.owner.phone}`}</dd></div>
-            {booking.coordinator && <div><dt className="text-white/50">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
+
           </dl>
         </CardContent>
       </Card>
