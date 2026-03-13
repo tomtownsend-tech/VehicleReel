@@ -36,3 +36,18 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# claude code / claude-flow
+.claude/
+.claude-flow/
+.mcp.json
+
+# local working files
+Arlene Suggestions/
+DNS/
+Invoices/
+Logins/
+QR/
+
+# temp env snapshots
+.env.vercel.*
