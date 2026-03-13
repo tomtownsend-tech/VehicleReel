@@ -18,7 +18,17 @@ export async function GET(
       projectOptions: {
         include: {
           option: {
-            include: {
+            select: {
+              id: true,
+              status: true,
+              rateType: true,
+              rateCents: true,
+              ownerPayoutCents: true,
+              startDate: true,
+              endDate: true,
+              queuePosition: true,
+              responseDeadlineAt: true,
+              confirmationDeadlineAt: true,
               vehicle: {
                 include: {
                   photos: { take: 1, orderBy: { order: 'asc' } },

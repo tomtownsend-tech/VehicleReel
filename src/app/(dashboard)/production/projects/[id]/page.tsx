@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, Link2, Plus, X, MapPin, Check, Users, UserPlus, Trash2 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { ArrowLeft, Download, Link2, Plus, X, MapPin, Check, Users, UserPlus, Trash2, Clock } from 'lucide-react';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import { downloadProjectImages } from '@/lib/utils/download-project';
 import { VehicleDetailModal } from '@/components/VehicleDetailModal';
 
@@ -30,7 +30,15 @@ interface Vehicle {
 interface OptionItem {
   id: string;
   status: string;
+  rateType: string;
+  rateCents: number;
+  startDate: string;
+  endDate: string;
+  queuePosition: number;
+  responseDeadlineAt: string;
+  confirmationDeadlineAt: string | null;
   vehicle: Vehicle;
+  booking: { id: string; status: string } | null;
 }
 
 interface ProjectOption {
@@ -258,64 +266,217 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {project.projectOptions.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-white/15 rounded-xl">
-          <p className="text-white/50 mb-4">No vehicles in this project yet.</p>
-          <Button variant="outline" onClick={openAddModal}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add your first option
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {project.projectOptions.map((po) => {
-            const { option } = po;
-            const { vehicle } = option;
-            const photo = vehicle.photos[0]?.url;
-            const isDeclined = DECLINED_STATUSES.includes(option.status);
+      {(() => {
+        const confirmedBookings = project.projectOptions.filter(
+          (po) => po.option.booking && po.option.status === 'CONFIRMED'
+        );
+        const activeOptions = project.projectOptions.filter(
+          (po) => !DECLINED_STATUSES.includes(po.option.status) && po.option.status !== 'CONFIRMED'
+        );
+        const declinedOptions = project.projectOptions.filter(
+          (po) => DECLINED_STATUSES.includes(po.option.status)
+        );
+        const statusVariant: Record<string, 'warning' | 'success' | 'danger' | 'info' | 'default'> = {
+          PENDING_RESPONSE: 'warning', ACCEPTED: 'info', CONFIRMED: 'success',
+        };
 
-            return (
-              <div
-                key={po.optionId}
-                className={`relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden cursor-pointer hover:border-white/20 transition-colors ${isDeclined ? 'opacity-50' : ''}`}
-                onClick={() => setSelectedVehicleId(vehicle.id)}
-              >
-                <button
-                  onClick={(e) => { e.stopPropagation(); removeOption(po.optionId); }}
-                  className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
-                  title="Remove from project"
-                >
-                  <X className="h-4 w-4 text-white/50" />
-                </button>
-                <div className="aspect-video bg-gray-800 relative">
-                  {photo ? (
-                    <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="font-semibold text-white text-sm">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </p>
-                  <p className="text-xs text-white/50 mt-0.5">
-                    {vehicle.color} &middot; {vehicle.type.replace('_', ' ')}
-                  </p>
-                  <p className="text-xs text-white/50 mt-0.5 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {vehicle.location}
-                  </p>
-                  {isDeclined && (
-                    <Badge variant="danger" className="mt-2 text-xs">
-                      {option.status.replace(/_/g, ' ')}
-                    </Badge>
-                  )}
+        if (project.projectOptions.length === 0) {
+          return (
+            <div className="text-center py-16 border border-dashed border-white/15 rounded-xl">
+              <p className="text-white/50 mb-4">No vehicles in this project yet.</p>
+              <Button variant="outline" onClick={openAddModal}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add your first option
+              </Button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-8">
+            {/* Confirmed Bookings */}
+            {confirmedBookings.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-3">
+                  Confirmed Bookings ({confirmedBookings.length})
+                </h2>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  {confirmedBookings.map((po) => {
+                    const { option } = po;
+                    const { vehicle } = option;
+                    const photo = vehicle.photos[0]?.url;
+                    return (
+                      <div
+                        key={po.optionId}
+                        className="relative rounded-xl border border-emerald-400/30 bg-gray-900 overflow-hidden cursor-pointer hover:border-emerald-400/50 transition-colors"
+                        onClick={() => setSelectedVehicleId(vehicle.id)}
+                      >
+                        <div className="absolute top-2 left-2 z-10">
+                          <Badge variant="success">Booked</Badge>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeOption(po.optionId); }}
+                          className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
+                          title="Remove from project"
+                        >
+                          <X className="h-4 w-4 text-white/50" />
+                        </button>
+                        <div className="aspect-video bg-gray-800 relative">
+                          {photo ? (
+                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="font-semibold text-white text-sm">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-xs text-white/50 mt-0.5">
+                            {formatDate(option.startDate)} &ndash; {formatDate(option.endDate)}
+                          </p>
+                          <p className="text-xs text-white/50 mt-0.5">
+                            {formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}
+                          </p>
+                          {option.booking && (
+                            <Link
+                              href={`/production/bookings/${option.booking.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-2 inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                            >
+                              View Booking &rarr;
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+
+            {/* Shortlisted Options */}
+            {activeOptions.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-3">
+                  Shortlisted Options ({activeOptions.length})
+                </h2>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activeOptions.map((po) => {
+                    const { option } = po;
+                    const { vehicle } = option;
+                    const photo = vehicle.photos[0]?.url;
+                    const canConfirm = option.status === 'ACCEPTED' && option.queuePosition === 1;
+                    return (
+                      <div
+                        key={po.optionId}
+                        className="relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden cursor-pointer hover:border-white/20 transition-colors"
+                        onClick={() => setSelectedVehicleId(vehicle.id)}
+                      >
+                        <div className="absolute top-2 left-2 z-10">
+                          <Badge variant={statusVariant[option.status] || 'default'}>
+                            {option.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeOption(po.optionId); }}
+                          className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
+                          title="Remove from project"
+                        >
+                          <X className="h-4 w-4 text-white/50" />
+                        </button>
+                        <div className="aspect-video bg-gray-800 relative">
+                          {photo ? (
+                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="font-semibold text-white text-sm">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-xs text-white/50 mt-0.5">
+                            {formatDate(option.startDate)} &ndash; {formatDate(option.endDate)}
+                          </p>
+                          <p className="text-xs text-white/50 mt-0.5">
+                            {formatCurrency(option.rateCents)}{option.rateType === 'PER_DAY' ? '/day' : ' package'}
+                            <span className="ml-2">#{option.queuePosition}</span>
+                          </p>
+                          {option.status === 'PENDING_RESPONSE' && (
+                            <p className="text-xs text-amber-400 mt-1 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Awaiting owner
+                            </p>
+                          )}
+                          {canConfirm && (
+                            <Link
+                              href={`/production/options/${option.id}/confirm`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-2 inline-block px-3 py-1 rounded-lg bg-emerald-400 text-gray-900 text-xs font-medium hover:bg-emerald-300"
+                            >
+                              Confirm Booking
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Declined Options */}
+            {declinedOptions.length > 0 && (
+              <div>
+                <h2 className="text-sm font-medium text-white/40 mb-3">
+                  Declined / Expired ({declinedOptions.length})
+                </h2>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  {declinedOptions.map((po) => {
+                    const { option } = po;
+                    const { vehicle } = option;
+                    const photo = vehicle.photos[0]?.url;
+                    return (
+                      <div
+                        key={po.optionId}
+                        className="relative rounded-xl border border-white/10 bg-gray-900 overflow-hidden opacity-50 cursor-pointer hover:border-white/20 transition-colors"
+                        onClick={() => setSelectedVehicleId(vehicle.id)}
+                      >
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeOption(po.optionId); }}
+                          className="absolute top-2 right-2 z-10 bg-gray-900/90 hover:bg-gray-900 rounded-full p-1"
+                          title="Remove from project"
+                        >
+                          <X className="h-4 w-4 text-white/50" />
+                        </button>
+                        <div className="aspect-video bg-gray-800 relative">
+                          {photo ? (
+                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="font-semibold text-white text-sm">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-xs text-white/50 mt-0.5 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {vehicle.location}
+                          </p>
+                          <Badge variant="danger" className="mt-2 text-xs">
+                            {option.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <Modal open={showTeamModal} onClose={() => { setShowTeamModal(false); setMemberError(''); }} title="Manage Team">
         <div className="space-y-4">
