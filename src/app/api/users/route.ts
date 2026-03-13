@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { registerSchema } from '@/lib/validators/auth';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { sendEmail, emailVerificationEmail } from '@/lib/services/email';
+import { CURRENT_TC_VERSION } from '@/lib/constants/tc-version';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
+    const now = new Date();
     const user = await prisma.user.create({
       data: {
         name,
@@ -46,6 +48,9 @@ export async function POST(request: NextRequest) {
         phone,
         companyName,
         status: 'PENDING_VERIFICATION',
+        tcVersion: CURRENT_TC_VERSION,
+        tcConsentAt: now,
+        popiaConsentAt: now,
       },
       select: {
         id: true,

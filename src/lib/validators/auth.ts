@@ -7,6 +7,8 @@ export const registerSchema = z.object({
   role: z.enum(['OWNER', 'PRODUCTION']),
   phone: z.string().min(1, 'Phone number is required'),
   companyName: z.string().optional(),
+  acceptTc: z.literal(true, { message: 'You must accept the Terms & Conditions' }),
+  acceptPopia: z.literal(true, { message: 'You must consent to POPIA data processing' }),
 });
 
 export const loginSchema = z.object({

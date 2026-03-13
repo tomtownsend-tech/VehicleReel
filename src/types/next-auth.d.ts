@@ -22,6 +22,7 @@ declare module 'next-auth' {
     status: UserStatus;
     isTestAccount: boolean;
     emailVerified: boolean;
+    tcVersion: string | null;
   }
 }
 
@@ -32,5 +33,6 @@ declare module 'next-auth/jwt' {
     status: UserStatus;
     isTestAccount: boolean;
     emailVerified: boolean;
+    tcVersion: string | null;
   }
 }

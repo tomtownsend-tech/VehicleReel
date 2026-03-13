@@ -153,6 +153,9 @@ model User {
   emailListings         Boolean        @default(true)
   isTestAccount         Boolean        @default(false)
   setupReminderCount    Int            @default(0)
+  tcVersion             String?
+  tcConsentAt           DateTime?
+  popiaConsentAt        DateTime?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

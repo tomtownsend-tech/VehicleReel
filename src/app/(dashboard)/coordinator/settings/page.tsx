@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { ConsentBanner } from '@/components/ConsentBanner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +80,10 @@ export default function CoordinatorSettingsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
+
+      <Suspense fallback={null}>
+        <ConsentBanner />
+      </Suspense>
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Profile</h2></CardHeader>

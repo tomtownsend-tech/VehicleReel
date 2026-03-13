@@ -18,6 +18,8 @@ function RegisterForm() {
     role: searchParams.get('role') || '',
     phone: '',
     companyName: '',
+    acceptTc: false,
+    acceptPopia: false,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -162,6 +164,39 @@ function RegisterForm() {
             required
             minLength={8}
           />
+
+          <div className="space-y-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.acceptTc}
+                onChange={(e) => setForm((prev) => ({ ...prev, acceptTc: e.target.checked }))}
+                className="mt-0.5 rounded border-white/15 text-white focus:ring-white/20 bg-white/5"
+                required
+              />
+              <span className="text-sm text-white/60">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-white/80 underline hover:text-white">
+                  Terms &amp; Conditions
+                </Link>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.acceptPopia}
+                onChange={(e) => setForm((prev) => ({ ...prev, acceptPopia: e.target.checked }))}
+                className="mt-0.5 rounded border-white/15 text-white focus:ring-white/20 bg-white/5"
+                required
+              />
+              <span className="text-sm text-white/60">
+                I consent to the processing of my personal information in accordance with{' '}
+                <Link href="/terms#popia" target="_blank" className="text-white/80 underline hover:text-white">
+                  POPIA
+                </Link>
+              </span>
+            </label>
+          </div>
 
           <Button type="submit" className="w-full" loading={loading}>
             Create Account

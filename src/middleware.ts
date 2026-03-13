@@ -1,6 +1,8 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+const CURRENT_TC_VERSION = '1.0';
+
 export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
@@ -21,6 +23,17 @@ export default withAuth(
     // Skip for ADMIN role (always seeded test accounts)
     if (token.emailVerified === false && token.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/verify-email', req.url));
+    }
+
+    // T&C consent gate — re-request if version changed
+    // Skip for ADMIN role and allow access to settings (where re-consent form lives)
+    if (token.tcVersion !== CURRENT_TC_VERSION && token.role !== 'ADMIN') {
+      const settingsPaths = ['/owner/settings', '/production/settings', '/coordinator/settings'];
+      if (!settingsPaths.some((p) => pathname.startsWith(p))) {
+        const settingsPath = token.role === 'OWNER' ? '/owner/settings' : token.role === 'PRODUCTION' ? '/production/settings' : '/coordinator/settings';
+        const url = new URL(`${settingsPath}?consent=required`, req.url);
+        return NextResponse.redirect(url);
+      }
     }
 
     // Admin routes

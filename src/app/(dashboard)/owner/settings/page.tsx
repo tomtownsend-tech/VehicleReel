@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { FileUp, Check, Loader2, Bell, BellOff } from 'lucide-react';
 import { ALL_EMAIL_CATEGORIES, EMAIL_CATEGORY_LABELS, EmailCategory } from '@/lib/services/notification-categories';
+import { Suspense } from 'react';
+import { ConsentBanner } from '@/components/ConsentBanner';
 
 const PERSONAL_DOC_TYPES = [
   { type: 'SA_ID', label: 'SA ID / Passport' },
@@ -169,6 +171,10 @@ export default function OwnerSettingsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
+
+      <Suspense fallback={null}>
+        <ConsentBanner />
+      </Suspense>
 
       <Card className="mb-6">
         <CardHeader><h2 className="text-lg font-semibold">Profile</h2></CardHeader>

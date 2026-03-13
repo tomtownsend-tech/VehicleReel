@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
           status: user.status,
           isTestAccount: user.isTestAccount,
           emailVerified: user.emailVerified,
+          tcVersion: user.tcVersion,
         };
       },
     }),
@@ -46,6 +47,7 @@ export const authOptions: NextAuthOptions = {
         token.status = (user as unknown as { status: UserStatus }).status;
         token.isTestAccount = (user as unknown as { isTestAccount: boolean }).isTestAccount;
         token.emailVerified = (user as unknown as { emailVerified: boolean }).emailVerified;
+        token.tcVersion = (user as unknown as { tcVersion: string | null }).tcVersion;
         token.lastRefresh = Date.now();
       }
 
@@ -55,13 +57,14 @@ export const authOptions: NextAuthOptions = {
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { status: true, role: true, isTestAccount: true, emailVerified: true },
+            select: { status: true, role: true, isTestAccount: true, emailVerified: true, tcVersion: true },
           });
           if (freshUser) {
             token.status = freshUser.status;
             token.role = freshUser.role;
             token.isTestAccount = freshUser.isTestAccount;
             token.emailVerified = freshUser.emailVerified;
+            token.tcVersion = freshUser.tcVersion;
           }
           token.lastRefresh = Date.now();
         } catch {
