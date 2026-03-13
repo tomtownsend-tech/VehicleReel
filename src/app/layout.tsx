@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/layout/session-provider';
+import { ChatWidget } from '@/components/ChatWidget';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-gray-950 text-white`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <ChatWidget />
+        </AuthProvider>
       </body>
     </html>
   );
