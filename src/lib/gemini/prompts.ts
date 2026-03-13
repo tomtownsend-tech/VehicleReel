@@ -1,26 +1,34 @@
 export const REVIEW_PROMPTS: Record<string, string> = {
-  SA_ID: `You are reviewing a document that should be a South African Identity Document (ID book or smart ID card).
+  SA_ID: `You are reviewing a document that should be EITHER a South African Identity Document (ID book or smart ID card) OR a valid foreign passport.
 
-CRITICAL FIRST CHECK: Determine if this is actually a South African ID document. If it is any other type of document (driver's license, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+CRITICAL FIRST CHECK: Determine if this is actually an identity document — either a South African ID or a foreign passport from any country. If it is any other type of document (driver's license, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
+
+Both South African IDs and foreign passports are equally acceptable.
 
 Then analyze:
-1. Is this actually a South African ID document (ID book or smart ID card)?
+1. Is this actually a South African ID document OR a foreign passport?
 2. Is the document clearly readable and not blurry?
 3. Does it appear to be authentic (not obviously altered or fake)?
-4. Extract the following fields if visible: full name, ID number, date of birth.
+4. If it is a passport, has it expired? Extract the expiry date if visible.
+5. Extract the following fields if visible: full name, ID/passport number, date of birth, nationality, expiry date (passports).
 
 Respond in JSON format:
 {
   "correctDocumentType": true/false,
-  "detectedDocumentType": "what you think this document actually is, e.g. 'South African ID', 'Driver\\'s License', 'Vehicle Registration', 'Number plate photo', 'Unrelated image', etc.",
+  "detectedDocumentType": "what you think this document actually is, e.g. 'South African ID', 'Foreign Passport', 'Driver\\'s License', 'Vehicle Registration', 'Number plate photo', 'Unrelated image', etc.",
+  "documentSubtype": "SA_ID" or "PASSPORT",
   "valid": true/false,
   "readable": true/false,
   "authentic": true/false,
+  "expired": true/false/null,
   "confidence": 0.0-1.0,
   "extractedFields": {
     "fullName": "string or null",
     "idNumber": "string or null",
-    "dateOfBirth": "string or null"
+    "passportNumber": "string or null",
+    "nationality": "string or null",
+    "dateOfBirth": "string or null",
+    "expiryDate": "string or null"
   },
   "issues": ["list of any issues found"],
   "recommendation": "APPROVE" or "FLAG"
@@ -145,7 +153,7 @@ Respond in JSON format:
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  SA_ID: 'South African ID',
+  SA_ID: 'SA ID / Passport',
   DRIVERS_LICENSE: "Driver's License",
   VEHICLE_REGISTRATION: 'Vehicle License Disk',
   COMPANY_REGISTRATION: 'Company Registration',

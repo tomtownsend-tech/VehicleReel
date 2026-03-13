@@ -18,7 +18,7 @@ interface Document {
 }
 
 const REQUIRED_DOCS = [
-  { type: 'SA_ID', label: 'South African ID' },
+  { type: 'SA_ID', label: 'SA ID / Passport' },
   { type: 'COMPANY_REGISTRATION', label: 'Company Registration' },
 ] as const;
 

@@ -107,6 +107,7 @@ export async function reviewDocument(documentId: string) {
           ...(reviewResult.extractedFields || {}),
           ...(flagReason ? { flagReason } : {}),
           ...(isWrongType ? { detectedDocumentType: reviewResult.detectedDocumentType } : {}),
+          ...(reviewResult.documentSubtype ? { documentSubtype: reviewResult.documentSubtype } : {}),
         },
         ...(expiryDate && !isNaN(expiryDate.getTime()) ? { expiryDate } : {}),
       },
