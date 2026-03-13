@@ -6,6 +6,7 @@ const dailyDetailSchema = z.object({
   locationAddress: z.string().max(500).optional(),
   locationPin: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
+  actualHours: z.number().min(0).max(24).optional().nullable(),
 });
 
 export const bookingDetailsSchema = z.object({

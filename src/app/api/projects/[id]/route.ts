@@ -67,6 +67,7 @@ export async function PATCH(
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
   if (parsed.data.startDate) updateData.startDate = toUTCDate(parsed.data.startDate);
   if (parsed.data.endDate) updateData.endDate = toUTCDate(parsed.data.endDate);
+  if (parsed.data.shootDayHours !== undefined) updateData.shootDayHours = parsed.data.shootDayHours;
 
   const updated = await prisma.project.update({
     where: { id: params.id },

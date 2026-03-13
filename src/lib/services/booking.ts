@@ -259,12 +259,12 @@ export async function checkInDay(bookingId: string, date: string, productionUser
 
 export async function updateBookingDetails(
   bookingId: string,
-  productionUserId: string,
+  userId: string,
   details: {
     locationAddress?: string;
     locationPin?: string;
     specialInstructions?: string;
-    days?: { date: string; callTime?: string; locationAddress?: string; locationPin?: string; notes?: string }[];
+    days?: { date: string; callTime?: string; locationAddress?: string; locationPin?: string; notes?: string; actualHours?: number | null }[];
   }
 ) {
   const booking = await prisma.booking.findUnique({
@@ -272,7 +272,7 @@ export async function updateBookingDetails(
     include: { option: { include: { vehicle: { select: { make: true, model: true } } } } },
   });
   if (!booking) throw new Error('Booking not found');
-  if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
+  if (booking.productionUserId !== userId && booking.coordinatorId !== userId) throw new Error('Not authorized');
 
   // Update booking-level fields
   await prisma.booking.update({
@@ -287,14 +287,18 @@ export async function updateBookingDetails(
   // Update per-day details
   if (details.days) {
     for (const day of details.days) {
+      const data: Record<string, unknown> = {
+        callTime: day.callTime ?? null,
+        locationAddress: day.locationAddress ?? null,
+        locationPin: day.locationPin ?? null,
+        notes: day.notes ?? null,
+      };
+      if (day.actualHours !== undefined) {
+        data.actualHours = day.actualHours;
+      }
       await prisma.bookingDailyDetail.updateMany({
         where: { bookingId, date: new Date(day.date + 'T00:00:00.000Z') },
-        data: {
-          callTime: day.callTime ?? null,
-          locationAddress: day.locationAddress ?? null,
-          locationPin: day.locationPin ?? null,
-          notes: day.notes ?? null,
-        },
+        data,
       });
     }
   }

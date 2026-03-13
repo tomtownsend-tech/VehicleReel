@@ -380,6 +380,7 @@ model BookingDailyDetail {
   locationAddress String?
   locationPin     String?
   notes           String?
+  actualHours     Decimal? @db.Decimal(4, 1)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -442,6 +443,7 @@ model Project {
   description      String?
   startDate        DateTime        @db.Date
   endDate          DateTime        @db.Date
+  shootDayHours    Int             @default(10)
   shareToken       String          @unique @default(cuid())
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt

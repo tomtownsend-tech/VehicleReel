@@ -26,7 +26,7 @@ export default function ProjectsPage() {
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', description: '', startDate: '', endDate: '' });
+  const [form, setForm] = useState({ name: '', description: '', startDate: '', endDate: '', shootDayHours: 10 });
 
   useEffect(() => {
     fetchProjects();
@@ -53,6 +53,7 @@ export default function ProjectsPage() {
           description: form.description || undefined,
           startDate: form.startDate,
           endDate: form.endDate,
+          shootDayHours: form.shootDayHours,
         }),
       });
 
@@ -63,7 +64,7 @@ export default function ProjectsPage() {
       }
 
       setShowModal(false);
-      setForm({ name: '', description: '', startDate: '', endDate: '' });
+      setForm({ name: '', description: '', startDate: '', endDate: '', shootDayHours: 10 });
       fetchProjects();
     } catch {
       setError('Something went wrong');
@@ -173,6 +174,29 @@ export default function ProjectsPage() {
               onChange={(v) => setForm((prev) => ({ ...prev, endDate: v }))}
               required
             />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-white/70">Shoot Day Length</label>
+            <div className="flex gap-2">
+              {[10, 12].map((hours) => (
+                <button
+                  key={hours}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, shootDayHours: hours }))}
+                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    form.shootDayHours === hours
+                      ? 'border-white bg-white text-gray-900'
+                      : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30'
+                  }`}
+                >
+                  {hours}-hour day
+                </button>
+              ))}
+            </div>
+            {form.shootDayHours === 12 && (
+              <p className="text-xs text-amber-400 mt-1">12-hour days have 7-day post-invoice payment terms.</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" loading={creating}>

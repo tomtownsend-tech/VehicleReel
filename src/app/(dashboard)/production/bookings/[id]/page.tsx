@@ -25,6 +25,7 @@ interface DailyDetail {
   locationAddress: string | null;
   locationPin: string | null;
   notes: string | null;
+  actualHours: string | null;
 }
 interface CheckIn { id: string; date: string; checkedInAt: string }
 
@@ -36,6 +37,7 @@ interface Booking {
   endDate: string;
   logistics: string;
   status: string;
+  shootDayHours: number;
   coordinatorId: string | null;
   locationAddress: string | null;
   locationPin: string | null;
@@ -289,6 +291,12 @@ export default function ProductionBookingDetailPage() {
     return '100% cancellation fee (less than 24 hours before shoot)';
   }
 
+  function getOvertimeLabel(actual: number): { text: string; color: string } | null {
+    if (!booking || actual <= booking.shootDayHours) return null;
+    if (actual <= 14) return { text: `${(actual - booking.shootDayHours).toFixed(1)}h overtime @ 1.5x`, color: 'text-amber-400' };
+    return { text: `${(actual - booking.shootDayHours).toFixed(1)}h overtime (${(14 - booking.shootDayHours).toFixed(1)}h @ 1.5x + ${(actual - 14).toFixed(1)}h @ 2x)`, color: 'text-red-400' };
+  }
+
   if (!booking) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
   const checkedDates = new Set(booking.checkIns.map((c) => c.date.split('T')[0]));
@@ -323,6 +331,7 @@ export default function ProductionBookingDetailPage() {
             <div><dt className="text-white/50">Dates</dt><dd className="font-medium">{formatDate(booking.startDate)} — {formatDate(booking.endDate)}</dd></div>
             <div><dt className="text-white/50">Rate</dt><dd className="font-medium">{formatCurrency(booking.rateCents)}{booking.rateType === 'PER_DAY' ? '/day' : ' package'}</dd></div>
             <div><dt className="text-white/50">Logistics</dt><dd className="font-medium">{booking.logistics === 'OWNER_DELIVERY' ? 'Owner delivers to set' : 'Vehicle collection'}</dd></div>
+            <div><dt className="text-white/50">Shoot Day</dt><dd className="font-medium">{booking.shootDayHours}-hour day{booking.shootDayHours === 12 ? ' (7-day payment terms)' : ''}</dd></div>
             <div><dt className="text-white/50">Owner Contact</dt><dd className="font-medium">{booking.option.vehicle.owner.email}{booking.option.vehicle.owner.phone && ` | ${booking.option.vehicle.owner.phone}`}</dd></div>
             {booking.coordinator && <div><dt className="text-white/50">Coordinator</dt><dd className="font-medium">{booking.coordinator.name}</dd></div>}
           </dl>
@@ -460,18 +469,26 @@ export default function ProductionBookingDetailPage() {
               const isCheckedIn = checkedDates.has(dateStr);
               const dateObj = new Date(dateStr + 'T00:00:00');
               const canCheckIn = dateObj <= today && !isCheckedIn;
+              const actualNum = d.actualHours ? parseFloat(d.actualHours) : null;
+              const overtime = actualNum ? getOvertimeLabel(actualNum) : null;
               return (
-                <div key={d.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 border-b border-white/5 last:border-0 gap-1">
-                  <span className="text-sm font-medium">{formatDate(d.date)}</span>
-                  {isCheckedIn ? (
-                    <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
-                  ) : canCheckIn ? (
-                    <Button size="sm" onClick={() => handleCheckIn(dateStr)} loading={checkingIn === dateStr}>
-                      Check In
-                    </Button>
-                  ) : (
-                    <Badge variant="default"><Clock className="h-3 w-3 mr-1 inline" />Upcoming</Badge>
-                  )}
+                <div key={d.id} className="py-2 border-b border-white/5 last:border-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium">{formatDate(d.date)}</span>
+                      {actualNum !== null && <span className="text-xs text-white/50">{actualNum}h worked</span>}
+                      {overtime && <span className={`text-xs font-medium ${overtime.color}`}>{overtime.text}</span>}
+                    </div>
+                    {isCheckedIn ? (
+                      <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1 inline" />Checked In</Badge>
+                    ) : canCheckIn ? (
+                      <Button size="sm" onClick={() => handleCheckIn(dateStr)} loading={checkingIn === dateStr}>
+                        Check In
+                      </Button>
+                    ) : (
+                      <Badge variant="default"><Clock className="h-3 w-3 mr-1 inline" />Upcoming</Badge>
+                    )}
+                  </div>
                 </div>
               );
             })}

@@ -20,6 +20,10 @@ export async function GET(
               owner: { select: { id: true, name: true, email: true, phone: true } },
             },
           },
+          projectOptions: {
+            include: { project: { select: { shootDayHours: true } } },
+            take: 1,
+          },
         },
       },
       productionUser: { select: { id: true, name: true, email: true, phone: true, companyName: true } },
@@ -62,5 +66,8 @@ export async function GET(
     }
   }
 
-  return NextResponse.json(booking);
+  // Extract shootDayHours from the first linked project (if any)
+  const shootDayHours = booking.option.projectOptions?.[0]?.project?.shootDayHours ?? 10;
+
+  return NextResponse.json({ ...booking, shootDayHours });
 }

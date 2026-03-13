@@ -38,6 +38,7 @@ export async function GET() {
     description: p.description,
     startDate: p.startDate,
     endDate: p.endDate,
+    shootDayHours: p.shootDayHours,
     shareToken: p.shareToken,
     createdAt: p.createdAt,
     optionCount: p.projectOptions.length,
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
       description: parsed.data.description,
       startDate: toUTCDate(parsed.data.startDate),
       endDate: toUTCDate(parsed.data.endDate),
+      shootDayHours: parsed.data.shootDayHours ?? 10,
     },
   });
 

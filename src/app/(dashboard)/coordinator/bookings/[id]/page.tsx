@@ -6,10 +6,10 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send, FileText, ExternalLink, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Send, FileText, ExternalLink, CheckCircle, Clock, Save } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
-interface DailyDetail { id: string; date: string; callTime: string | null; locationAddress: string | null; locationPin: string | null; notes: string | null }
+interface DailyDetail { id: string; date: string; callTime: string | null; locationAddress: string | null; locationPin: string | null; notes: string | null; actualHours: string | null }
 interface CheckIn { id: string; date: string; checkedInAt: string }
 interface InsuranceDoc { id: string; status: string; fileUrl: string; fileName: string }
 
@@ -18,6 +18,7 @@ interface Booking {
   startDate: string;
   endDate: string;
   status: string;
+  shootDayHours: number;
   locationAddress: string | null;
   locationPin: string | null;
   specialInstructions: string | null;
@@ -106,18 +107,59 @@ function ChatThread({ bookingId, thread, label, session }: { bookingId: string; 
   );
 }
 
+function getOvertimeLabel(actual: number, scheduledHours: number): { text: string; color: string } | null {
+  if (actual <= scheduledHours) return null;
+  if (actual <= 14) return { text: `${(actual - scheduledHours).toFixed(1)}h overtime @ 1.5x`, color: 'text-amber-400' };
+  return { text: `${(actual - scheduledHours).toFixed(1)}h overtime (${(14 - scheduledHours).toFixed(1)}h @ 1.5x + ${(actual - 14).toFixed(1)}h @ 2x)`, color: 'text-red-400' };
+}
+
 export default function CoordinatorBookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [hoursForms, setHoursForms] = useState<Record<string, string>>({});
+  const [savingHours, setSavingHours] = useState(false);
 
   useEffect(() => {
     fetch(`/api/bookings/${params.id}`)
       .then((r) => r.json())
-      .then((data) => { if (data && !data.error) setBooking(data); })
+      .then((data) => {
+        if (data && !data.error) {
+          setBooking(data);
+          const forms: Record<string, string> = {};
+          data.dailyDetails?.forEach((d: DailyDetail) => {
+            forms[d.date.split('T')[0]] = d.actualHours ?? '';
+          });
+          setHoursForms(forms);
+        }
+      })
       .catch(() => {});
   }, [params.id]);
+
+  async function saveActualHours() {
+    if (!booking) return;
+    setSavingHours(true);
+    try {
+      const days = Object.entries(hoursForms).map(([date, hours]) => ({
+        date,
+        actualHours: hours ? parseFloat(hours) : null,
+      }));
+      const res = await fetch(`/api/bookings/${booking.id}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (updated?.dailyDetails) {
+          setBooking((prev) => prev ? { ...prev, dailyDetails: updated.dailyDetails } : prev);
+        }
+      }
+    } finally {
+      setSavingHours(false);
+    }
+  }
 
   if (!booking || !session) return <div className="animate-pulse"><div className="h-64 bg-gray-800 rounded" /></div>;
 
@@ -155,13 +197,21 @@ export default function CoordinatorBookingDetailPage() {
 
       {/* Daily Schedule & Check-In Status */}
       <Card className="mb-6">
-        <CardHeader><h2 className="text-lg font-semibold">Daily Schedule</h2></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Daily Schedule</h2>
+            <span className="text-xs text-white/50">{booking.shootDayHours}-hour shoot day</span>
+          </div>
+        </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {booking.dailyDetails.map((d) => {
               const dateStr = d.date.split('T')[0];
               const isCheckedIn = checkedDates.has(dateStr);
               const hasDetails = d.callTime || d.locationAddress || d.locationPin || d.notes;
+              const actualVal = hoursForms[dateStr] ?? '';
+              const actualNum = actualVal ? parseFloat(actualVal) : null;
+              const overtime = actualNum ? getOvertimeLabel(actualNum, booking.shootDayHours) : null;
               return (
                 <div key={d.id} className="border border-white/10 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
@@ -182,9 +232,28 @@ export default function CoordinatorBookingDetailPage() {
                   ) : (
                     <p className="text-xs text-white/40 mt-1">No details provided yet</p>
                   )}
+                  <div className="mt-2 flex items-center gap-3">
+                    <label className="text-xs text-white/50 flex-shrink-0">Actual hours:</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="24"
+                      value={actualVal}
+                      onChange={(e) => setHoursForms((prev) => ({ ...prev, [dateStr]: e.target.value }))}
+                      placeholder="—"
+                      className="w-20 px-2 py-1 border border-white/15 bg-white/5 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                    {overtime && <span className={`text-xs font-medium ${overtime.color}`}>{overtime.text}</span>}
+                  </div>
                 </div>
               );
             })}
+          </div>
+          <div className="mt-4">
+            <Button onClick={saveActualHours} loading={savingHours}>
+              <Save className="h-4 w-4 mr-1" /> Save Hours
+            </Button>
           </div>
         </CardContent>
       </Card>
