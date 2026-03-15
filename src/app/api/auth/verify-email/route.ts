@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
+import { getToken, encode } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, emailVerificationEmail, welcomeSetupEmail } from '@/lib/services/email';
@@ -49,6 +50,25 @@ export async function POST(request: NextRequest) {
           message: `Please upload your ${docsNeeded} in Settings to complete your account setup.`,
           emailContent: welcomeSetupEmail(user.name, user.role),
         });
+      }
+
+      // Update the JWT cookie directly so the middleware sees emailVerified: true
+      // (withAuth middleware reads the cookie directly, not via the JWT callback)
+      const existingToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET! });
+      if (existingToken) {
+        existingToken.emailVerified = true;
+        existingToken.lastRefresh = Date.now();
+        const newJwt = await encode({ token: existingToken, secret: process.env.NEXTAUTH_SECRET! });
+        const isSecure = (process.env.NEXTAUTH_URL || '').startsWith('https');
+        const cookieName = isSecure ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+        const response = NextResponse.json({ success: true, role: user.role });
+        response.cookies.set(cookieName, newJwt, {
+          httpOnly: true,
+          secure: isSecure,
+          sameSite: 'lax',
+          path: '/',
+        });
+        return response;
       }
 
       return NextResponse.json({ success: true, role: user.role });
