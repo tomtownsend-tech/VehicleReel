@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSupabase } from '@/lib/supabase';
+import { checkAndActivateUser } from '@/lib/services/document-review';
 
 export const runtime = 'nodejs';
 
@@ -31,6 +32,17 @@ export async function GET(request: NextRequest) {
     }),
     prisma.document.count({ where }),
   ]);
+
+  // Self-healing: if all required docs are approved but user is still PENDING_VERIFICATION, trigger verification
+  if (!vehicleId && session.user.id === userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { status: true },
+    });
+    if (user?.status === 'PENDING_VERIFICATION') {
+      await checkAndActivateUser(userId, null);
+    }
+  }
 
   return NextResponse.json({
     data: documents,
