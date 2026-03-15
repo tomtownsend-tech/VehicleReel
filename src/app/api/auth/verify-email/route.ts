@@ -35,10 +35,13 @@ export async function POST(request: NextRequest) {
       await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
 
       // Send welcome notification prompting document upload
-      if (user.role === 'OWNER' || user.role === 'PRODUCTION') {
-        const docsNeeded = user.role === 'PRODUCTION'
-          ? 'SA ID / Passport and Company Registration'
-          : 'SA ID / Passport and Driver\'s License';
+      if (user.role === 'OWNER' || user.role === 'PRODUCTION' || user.role === 'ART_DEPARTMENT') {
+        const docsNeededMap: Record<string, string> = {
+          PRODUCTION: 'SA ID / Passport and Company Registration',
+          OWNER: 'SA ID / Passport and Driver\'s License',
+          ART_DEPARTMENT: 'SA ID / Passport',
+        };
+        const docsNeeded = docsNeededMap[user.role] || 'SA ID / Passport';
         await safeNotify({
           userId: user.id,
           type: 'DOCUMENT_EXPIRING',

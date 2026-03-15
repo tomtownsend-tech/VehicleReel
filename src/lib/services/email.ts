@@ -317,14 +317,22 @@ export function passwordResetEmail(userName: string, resetUrl: string) {
 
 export function welcomeSetupEmail(userName: string, role: string) {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
-  const settingsUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
+  const settingsUrlMap: Record<string, string> = {
+    PRODUCTION: `${baseUrl}/production/settings`,
+    ART_DEPARTMENT: `${baseUrl}/art-department/settings`,
+    OWNER: `${baseUrl}/owner/settings`,
+  };
+  const settingsUrl = settingsUrlMap[role] || `${baseUrl}/owner/settings`;
   const faqUrl = `${baseUrl}/faq`;
-  const docsNeeded = role === 'PRODUCTION'
-    ? 'SA ID / Passport and Company Registration'
-    : 'SA ID / Passport and Driver&rsquo;s License';
+  const docsNeededMap: Record<string, string> = {
+    PRODUCTION: 'SA ID / Passport and Company Registration',
+    ART_DEPARTMENT: 'SA ID / Passport',
+    OWNER: 'SA ID / Passport and Driver&rsquo;s License',
+  };
+  const docsNeeded = docsNeededMap[role] || 'SA ID / Passport';
 
   const faqSummaries = [
-    { q: 'What documents do I need?', a: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : 'SA ID + Driver&rsquo;s License, plus a Vehicle License Disk for each vehicle.' },
+    { q: 'What documents do I need?', a: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : role === 'ART_DEPARTMENT' ? 'SA ID or Passport.' : 'SA ID + Driver&rsquo;s License, plus a Vehicle License Disk for each vehicle.' },
     { q: 'How long does verification take?', a: 'Documents are reviewed automatically by AI, usually within minutes.' },
     { q: 'What vehicle types are supported?', a: 'Cars, Racing Cars, Bikes, Motorbikes, Scooters, Boats, Planes, and Jet Skis.' },
     { q: 'What is an &ldquo;option&rdquo;?', a: 'A hold request on a vehicle for specific dates &mdash; like &ldquo;first dibs,&rdquo; not yet a confirmed booking.' },
