@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   // Send Day 1 / Day 3 / Day 7 setup reminders to users with outstanding items
   const incompleteUsers = await prisma.user.findMany({
     where: {
-      role: { in: ['OWNER', 'PRODUCTION'] },
+      role: { in: ['OWNER', 'PRODUCTION', 'ART_DEPARTMENT'] },
       isTestAccount: false,
       setupReminderCount: { lt: MAX_REMINDERS },
     },
@@ -47,7 +47,9 @@ export async function GET(request: NextRequest) {
     // 1. Check profile documents
     const requiredProfileDocs = user.role === 'PRODUCTION'
       ? ['SA_ID', 'COMPANY_REGISTRATION'] as const
-      : ['SA_ID', 'DRIVERS_LICENSE'] as const;
+      : user.role === 'ART_DEPARTMENT'
+        ? ['SA_ID'] as const
+        : ['SA_ID', 'DRIVERS_LICENSE'] as const;
 
     const userDocs = await prisma.document.findMany({
       where: { userId: user.id, type: { in: [...requiredProfileDocs] } },

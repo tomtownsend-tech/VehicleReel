@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = (user as unknown as { role: UserRole }).role;
@@ -52,8 +52,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Refresh user status from DB every 5 minutes to catch bans/suspensions
+      // Also force refresh when client explicitly calls update() (e.g. after email verification)
       const fiveMinutes = 5 * 60 * 1000;
-      if (!token.lastRefresh || Date.now() - (token.lastRefresh as number) > fiveMinutes) {
+      if (trigger === 'update' || !token.lastRefresh || Date.now() - (token.lastRefresh as number) > fiveMinutes) {
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },

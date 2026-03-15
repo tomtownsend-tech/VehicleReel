@@ -83,7 +83,6 @@ function RegisterForm() {
               onClick={() => updateField('role', 'OWNER')}
               className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors"
             >
-              <span className="text-2xl mb-1">🚗</span>
               <span className="font-medium text-white">Vehicle Owner</span>
               <span className="text-xs text-white/50 mt-1">List my vehicles</span>
             </button>
@@ -92,7 +91,6 @@ function RegisterForm() {
               onClick={() => updateField('role', 'PRODUCTION')}
               className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors"
             >
-              <span className="text-2xl mb-1">🎬</span>
               <span className="font-medium text-white">Production</span>
               <span className="text-xs text-white/50 mt-1">Find vehicles</span>
             </button>
@@ -101,7 +99,6 @@ function RegisterForm() {
               onClick={() => updateField('role', 'ART_DEPARTMENT')}
               className="flex flex-col items-center p-4 border-2 border-white/10 rounded-xl hover:border-white/30 hover:bg-white/5 transition-colors sm:col-span-2"
             >
-              <span className="text-2xl mb-1">🎨</span>
               <span className="font-medium text-white">Art Department</span>
               <span className="text-xs text-white/50 mt-1">Browse &amp; book for projects</span>
             </button>
