@@ -46,6 +46,7 @@ function LoginForm() {
           else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
           else if (role === 'OWNER') router.push('/owner/vehicles');
           else if (role === 'PRODUCTION') router.push('/production/search');
+          else if (role === 'ART_DEPARTMENT') router.push('/art-department/projects');
           else router.push('/');
         }
         router.refresh();

@@ -40,6 +40,7 @@ function VerifyEmailContent() {
         if (role === 'OWNER') router.push('/owner/settings');
         else if (role === 'PRODUCTION') router.push('/production/settings');
         else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
+        else if (role === 'ART_DEPARTMENT') router.push('/art-department/projects');
         else if (role === 'ADMIN') router.push('/admin/analytics');
         else router.push('/login');
         router.refresh();
