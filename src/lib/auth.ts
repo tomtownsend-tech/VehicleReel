@@ -52,9 +52,13 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Refresh user status from DB every 5 minutes to catch bans/suspensions
-      // Also force refresh when client explicitly calls update() (e.g. after email verification)
+      // Force refresh when: client calls update(), token has stale emailVerified, or 5 min elapsed
       const fiveMinutes = 5 * 60 * 1000;
-      if (trigger === 'update' || !token.lastRefresh || Date.now() - (token.lastRefresh as number) > fiveMinutes) {
+      const needsRefresh = trigger === 'update'
+        || token.emailVerified === false
+        || !token.lastRefresh
+        || Date.now() - (token.lastRefresh as number) > fiveMinutes;
+      if (needsRefresh) {
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },

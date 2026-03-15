@@ -1,13 +1,12 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 function VerifyEmailContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, update } = useSession();
   const token = searchParams.get('token');
@@ -32,24 +31,25 @@ function VerifyEmailContent() {
         return;
       }
       setStatus('success');
-      // Refresh the session so emailVerified updates in the JWT
-      const updated = await update();
-      // Redirect to role-based dashboard after a brief pause
+      // Refresh the session so emailVerified updates in the JWT cookie
+      await update();
+      // Hard navigate after a brief pause — full page load ensures middleware reads the fresh cookie
       setTimeout(() => {
-        const role = data.role || updated?.user?.role || session?.user?.role;
-        if (role === 'OWNER') router.push('/owner/settings');
-        else if (role === 'PRODUCTION') router.push('/production/settings');
-        else if (role === 'COORDINATOR') router.push('/coordinator/bookings');
-        else if (role === 'ART_DEPARTMENT') router.push('/art-department/projects');
-        else if (role === 'ADMIN') router.push('/admin/analytics');
-        else router.push('/login');
-        router.refresh();
+        const role = data.role || session?.user?.role;
+        const dashboardMap: Record<string, string> = {
+          OWNER: '/owner/settings',
+          PRODUCTION: '/production/settings',
+          COORDINATOR: '/coordinator/bookings',
+          ART_DEPARTMENT: '/art-department/projects',
+          ADMIN: '/admin/analytics',
+        };
+        window.location.href = dashboardMap[role] || '/login';
       }, 1500);
     } catch {
       setStatus('error');
       setError('Something went wrong. Please try again.');
     }
-  }, [router, session, update]);
+  }, [session, update]);
 
   useEffect(() => {
     if (token && status === 'idle') {
