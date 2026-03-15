@@ -211,10 +211,13 @@ export async function checkAndActivateUser(userId: string, vehicleId: string | n
   // Role-aware document requirements:
   // OWNER: SA_ID + DRIVERS_LICENSE
   // PRODUCTION: SA_ID + COMPANY_REGISTRATION
-  const requiredTypes: ('SA_ID' | 'DRIVERS_LICENSE' | 'COMPANY_REGISTRATION')[] =
-    user.role === 'PRODUCTION'
-      ? ['SA_ID', 'COMPANY_REGISTRATION']
-      : ['SA_ID', 'DRIVERS_LICENSE'];
+  // ART_DEPARTMENT: SA_ID only
+  const requiredTypesMap: Record<string, ('SA_ID' | 'DRIVERS_LICENSE' | 'COMPANY_REGISTRATION')[]> = {
+    PRODUCTION: ['SA_ID', 'COMPANY_REGISTRATION'],
+    ART_DEPARTMENT: ['SA_ID'],
+    OWNER: ['SA_ID', 'DRIVERS_LICENSE'],
+  };
+  const requiredTypes = requiredTypesMap[user.role] || ['SA_ID', 'DRIVERS_LICENSE'];
 
   // Personal doc types can be uploaded with or without a vehicleId — match by type only
   const personalDocs = await prisma.document.findMany({
