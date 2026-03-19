@@ -76,11 +76,18 @@ export async function PATCH(request: NextRequest) {
   let newStatus: 'BANNED' | 'VERIFIED' | 'PENDING_VERIFICATION';
   if (action === 'UNBAN') {
     // Check if user's documents are all approved before restoring to VERIFIED
-    const docs = await prisma.document.findMany({
-      where: { userId },
-      select: { type: true, status: true },
-    });
-    const personalDocs = docs.filter((d) => ['SA_ID', 'DRIVERS_LICENSE'].includes(d.type));
+    const [unbannedUser, docs] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+      prisma.document.findMany({ where: { userId }, select: { type: true, status: true } }),
+    ]);
+    // Role-aware required types: mirrors document-review.ts checkAndActivateUser
+    const requiredTypesMap: Record<string, string[]> = {
+      PRODUCTION: ['SA_ID', 'COMPANY_REGISTRATION'],
+      ART_DEPARTMENT: ['SA_ID'],
+      OWNER: ['SA_ID', 'DRIVERS_LICENSE'],
+    };
+    const requiredTypes = requiredTypesMap[unbannedUser?.role ?? ''] || ['SA_ID', 'DRIVERS_LICENSE'];
+    const personalDocs = docs.filter((d) => requiredTypes.includes(d.type));
     const allApproved = personalDocs.length > 0 && personalDocs.every((d) => d.status === 'APPROVED');
     newStatus = allApproved ? 'VERIFIED' : 'PENDING_VERIFICATION';
   } else {
@@ -92,35 +99,29 @@ export async function PATCH(request: NextRequest) {
     data: { status: newStatus },
   });
 
-  // If banning, suspend all their vehicles and decline pending options
+  // If banning, suspend all their vehicles and decline pending options in a transaction
   if (action === 'BAN') {
-    const vehicles = await prisma.vehicle.findMany({
-      where: { ownerId: userId },
-    });
-
-    for (const vehicle of vehicles) {
-      await prisma.vehicle.update({
-        where: { id: vehicle.id },
+    await prisma.$transaction([
+      prisma.vehicle.updateMany({
+        where: { ownerId: userId },
         data: { status: 'REMOVED' },
-      });
-
-      await prisma.option.updateMany({
+      }),
+      prisma.option.updateMany({
         where: {
-          vehicleId: vehicle.id,
+          vehicle: { ownerId: userId },
           status: { in: ['PENDING_RESPONSE', 'ACCEPTED'] },
         },
         data: { status: 'DECLINED_ADMIN' },
-      });
-    }
-
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: 'USER_BANNED',
-        title: 'Account Banned',
-        message: 'Your account has been banned by an administrator.',
-      },
-    });
+      }),
+      prisma.notification.create({
+        data: {
+          userId,
+          type: 'USER_BANNED',
+          title: 'Account Banned',
+          message: 'Your account has been banned by an administrator.',
+        },
+      }),
+    ]);
   }
 
   // Audit log

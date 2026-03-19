@@ -21,8 +21,3 @@ export const bookingDetailsSchema = z.object({
 export const checkInSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
-
-export const assignCoordinatorSchema = z.object({
-  bookingId: z.string().min(1),
-  coordinatorId: z.string().min(1),
-});

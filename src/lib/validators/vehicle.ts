@@ -20,7 +20,3 @@ export const availabilityBlockSchema = z.object({
   endDate: z.string().refine((d) => !isNaN(Date.parse(d)), 'Invalid end date'),
   reason: z.string().optional(),
 });
-
-export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
-export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;
-export type AvailabilityBlockInput = z.infer<typeof availabilityBlockSchema>;

@@ -47,10 +47,13 @@ export async function PATCH(
       where: { userId: document.userId },
     });
 
-    // Role-aware: OWNER needs SA_ID + DRIVERS_LICENSE, PRODUCTION needs SA_ID + COMPANY_REGISTRATION
-    const requiredTypes = docUser?.role === 'PRODUCTION'
-      ? ['SA_ID', 'COMPANY_REGISTRATION']
-      : ['SA_ID', 'DRIVERS_LICENSE'];
+    // Role-aware required types: mirrors document-review.ts checkAndActivateUser
+    const requiredTypesMap: Record<string, string[]> = {
+      PRODUCTION: ['SA_ID', 'COMPANY_REGISTRATION'],
+      ART_DEPARTMENT: ['SA_ID'],
+      OWNER: ['SA_ID', 'DRIVERS_LICENSE'],
+    };
+    const requiredTypes = requiredTypesMap[docUser?.role ?? ''] || ['SA_ID', 'DRIVERS_LICENSE'];
 
     const personalApproved = requiredTypes.every((type) =>
       allUserDocs.some((d) => d.type === type && d.status === 'APPROVED')
@@ -67,7 +70,11 @@ export async function PATCH(
       const vehicleDocs = allUserDocs.filter(
         (d) => d.vehicleId === document.vehicleId && d.type === 'VEHICLE_REGISTRATION'
       );
-      const userIsVerified = personalApproved || docUser?.role === 'OWNER' && (await prisma.user.findUnique({ where: { id: document.userId }, select: { status: true } }))?.status === 'VERIFIED';
+      // Check if user was already verified (e.g. approving a vehicle doc for an already-verified owner)
+      const existingUser = !personalApproved
+        ? await prisma.user.findUnique({ where: { id: document.userId }, select: { status: true } })
+        : null;
+      const userIsVerified = personalApproved || existingUser?.status === 'VERIFIED';
       if (userIsVerified && vehicleDocs.length > 0 && vehicleDocs.every((d) => d.status === 'APPROVED')) {
         await prisma.vehicle.update({
           where: { id: document.vehicleId },

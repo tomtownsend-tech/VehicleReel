@@ -1,7 +1,6 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
-
-const CURRENT_TC_VERSION = '1.0';
+import { CURRENT_TC_VERSION } from '@/lib/constants/tc-version';
 
 export default withAuth(
   function middleware(req) {

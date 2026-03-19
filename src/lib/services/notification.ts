@@ -20,7 +20,7 @@ export async function safeNotify(params: CreateNotificationParams) {
   }
 }
 
-export async function createNotification({
+async function createNotification({
   userId,
   type,
   title,

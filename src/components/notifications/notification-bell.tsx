@@ -79,7 +79,13 @@ export function NotificationBell() {
       if (data.vehicleId) return `/admin/vehicles/${data.vehicleId}`;
       return null;
     }
-    const prefix = userRole === 'COORDINATOR' ? '/coordinator' : userRole === 'PRODUCTION' ? '/production' : '/owner';
+    const prefixMap: Record<string, string> = {
+      COORDINATOR: '/coordinator',
+      PRODUCTION: '/production',
+      ART_DEPARTMENT: '/art-department',
+      OWNER: '/owner',
+    };
+    const prefix = prefixMap[userRole ?? ''] || '/owner';
     if (data.bookingId) return `${prefix}/bookings/${data.bookingId}`;
     if (data.optionId) return `${prefix}/options`;
     if (data.vehicleId) return `${prefix}/vehicles/${data.vehicleId}`;

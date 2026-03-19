@@ -16,13 +16,3 @@ export function formatDate(date: Date | string): string {
     year: 'numeric',
   });
 }
-
-export function formatDateTime(date: Date | string): string {
-  return new Date(date).toLocaleString('en-ZA', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}

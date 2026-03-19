@@ -31,9 +31,3 @@ export const VEHICLE_USAGE_TYPES = [
   'Chase',
   'Precision Driving',
 ] as const;
-
-export const ACTIVE_OPTION_STATUSES = ['PENDING_RESPONSE', 'ACCEPTED'] as const;
-export const TERMINAL_OPTION_STATUSES = [
-  'CONFIRMED', 'DECLINED_BY_OWNER', 'EXPIRED_RESPONSE',
-  'EXPIRED_CONFIRMATION', 'DECLINED_OVERLAP', 'DECLINED_BLOCKED', 'DECLINED_ADMIN',
-] as const;

@@ -173,19 +173,13 @@ export async function GET(request: NextRequest) {
       });
 
       // Decline any pending options on this vehicle
-      const pendingOptions = await prisma.option.findMany({
+      await prisma.option.updateMany({
         where: {
           vehicleId: doc.vehicleId,
           status: { in: ['PENDING_RESPONSE', 'ACCEPTED'] },
         },
+        data: { status: 'DECLINED_ADMIN' },
       });
-
-      for (const option of pendingOptions) {
-        await prisma.option.update({
-          where: { id: option.id },
-          data: { status: 'DECLINED_ADMIN' },
-        });
-      }
 
       // Notify owner
       await prisma.notification.create({

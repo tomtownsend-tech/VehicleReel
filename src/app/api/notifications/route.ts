@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const unreadOnly = searchParams.get('unreadOnly') === 'true';
-  const limit = parseInt(searchParams.get('limit') || '50');
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
 
   const where: Record<string, unknown> = { userId: session.user.id };
   if (unreadOnly) where.read = false;

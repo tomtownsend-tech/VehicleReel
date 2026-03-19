@@ -23,5 +23,3 @@ export const createOptionSchema = z.object({
   const today = todayUTC();
   return start >= today;
 }, { message: 'Start date must not be in the past', path: ['startDate'] });
-
-export type CreateOptionInput = z.infer<typeof createOptionSchema>;

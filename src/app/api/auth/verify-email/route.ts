@@ -54,11 +54,16 @@ export async function POST(request: NextRequest) {
 
       // Update the JWT cookie directly so the middleware sees emailVerified: true
       // (withAuth middleware reads the cookie directly, not via the JWT callback)
-      const existingToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET! });
+      const secret = process.env.NEXTAUTH_SECRET;
+      if (!secret) {
+        console.error('NEXTAUTH_SECRET is not set — cannot update JWT cookie');
+        return NextResponse.json({ success: true, role: user.role });
+      }
+      const existingToken = await getToken({ req: request, secret });
       if (existingToken) {
         existingToken.emailVerified = true;
         existingToken.lastRefresh = Date.now();
-        const newJwt = await encode({ token: existingToken, secret: process.env.NEXTAUTH_SECRET! });
+        const newJwt = await encode({ token: existingToken, secret });
         const isSecure = (process.env.NEXTAUTH_URL || '').startsWith('https');
         const cookieName = isSecure ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
         const response = NextResponse.json({ success: true, role: user.role });

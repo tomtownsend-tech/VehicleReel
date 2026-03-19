@@ -21,6 +21,3 @@ export const updateProjectSchema = z.object({
 export const addOptionSchema = z.object({
   optionId: z.string().min(1, 'Option ID is required'),
 });
-
-export type CreateProjectInput = z.infer<typeof createProjectSchema>;
-export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

@@ -180,7 +180,7 @@ async function getProjectCoordinators(bookingId: string): Promise<string[]> {
 export async function checkInDay(bookingId: string, date: string, productionUserId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { dailyDetails: true, checkIns: true, option: { include: { vehicle: { select: { make: true, model: true } } } } },
+    include: { dailyDetails: true, option: { include: { vehicle: { select: { make: true, model: true } } } } },
   });
   if (!booking) throw new Error('Booking not found');
   if (booking.productionUserId !== productionUserId) throw new Error('Not authorized');
@@ -190,8 +190,25 @@ export async function checkInDay(bookingId: string, date: string, productionUser
   today.setUTCHours(0, 0, 0, 0);
   if (checkDate > today) throw new Error('Cannot check in for a future date');
 
-  const checkIn = await prisma.bookingCheckIn.create({
-    data: { bookingId, date: checkDate, checkedInBy: productionUserId },
+  // Use transaction to prevent TOCTOU race on PAYMENT_READY transition
+  const { checkIn, isComplete } = await prisma.$transaction(async (tx) => {
+    const newCheckIn = await tx.bookingCheckIn.create({
+      data: { bookingId, date: checkDate, checkedInBy: productionUserId },
+    });
+
+    // Re-count inside transaction for accurate total
+    const checkedInCount = await tx.bookingCheckIn.count({ where: { bookingId } });
+    const totalDays = booking.dailyDetails.length;
+    const allComplete = checkedInCount >= totalDays && totalDays > 0;
+
+    if (allComplete) {
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: 'PAYMENT_READY' },
+      });
+    }
+
+    return { checkIn: newCheckIn, isComplete: allComplete };
   });
 
   const vehicleName = `${booking.option.vehicle.make} ${booking.option.vehicle.model}`;
@@ -218,15 +235,7 @@ export async function checkInDay(bookingId: string, date: string, productionUser
     });
   }
 
-  // Check if all days are now checked in
-  const totalDays = booking.dailyDetails.length;
-  const checkedInCount = booking.checkIns.length + 1; // +1 for the one we just created
-  if (checkedInCount >= totalDays && totalDays > 0) {
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: 'PAYMENT_READY' },
-    });
-
+  if (isComplete) {
     for (const coordId of coordinatorIds) {
       await safeNotify({
         userId: coordId,
@@ -279,23 +288,25 @@ export async function updateBookingDetails(
     },
   });
 
-  // Update per-day details
-  if (details.days) {
-    for (const day of details.days) {
-      const data: Record<string, unknown> = {
-        callTime: day.callTime ?? null,
-        locationAddress: day.locationAddress ?? null,
-        locationPin: day.locationPin ?? null,
-        notes: day.notes ?? null,
-      };
-      if (day.actualHours !== undefined) {
-        data.actualHours = day.actualHours;
-      }
-      await prisma.bookingDailyDetail.updateMany({
-        where: { bookingId, date: new Date(day.date + 'T00:00:00.000Z') },
-        data,
-      });
-    }
+  // Update per-day details in a transaction to ensure consistency
+  if (details.days && details.days.length > 0) {
+    await prisma.$transaction(
+      details.days.map((day) => {
+        const data: Record<string, unknown> = {
+          callTime: day.callTime ?? null,
+          locationAddress: day.locationAddress ?? null,
+          locationPin: day.locationPin ?? null,
+          notes: day.notes ?? null,
+        };
+        if (day.actualHours !== undefined) {
+          data.actualHours = day.actualHours;
+        }
+        return prisma.bookingDailyDetail.updateMany({
+          where: { bookingId, date: new Date(day.date + 'T00:00:00.000Z') },
+          data,
+        });
+      })
+    );
   }
 
   // Notify owner

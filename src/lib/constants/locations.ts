@@ -12,4 +12,4 @@ export const LOCATIONS = [
   'George',
 ] as const;
 
-export type Location = typeof LOCATIONS[number];
+

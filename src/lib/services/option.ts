@@ -228,43 +228,7 @@ export async function promoteQueue(vehicleId: string, startDate: Date, endDate: 
     include: { vehicle: { select: { make: true, model: true } }, productionUser: { select: { id: true, name: true } } },
   });
 
-  // Recalculate queue positions for accepted options
-  for (let i = 0; i < acceptedOptions.length; i++) {
-    const newPosition = i + 1;
-    const option = acceptedOptions[i];
-    const oldPosition = option.queuePosition;
-
-    const updateData: Record<string, unknown> = { queuePosition: newPosition };
-
-    // If promoted to first position and has less than 12 hours remaining, extend
-    if (newPosition === 1 && oldPosition !== 1 && option.confirmationDeadlineAt) {
-      const now = new Date();
-      const remainingMs = option.confirmationDeadlineAt.getTime() - now.getTime();
-      const remainingHours = remainingMs / (1000 * 60 * 60);
-
-      if (remainingHours < 12) {
-        updateData.confirmationDeadlineAt = addHours(now, 12);
-        updateData.promotedAt = now;
-      }
-
-      // Notify production user about promotion
-      const vehicleName = `${option.vehicle.make} ${option.vehicle.model}`;
-      await safeNotify({
-        userId: option.productionUser.id,
-        type: 'OPTION_PROMOTED',
-        title: 'Option Promoted',
-        message: `Your option on ${vehicleName} has been promoted to position ${newPosition}.`,
-        data: { optionId: option.id, vehicleId },
-      });
-    }
-
-    await prisma.option.update({
-      where: { id: option.id },
-      data: updateData,
-    });
-  }
-
-  // Also recalculate pending_response options
+  // Also fetch pending_response options
   const pendingOptions = await prisma.option.findMany({
     where: {
       vehicleId,
@@ -275,6 +239,40 @@ export async function promoteQueue(vehicleId: string, startDate: Date, endDate: 
     orderBy: { createdAt: 'asc' },
   });
 
+  // Build all updates, then execute in a single transaction
+  const updates: ReturnType<typeof prisma.option.update>[] = [];
+  const promotionNotifications: { userId: string; vehicleName: string; position: number; optionId: string }[] = [];
+
+  // Recalculate queue positions for accepted options
+  for (let i = 0; i < acceptedOptions.length; i++) {
+    const newPosition = i + 1;
+    const option = acceptedOptions[i];
+    const oldPosition = option.queuePosition;
+
+    const updateData: Record<string, unknown> = { queuePosition: newPosition };
+
+    if (newPosition === 1 && oldPosition !== 1 && option.confirmationDeadlineAt) {
+      const now = new Date();
+      const remainingMs = option.confirmationDeadlineAt.getTime() - now.getTime();
+      const remainingHours = remainingMs / (1000 * 60 * 60);
+
+      if (remainingHours < 12) {
+        updateData.confirmationDeadlineAt = addHours(now, 12);
+        updateData.promotedAt = now;
+      }
+
+      promotionNotifications.push({
+        userId: option.productionUser.id,
+        vehicleName: `${option.vehicle.make} ${option.vehicle.model}`,
+        position: newPosition,
+        optionId: option.id,
+      });
+    }
+
+    updates.push(prisma.option.update({ where: { id: option.id }, data: updateData }));
+  }
+
+  // Recalculate pending_response options
   const acceptedCount = acceptedOptions.length;
   for (let i = 0; i < pendingOptions.length; i++) {
     const newPosition = acceptedCount + i + 1;
@@ -282,8 +280,6 @@ export async function promoteQueue(vehicleId: string, startDate: Date, endDate: 
 
     const updateData: Record<string, unknown> = { queuePosition: newPosition };
 
-    // If a PENDING_RESPONSE option is promoted to position 1 (all accepted expired),
-    // extend response deadline if less than 12 hours remain
     if (newPosition === 1 && option.queuePosition !== 1) {
       const now = new Date();
       const remainingMs = option.responseDeadlineAt.getTime() - now.getTime();
@@ -295,9 +291,22 @@ export async function promoteQueue(vehicleId: string, startDate: Date, endDate: 
       }
     }
 
-    await prisma.option.update({
-      where: { id: option.id },
-      data: updateData,
+    updates.push(prisma.option.update({ where: { id: option.id }, data: updateData }));
+  }
+
+  // Execute all position updates atomically
+  if (updates.length > 0) {
+    await prisma.$transaction(updates);
+  }
+
+  // Send promotion notifications outside the transaction
+  for (const notif of promotionNotifications) {
+    await safeNotify({
+      userId: notif.userId,
+      type: 'OPTION_PROMOTED',
+      title: 'Option Promoted',
+      message: `Your option on ${notif.vehicleName} has been promoted to position ${notif.position}.`,
+      data: { optionId: notif.optionId, vehicleId },
     });
   }
 }

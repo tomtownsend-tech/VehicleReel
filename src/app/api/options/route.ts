@@ -27,7 +27,11 @@ export async function GET(request: NextRequest) {
   }
   // ADMIN sees all options (no filter)
 
-  if (status) {
+  const VALID_OPTION_STATUSES = [
+    'PENDING_RESPONSE', 'ACCEPTED', 'CONFIRMED', 'DECLINED_BY_OWNER',
+    'EXPIRED_RESPONSE', 'EXPIRED_CONFIRMATION', 'DECLINED_OVERLAP', 'DECLINED_BLOCKED', 'DECLINED_ADMIN',
+  ];
+  if (status && VALID_OPTION_STATUSES.includes(status)) {
     where.status = status;
   }
 
