@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
   const specialFeatures = searchParams.get('specialFeatures');
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
 
   const where: Prisma.VehicleWhereInput = {
     status: 'ACTIVE',
