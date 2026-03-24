@@ -1,10 +1,12 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -142,7 +144,7 @@ export default function VerifyEmailPage() {
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">VehicleReel</h1>
+          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto mx-auto" priority />
           <p className="mt-2 text-white/60">Email Verification</p>
         </div>
 

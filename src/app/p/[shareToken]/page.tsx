@@ -1,6 +1,8 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { MapPin } from 'lucide-react';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 export default async function PublicPresentationPage({
   params,
@@ -85,8 +87,8 @@ export default async function PublicPresentationPage({
         )}
       </main>
 
-      <footer className="py-6 text-center">
-        <p className="text-xs text-white/40">Powered by VehicleReel</p>
+      <footer className="py-6 flex justify-center">
+        <Image src={vrLogoWhite} alt="VehicleReel" height={20} className="w-auto opacity-40" />
       </footer>
     </div>
   );

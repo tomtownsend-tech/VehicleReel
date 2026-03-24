@@ -4,9 +4,11 @@ import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 function LoginForm() {
   const router = useRouter();
@@ -109,7 +111,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">VehicleReel</h1>
+          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto mx-auto" priority />
           <p className="mt-2 text-white/60">Sign in to your account</p>
         </div>
 

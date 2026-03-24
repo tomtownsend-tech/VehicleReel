@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Menu, X } from 'lucide-react';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
@@ -53,8 +55,8 @@ export function MobileNav() {
   return (
     <div className="lg:hidden">
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 bg-gray-900">
-        <Link href={homeHref} className="text-xl font-bold text-white">
-          VehicleReel
+        <Link href={homeHref}>
+          <Image src={vrLogoWhite} alt="VehicleReel" height={32} className="w-auto" priority />
         </Link>
         <div className="flex items-center gap-2">
           <NotificationBell />

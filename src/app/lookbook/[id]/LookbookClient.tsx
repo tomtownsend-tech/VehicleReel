@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { LookbookSection } from '@/components/LookbookSection';
 import { LookbookProgress } from '@/components/LookbookProgress';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 interface Vehicle {
   id: string;
@@ -77,10 +79,8 @@ export default function LookbookClient({
       ))}
 
       {/* Footer */}
-      <div className="lookbook-section h-screen flex flex-col items-center justify-center bg-black">
-        <p className="text-xs tracking-widest text-white/20 uppercase">
-          Powered by VehicleReel
-        </p>
+      <div className="lookbook-section h-screen flex flex-col items-center justify-center bg-black gap-2">
+        <Image src={vrLogoWhite} alt="VehicleReel" height={24} className="w-auto opacity-20" />
       </div>
     </div>
   );

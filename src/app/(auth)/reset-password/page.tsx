@@ -1,11 +1,13 @@
 'use client';
 
 import { Suspense, useState } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -102,7 +104,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">VehicleReel</h1>
+          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto mx-auto" priority />
           <p className="mt-2 text-white/60">Set a new password</p>
         </div>
 

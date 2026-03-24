@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Car, Film, Upload, ShieldCheck, Search, CalendarCheck, MessageSquare, ClipboardList, CreditCard, ChevronDown } from 'lucide-react';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 const OWNER_STEPS = [
   { icon: Upload, title: 'Register & Upload', desc: 'Create an account, upload your SA ID, Driver\'s License, and Vehicle License Disk.' },
@@ -150,8 +152,8 @@ export default function Home() {
       </section>
 
       {/* Footer watermark */}
-      <div className="pb-8 text-center">
-        <span className="text-xs tracking-widest text-gray-600 uppercase">VehicleReel</span>
+      <div className="pb-8 flex justify-center">
+        <Image src={vrLogoWhite} alt="VehicleReel" height={20} className="w-auto opacity-30" />
       </div>
     </div>
   );

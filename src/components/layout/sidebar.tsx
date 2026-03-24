@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Car, Search, FileText, Calendar, Settings, LogOut,
   Users, BarChart3, Shield, BookOpen, Sparkles, FolderOpen, HelpCircle,
 } from 'lucide-react';
+import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
@@ -56,8 +58,8 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-white/10 lg:bg-gray-900 lg:sticky lg:top-0 lg:h-screen overflow-visible z-50">
       <div className="relative flex items-center justify-between h-16 px-6 border-b border-white/10 overflow-visible">
-        <Link href={homeHref} className="text-xl font-bold text-white">
-          VehicleReel
+        <Link href={homeHref}>
+          <Image src={vrLogoWhite} alt="VehicleReel" height={32} className="w-auto" priority />
         </Link>
         <NotificationBell />
       </div>
