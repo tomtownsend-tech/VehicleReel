@@ -111,7 +111,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto mx-auto" priority />
+          <Image src={vrLogoWhite} alt="VehicleReel" height={72} className="w-auto mx-auto" priority />
           <p className="mt-2 text-white/60">Sign in to your account</p>
         </div>
 
