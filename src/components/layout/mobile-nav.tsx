@@ -56,7 +56,7 @@ export function MobileNav() {
     <div className="lg:hidden">
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 bg-gray-900">
         <Link href={homeHref}>
-          <Image src={vrLogoWhite} alt="VehicleReel" height={32} className="w-auto" priority />
+          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto" priority />
         </Link>
         <div className="flex items-center gap-2">
           <NotificationBell />

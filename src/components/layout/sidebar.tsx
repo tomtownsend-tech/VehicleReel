@@ -59,7 +59,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-white/10 lg:bg-gray-900 lg:sticky lg:top-0 lg:h-screen overflow-visible z-50">
       <div className="relative flex items-center justify-between h-16 px-6 border-b border-white/10 overflow-visible">
         <Link href={homeHref}>
-          <Image src={vrLogoWhite} alt="VehicleReel" height={32} className="w-auto" priority />
+          <Image src={vrLogoWhite} alt="VehicleReel" height={48} className="w-auto" priority />
         </Link>
         <NotificationBell />
       </div>
