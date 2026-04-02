@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { format, subHours, differenceInHours } from 'date-fns';
 import { safeNotify } from './notification';
 import { bookingConfirmedEmail, optionDeclinedEmail, insuranceReminderEmail, bookingCancelledEmail } from './email';
+import { generateInvoice } from './invoice';
 
 export async function confirmBooking(optionId: string, productionUserId: string, logistics: 'VEHICLE_COLLECTION' | 'OWNER_DELIVERY') {
   // Create booking and update option in a transaction (validation inside tx to prevent races)
@@ -245,6 +246,11 @@ export async function checkInDay(bookingId: string, date: string, productionUser
         data: { bookingId },
       });
     }
+
+    // Auto-generate and send invoice
+    generateInvoice(bookingId).catch((err) =>
+      console.error('Invoice generation failed for booking', bookingId, err)
+    );
   }
 
   return checkIn;

@@ -36,6 +36,8 @@ export const NOTIFICATION_CATEGORY_MAP: Record<NotificationType, EmailCategory> 
   INSURANCE_OVERDUE: 'emailListings',
   SPECIAL_REQUEST: 'emailListings',
   USER_BANNED: 'emailListings',
+  INVOICE_SENT: 'emailOptionsBookings',
+  PAYMENT_REMINDER: 'emailOptionsBookings',
 };
 
 export const EMAIL_CATEGORY_LABELS: Record<EmailCategory, { label: string; description: string }> = {

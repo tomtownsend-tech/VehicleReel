@@ -101,6 +101,13 @@ enum BookingStatus {
   PAYMENT_READY
 }
 
+enum InvoiceStatus {
+  SENT
+  OVERDUE
+  PAID
+  CANCELLED
+}
+
 enum LogisticsType {
   VEHICLE_COLLECTION
   OWNER_DELIVERY
@@ -131,6 +138,8 @@ enum NotificationType {
   VEHICLE_CHECKED_IN
   SPECIAL_REQUEST
   BOOKING_CANCELLED
+  INVOICE_SENT
+  PAYMENT_REMINDER
 }
 
 enum ProjectMemberRole {
@@ -177,6 +186,8 @@ model User {
   checkIns               BookingCheckIn[]
   projects               Project[]      @relation("ProductionProjects")
   projectMemberships     ProjectMember[]
+  invoicesAsProduction   Invoice[]      @relation("ProductionInvoices")
+  invoicesAsOwner        Invoice[]      @relation("OwnerInvoices")
 
   @@map("users")
 }
@@ -359,6 +370,7 @@ model Booking {
   documents        Document[]
   dailyDetails     BookingDailyDetail[]
   checkIns         BookingCheckIn[]
+  invoice          Invoice?
 
   @@index([vehicleId, status])
   @@index([ownerId])
@@ -411,6 +423,34 @@ model BookingCheckIn {
 
   @@unique([bookingId, date])
   @@map("booking_check_ins")
+}
+
+model Invoice {
+  id                String        @id @default(cuid())
+  invoiceNumber     String        @unique
+  bookingId         String        @unique
+  productionUserId  String
+  ownerId           String
+  subtotalCents     Int
+  platformFeeCents  Int
+  totalCents        Int
+  ownerPayoutCents  Int
+  status            InvoiceStatus @default(SENT)
+  pdfUrl            String?
+  sentAt            DateTime      @default(now())
+  paidAt            DateTime?
+  lastReminderAt    DateTime?
+  reminderCount     Int           @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  booking           Booking       @relation(fields: [bookingId], references: [id])
+  productionUser    User          @relation("ProductionInvoices", fields: [productionUserId], references: [id])
+  owner             User          @relation("OwnerInvoices", fields: [ownerId], references: [id])
+
+  @@index([status, sentAt])
+  @@index([productionUserId])
+  @@map("invoices")
 }
 
 model Notification {

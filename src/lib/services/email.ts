@@ -27,6 +27,26 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   }
 }
 
+interface SendEmailWithAttachmentParams extends SendEmailParams {
+  attachments: { filename: string; content: Buffer }[];
+}
+
+export async function sendEmailWithAttachment({ to, subject, html, attachments }: SendEmailWithAttachmentParams) {
+  try {
+    await resend.emails.send({
+      from: `VehicleReel <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
+      to,
+      subject,
+      html,
+      attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Email send error:', error);
+    return { success: false, error };
+  }
+}
+
 export function optionPlacedEmail(ownerName: string, vehicleName: string, productionUser: string, rate: string, dates: string, deadline: string) {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
@@ -382,6 +402,57 @@ export function messageReceivedEmail(userName: string, senderName: string, vehic
       <p>Hi ${escapeHtml(userName)},</p>
       <p><strong>${escapeHtml(senderName)}</strong> sent you a message about <strong>${escapeHtml(vehicleName)}</strong>.</p>
       <p>Log in to VehicleReel to reply.</p>
+    `,
+  };
+}
+
+const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+
+export function invoiceSentEmail(
+  recipientName: string,
+  invoiceNumber: string,
+  vehicleDescription: string,
+  totalFormatted: string,
+  shootDates: string,
+) {
+  return {
+    subject: `Invoice ${invoiceNumber} — ${vehicleDescription}`,
+    html: `
+      <h2>Invoice ${escapeHtml(invoiceNumber)}</h2>
+      <p>Hi ${escapeHtml(recipientName)},</p>
+      <p>An invoice has been generated for the completed shoot:</p>
+      <ul>
+        <li><strong>Vehicle:</strong> ${escapeHtml(vehicleDescription)}</li>
+        <li><strong>Shoot Dates:</strong> ${escapeHtml(shootDates)}</li>
+        <li><strong>Total Due:</strong> ${escapeHtml(totalFormatted)}</li>
+      </ul>
+      <p>The invoice PDF is attached to this email. Please use <strong>${escapeHtml(invoiceNumber)}</strong> as your payment reference.</p>
+      <p><a href="${baseUrl}/production/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View Booking</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">Payment is due within 30 days of invoice date.</p>
+    `,
+  };
+}
+
+export function paymentReminderEmail(
+  recipientName: string,
+  invoiceNumber: string,
+  vehicleDescription: string,
+  totalFormatted: string,
+  daysSinceSent: number,
+) {
+  return {
+    subject: `Payment Reminder: Invoice ${invoiceNumber} — ${daysSinceSent} days outstanding`,
+    html: `
+      <h2>Payment Reminder</h2>
+      <p>Hi ${escapeHtml(recipientName)},</p>
+      <p>This is a friendly reminder that invoice <strong>${escapeHtml(invoiceNumber)}</strong> is ${daysSinceSent} day${daysSinceSent === 1 ? '' : 's'} outstanding.</p>
+      <ul>
+        <li><strong>Vehicle:</strong> ${escapeHtml(vehicleDescription)}</li>
+        <li><strong>Amount Due:</strong> ${escapeHtml(totalFormatted)}</li>
+      </ul>
+      <p>Please use <strong>${escapeHtml(invoiceNumber)}</strong> as your payment reference when making payment.</p>
+      <p><a href="${baseUrl}/production/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View Booking</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">If you have already made payment, please disregard this reminder.</p>
     `,
   };
 }
