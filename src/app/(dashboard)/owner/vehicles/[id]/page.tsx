@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { MapPin, Calendar, ArrowLeft, Plus, Trash2, Upload, X, Ban, FileUp, Check, Loader2 } from 'lucide-react';
 import { compressImage } from '@/lib/utils/compress-image';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface Vehicle {
   id: string;
@@ -246,7 +247,7 @@ export default function VehicleDetailPage() {
                     <div key={label} className="relative">
                       {photo ? (
                         <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 group">
-                          <img src={photo.originalUrl || photo.url} alt={label} className="w-full h-full object-cover" />
+                          <VehiclePhoto src={photo.originalUrl || photo.url} alt={label} />
                           <span className="absolute bottom-1 left-1 text-xs bg-gray-900/90 text-white/70 px-1.5 py-0.5 rounded font-medium">{label}</span>
                           <button
                             onClick={() => deletePhoto(photo.id)}
@@ -278,7 +279,7 @@ export default function VehicleDetailPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {extraPhotos.map((photo) => (
                   <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 group">
-                    <img src={photo.originalUrl || photo.url} alt="" className="w-full h-full object-cover" />
+                    <VehiclePhoto src={photo.originalUrl || photo.url} />
                     <button
                       onClick={() => deletePhoto(photo.id)}
                       disabled={deletingPhotoId === photo.id}

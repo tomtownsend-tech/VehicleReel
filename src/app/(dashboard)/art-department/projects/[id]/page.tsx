@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Users, Download, Link2, Check, Clock } from 'lucide-
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { downloadProjectImages } from '@/lib/utils/download-project';
 import { VehicleDetailModal } from '@/components/VehicleDetailModal';
+import { VehiclePhoto as VehiclePhotoImg } from '@/components/VehiclePhoto';
 
 interface VehiclePhoto { url: string }
 
@@ -211,11 +212,7 @@ export default function ArtDepartmentProjectDetailPage() {
                           <Badge variant="success">Booked</Badge>
                         </div>
                         <div className="aspect-video bg-gray-800 relative">
-                          {photo ? (
-                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
-                          )}
+                          <VehiclePhotoImg src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
                         </div>
                         <div className="p-3">
                           <p className="font-semibold text-white text-sm">
@@ -258,11 +255,7 @@ export default function ArtDepartmentProjectDetailPage() {
                           </Badge>
                         </div>
                         <div className="aspect-video bg-gray-800 relative">
-                          {photo ? (
-                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
-                          )}
+                          <VehiclePhotoImg src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
                         </div>
                         <div className="p-3">
                           <p className="font-semibold text-white text-sm">
@@ -307,11 +300,7 @@ export default function ArtDepartmentProjectDetailPage() {
                         onClick={() => setSelectedVehicleId(vehicle.id)}
                       >
                         <div className="aspect-video bg-gray-800 relative">
-                          {photo ? (
-                            <img src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">No photo</div>
-                          )}
+                          <VehiclePhotoImg src={photo} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="absolute inset-0 w-full h-full object-cover" />
                         </div>
                         <div className="p-3">
                           <p className="font-semibold text-white text-sm">

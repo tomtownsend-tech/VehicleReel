@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSupabase } from '@/lib/supabase';
 import { detectAndBlurPlates } from '@/lib/services/plate-blur';
+import sharp from 'sharp';
 
 export const runtime = 'nodejs';
 
@@ -54,11 +55,26 @@ export async function POST(
     const photos = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const contentType = file.type || 'image/jpeg';
-      const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
+      const rawExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const rawBuffer = Buffer.from(await file.arrayBuffer());
 
-      const buffer = Buffer.from(await file.arrayBuffer());
+      // Convert non-web-safe formats (HEIC, TIFF, etc.) to JPEG (best-effort server-side fallback)
+      const needsConversion = ['heic', 'heif', 'tiff', 'tif', 'avif', 'bmp'].includes(rawExt);
+      let buffer: Buffer = rawBuffer;
+      let ext = rawExt;
+      let contentType = file.type || 'image/jpeg';
+      if (needsConversion) {
+        try {
+          buffer = await sharp(rawBuffer).jpeg({ quality: 90 }).toBuffer();
+          ext = 'jpg';
+          contentType = 'image/jpeg';
+        } catch {
+          // sharp may lack HEIC support on some platforms; client-side heic2any handles this
+          ext = 'jpg';
+          contentType = 'image/jpeg';
+        }
+      }
+      const path = `vehicles/${params.id}/${Date.now()}-${i}.${ext}`;
 
       // Detect and blur license plates
       const { processedBuffer, hasPlates } = await detectAndBlurPlates(buffer);

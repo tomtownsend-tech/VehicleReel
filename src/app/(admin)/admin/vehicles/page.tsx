@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Car } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface VehicleItem {
   id: string;
@@ -67,11 +67,7 @@ export default function AdminVehiclesPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <Link href={`/admin/vehicles/${v.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-12 h-12 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    {v.photos[0] ? (
-                      <img src={v.photos[0].url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Car className="h-6 w-6 text-white/30" />
-                    )}
+                    <VehiclePhoto src={v.photos[0]?.url} />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

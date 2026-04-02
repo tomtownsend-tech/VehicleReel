@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Car, MapPin, Calendar, User } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface Vehicle {
   id: string;
@@ -110,7 +111,7 @@ export default function AdminVehicleDetailPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
           {vehicle.photos.map((photo) => (
             <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-gray-800">
-              <img src={photo.originalUrl || photo.url} alt="" className="w-full h-full object-cover" />
+              <VehiclePhoto src={photo.originalUrl || photo.url} />
             </div>
           ))}
         </div>

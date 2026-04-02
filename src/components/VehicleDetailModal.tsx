@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface VehicleDetail {
   id: string;
@@ -66,10 +67,9 @@ export function VehicleDetailModal({ vehicleId, onClose }: VehicleDetailModalPro
           {vehicle.photos.length > 0 && (
             <div>
               <div className="aspect-video rounded-lg overflow-hidden bg-gray-800">
-                <img
+                <VehiclePhoto
                   src={vehicle.photos[activePhoto]?.url}
                   alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                  className="w-full h-full object-cover"
                 />
               </div>
               {vehicle.photos.length > 1 && (
@@ -82,7 +82,7 @@ export function VehicleDetailModal({ vehicleId, onClose }: VehicleDetailModalPro
                         i === activePhoto ? 'border-white' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      <VehiclePhoto src={photo.url} />
                     </button>
                   ))}
                 </div>

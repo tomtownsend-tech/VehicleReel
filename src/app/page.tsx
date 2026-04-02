@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Car, Film, Upload, ShieldCheck, Search, CalendarCheck, MessageSquare, ClipboardList, CreditCard, ChevronDown } from 'lucide-react';
+import { Car, Film, Upload, ShieldCheck, Search, CalendarCheck, MessageSquare, ClipboardList, CreditCard, ChevronDown, Shield } from 'lucide-react';
 import vrLogoWhite from '@/assets/branding/vr-logo-white.png';
 
 const OWNER_STEPS = [
-  { icon: Upload, title: 'Register & Upload', desc: 'Create an account, upload your SA ID, Driver\'s License, and Vehicle License Disk.' },
+  { icon: Upload, title: 'Register & Upload', desc: 'Create an account and upload a form of identification (SA ID, passport, or driver\'s licence). Any nationality welcome.' },
   { icon: ShieldCheck, title: 'Get Verified', desc: 'AI reviews your documents in minutes. Once approved, your vehicle goes live.' },
-  { icon: CalendarCheck, title: 'Receive Options', desc: 'Production companies place holds on your vehicle for specific shoot dates.' },
+  { icon: CalendarCheck, title: 'You\'re in Control', desc: 'Block out dates, accept or decline options from production companies, and manage your vehicle on your terms.' },
   { icon: CreditCard, title: 'Get Paid', desc: 'After the shoot, VehicleReel invoices the production company and pays you out.' },
 ];
 
 const PRODUCTION_STEPS = [
-  { icon: Film, title: 'Register Your Company', desc: 'Create an account with your SA ID and Company Registration to get verified.' },
+  { icon: Film, title: 'Register Your Company', desc: 'Create an account with your ID and Company Registration to get verified.' },
   { icon: Search, title: 'Search Vehicles', desc: 'Filter by type, make, model, color, year, location, and date availability.' },
   { icon: ClipboardList, title: 'Place Options & Book', desc: 'Reserve vehicles with date holds. Once the owner accepts, confirm your booking.' },
   { icon: MessageSquare, title: 'Coordinate the Shoot', desc: 'Upload insurance, set call times and locations, and manage logistics through the platform.' },
@@ -148,6 +148,14 @@ export default function Home() {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* POPIA Trust Badge */}
+        <div className="mt-16 flex items-center justify-center gap-3 text-white/40">
+          <Shield className="h-5 w-5 flex-shrink-0" />
+          <p className="text-sm">
+            Your data is safe with us. VehicleReel is fully POPIA compliant. We never share your personal information without your consent.
+          </p>
         </div>
       </section>
 

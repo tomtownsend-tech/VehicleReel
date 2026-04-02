@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, ArrowLeft, Ban } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface Vehicle {
   id: string;
@@ -67,7 +68,7 @@ export default function ArtDepartmentVehicleDetailPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
           {vehicle.photos.map((photo, i) => (
             <div key={photo.id} className={`${i === 0 ? 'col-span-2' : ''} aspect-video rounded-lg overflow-hidden bg-gray-800`}>
-              <img src={photo.url} alt="" className="w-full h-full object-cover" />
+              <VehiclePhoto src={photo.url} />
             </div>
           ))}
         </div>

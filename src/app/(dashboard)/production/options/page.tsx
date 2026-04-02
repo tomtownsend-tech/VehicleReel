@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, Clock } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { OPTION_STATUS_LABELS } from '@/lib/constants';
 
@@ -70,11 +71,7 @@ export default function ProductionOptionsPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex items-start gap-3 sm:gap-4">
                     <div className="h-16 w-24 rounded-lg bg-gray-800 overflow-hidden flex-shrink-0">
-                      {opt.vehicle.photos[0]?.url ? (
-                        <img src={opt.vehicle.photos[0].url} alt={`${opt.vehicle.year} ${opt.vehicle.make} ${opt.vehicle.model}`} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-white/30 text-xs">No photo</div>
-                      )}
+                      <VehiclePhoto src={opt.vehicle.photos[0]?.url} alt={`${opt.vehicle.year} ${opt.vehicle.make} ${opt.vehicle.model}`} />
                     </div>
                     <div>
                     <div className="flex items-center gap-3">

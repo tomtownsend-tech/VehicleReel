@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 
 interface LookbookSectionProps {
   photoUrl: string | null;
@@ -51,13 +52,12 @@ export function LookbookSection({
     >
       {/* Full-bleed image */}
       {photoUrl ? (
-        <img
+        <VehiclePhoto
           src={photoUrl}
           alt={title}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[600ms] ease-out ${
             isVisible ? 'opacity-100' : 'opacity-0'
           }`}
-          style={{ willChange: isVisible ? 'auto' : 'opacity' }}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-white/20 text-lg">

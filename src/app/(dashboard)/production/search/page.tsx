@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Car, Filter, X, Send, Sparkles, Calendar } from 'lucide-react';
+import { Search, MapPin, Filter, X, Send, Sparkles, Calendar } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -268,17 +269,7 @@ export default function ProductionSearchPage() {
               className="bg-gray-900 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-colors"
             >
               <div className="aspect-video bg-gray-800 relative">
-                {vehicle.photos[0] ? (
-                  <img
-                    src={vehicle.photos[0].url}
-                    alt={`${vehicle.make} ${vehicle.model}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Car className="h-12 w-12 text-white/30" />
-                  </div>
-                )}
+                <VehiclePhoto src={vehicle.photos[0]?.url} alt={`${vehicle.make} ${vehicle.model}`} />
                 {getOptionBadge(vehicle) && (
                   <div className="absolute top-3 right-3">{getOptionBadge(vehicle)}</div>
                 )}

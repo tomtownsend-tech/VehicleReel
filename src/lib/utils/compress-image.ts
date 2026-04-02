@@ -1,4 +1,23 @@
-export function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<File> {
+const HEIC_TYPES = ['image/heic', 'image/heif'];
+const HEIC_EXTENSIONS = ['.heic', '.heif'];
+
+function isHeic(file: File): boolean {
+  if (HEIC_TYPES.includes(file.type)) return true;
+  const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+  return HEIC_EXTENSIONS.includes(ext);
+}
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const heic2any = (await import('heic2any')).default;
+  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  const result = Array.isArray(blob) ? blob[0] : blob;
+  return new File([result], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+}
+
+export async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<File> {
+  // Convert HEIC to JPEG first (most browsers can't render HEIC)
+  const sourceFile = isHeic(file) ? await convertHeicToJpeg(file) : file;
+
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -15,16 +34,16 @@ export function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promi
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+            resolve(new File([blob], sourceFile.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
           } else {
-            resolve(file);
+            resolve(sourceFile);
           }
         },
         'image/jpeg',
         quality
       );
     };
-    img.onerror = () => resolve(file);
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => resolve(sourceFile);
+    img.src = URL.createObjectURL(sourceFile);
   });
 }

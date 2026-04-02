@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FolderOpen, Plus } from 'lucide-react';
+import { VehiclePhoto } from '@/components/VehiclePhoto';
 import { formatDate } from '@/lib/utils';
 
 interface Project {
@@ -106,7 +107,7 @@ export default function ProjectsPage() {
                 {project.thumbnails.length > 0 ? (
                   project.thumbnails.map((url, i) => (
                     <div key={i} className="flex-1 relative">
-                      <img src={url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <VehiclePhoto src={url} className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                   ))
                 ) : (
