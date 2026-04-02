@@ -236,13 +236,13 @@ export async function checkAndActivateUser(userId: string, vehicleId: string | n
     });
   }
 
-  // Activate vehicle if vehicle registration is approved and user is verified
+  // Activate vehicle if vehicle registration or permit is approved and user is verified
   if (vehicleId) {
     const vehicleDocs = await prisma.document.findMany({
-      where: { vehicleId, type: 'VEHICLE_REGISTRATION' },
+      where: { vehicleId, type: { in: ['VEHICLE_REGISTRATION', 'VEHICLE_PERMIT'] } },
     });
     const vehicleDocsApproved = vehicleDocs.length > 0 &&
-      vehicleDocs.every((d) => d.status === 'APPROVED');
+      vehicleDocs.some((d) => d.status === 'APPROVED');
 
     if ((allPersonalApproved || user.status === 'VERIFIED') && vehicleDocsApproved) {
       await prisma.vehicle.update({

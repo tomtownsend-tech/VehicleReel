@@ -27,6 +27,7 @@ enum DocumentType {
   SA_ID
   DRIVERS_LICENSE
   VEHICLE_REGISTRATION
+  VEHICLE_PERMIT
   COMPANY_REGISTRATION
   INSURANCE
 }
@@ -54,6 +55,7 @@ enum VehicleType {
   SCOOTER
   MOTORBIKE
   RACING_CAR
+  OTHER
 }
 
 enum VehicleCondition {
@@ -242,6 +244,7 @@ model Vehicle {
   id              String           @id @default(cuid())
   ownerId         String
   type            VehicleType
+  customType      String?
   driveSide       DriveSide?
   make            String
   model           String

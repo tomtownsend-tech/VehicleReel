@@ -119,6 +119,46 @@ Respond in JSON format:
   "issues": ["list of any issues found"],
   "recommendation": "APPROVE" or "FLAG"
 }`,
+  VEHICLE_PERMIT: `You are reviewing a document that should be a permit, licence, or ownership declaration for a non-standard vehicle (e.g. aircraft, boat, train, or other specialty vehicle that does not have a standard South African vehicle license disk).
+
+ACCEPTABLE DOCUMENTS:
+- Aviation licence or permit (e.g. CAA licence)
+- Boat/vessel licence or registration
+- Railway operating permit
+- Any government-issued permit to own or operate the vehicle
+- A signed and dated letter from the owner explaining why no permit exists (must include the owner's full name, signature, date, and a clear explanation)
+
+CRITICAL FIRST CHECK: Determine if this is one of the acceptable documents listed above. If it is a standard vehicle license disk, driver's license, ID, selfie, or unrelated image, set "correctDocumentType" to false.
+
+Then analyze:
+1. Is this an acceptable permit, licence, or ownership declaration?
+2. Is the document clearly readable?
+3. Does it appear authentic?
+4. If it is a signed letter: does it include the owner's name, signature, date, and explanation?
+5. Extract any identifying details.
+
+Respond in JSON format:
+{
+  "correctDocumentType": true/false,
+  "detectedDocumentType": "what you think this document actually is, e.g. 'Aviation Licence', 'Boat Registration', 'Signed Declaration Letter', 'Vehicle Registration', 'Unrelated image', etc.",
+  "documentSubtype": "PERMIT" or "LICENCE" or "DECLARATION_LETTER",
+  "valid": true/false,
+  "readable": true/false,
+  "authentic": true/false,
+  "expired": true/false/null,
+  "confidence": 0.0-1.0,
+  "extractedFields": {
+    "permitType": "string or null",
+    "permitNumber": "string or null",
+    "issuingAuthority": "string or null",
+    "ownerName": "string or null",
+    "vehicleDescription": "string or null",
+    "expiryDate": "string or null"
+  },
+  "issues": ["list of any issues found"],
+  "recommendation": "APPROVE" or "FLAG"
+}`,
+
   INSURANCE: `You are reviewing a document that should be a vehicle insurance certificate or policy.
 
 CRITICAL FIRST CHECK: Determine if this is actually a vehicle insurance document. If it is any other type of document (driver's license, ID book, vehicle registration, number plate photo, selfie, random image, etc.), immediately set "correctDocumentType" to false.
@@ -156,6 +196,7 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   SA_ID: 'SA ID / Passport',
   DRIVERS_LICENSE: "Driver's License",
   VEHICLE_REGISTRATION: 'Vehicle License Disk',
+  VEHICLE_PERMIT: 'Vehicle Permit / Declaration',
   COMPANY_REGISTRATION: 'Company Registration',
   INSURANCE: 'Vehicle Insurance',
 };

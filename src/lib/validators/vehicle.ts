@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const createVehicleSchema = z.object({
-  type: z.enum(['CAR', 'BIKE', 'BOAT', 'PLANE', 'JET_SKI', 'SCOOTER', 'MOTORBIKE', 'RACING_CAR']),
+  type: z.enum(['CAR', 'BIKE', 'BOAT', 'PLANE', 'JET_SKI', 'SCOOTER', 'MOTORBIKE', 'RACING_CAR', 'OTHER']),
+  customType: z.string().min(1, 'Please specify the vehicle type').optional(),
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
   color: z.string().min(1, 'Color is required'),

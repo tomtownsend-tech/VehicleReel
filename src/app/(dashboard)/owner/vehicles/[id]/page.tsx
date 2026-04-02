@@ -13,6 +13,7 @@ import { VehiclePhoto } from '@/components/VehiclePhoto';
 interface Vehicle {
   id: string;
   type: string;
+  customType: string | null;
   driveSide: string | null;
   make: string;
   model: string;
@@ -147,9 +148,9 @@ export default function VehicleDetailPage() {
     { type: 'DRIVERS_LICENSE', label: "Driver's License" },
   ] as const;
 
-  const VEHICLE_DOC_TYPES = [
-    { type: 'VEHICLE_REGISTRATION', label: 'Vehicle License Disk' },
-  ] as const;
+  const VEHICLE_DOC_TYPES = vehicle?.type === 'OTHER'
+    ? [{ type: 'VEHICLE_PERMIT', label: 'Vehicle Permit / Declaration' }] as const
+    : [{ type: 'VEHICLE_REGISTRATION', label: 'Vehicle License Disk' }] as const;
 
   async function handleDeleteVehicle() {
     setDeletingVehicle(true);
@@ -376,6 +377,11 @@ export default function VehicleDetailPage() {
             })}
           </div>
           <h3 className="text-sm font-medium text-white/70 mb-2">Vehicle Documents</h3>
+          {vehicle.type === 'OTHER' && (
+            <p className="text-xs text-white/50 mb-2">
+              Upload a permit or licence for your vehicle (e.g. aviation licence, boat registration). If no permit exists, upload a signed and dated letter explaining why.
+            </p>
+          )}
           <div className="space-y-3">
             {VEHICLE_DOC_TYPES.map(({ type, label }) => {
               const existing = vehicle.documents.filter((d) => d.type === type);

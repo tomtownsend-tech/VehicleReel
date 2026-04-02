@@ -28,6 +28,7 @@ export default function NewVehiclePage() {
   // Vehicle details
   const [details, setDetails] = useState({
     type: '',
+    customType: '',
     make: '',
     model: '',
     color: '',
@@ -49,7 +50,8 @@ export default function NewVehiclePage() {
   const [extraPhotoFiles, setExtraPhotoFiles] = useState<File[]>([]);
   const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
 
-  // Documents
+  // Documents — vehicle doc type depends on whether type is OTHER
+  const isOtherType = details.type === 'OTHER';
   const [documents, setDocuments] = useState<{ type: string; file: File | null; uploaded: boolean; isPersonal: boolean }[]>([
     { type: 'SA_ID', file: null, uploaded: false, isPersonal: true },
     { type: 'DRIVERS_LICENSE', file: null, uploaded: false, isPersonal: true },
@@ -58,6 +60,11 @@ export default function NewVehiclePage() {
 
   function updateDetail(field: string, value: string) {
     setDetails((prev) => ({ ...prev, [field]: value }));
+    // When type changes, update the vehicle document requirement
+    if (field === 'type') {
+      const newVehicleDoc = value === 'OTHER' ? 'VEHICLE_PERMIT' : 'VEHICLE_REGISTRATION';
+      setDocuments((prev) => prev.map((d, i) => i === 2 ? { ...d, type: newVehicleDoc, file: null, uploaded: false } : d));
+    }
   }
 
   async function handleDetailsSubmit() {
@@ -71,6 +78,7 @@ export default function NewVehiclePage() {
           ...details,
           year: parseInt(details.year),
           mileage: details.mileage ? parseInt(details.mileage) : undefined,
+          customType: details.type === 'OTHER' ? details.customType : undefined,
           driveSide: details.driveSide || undefined,
           specialFeatures: details.specialFeatures
             ? details.specialFeatures.split(',').map((s: string) => s.trim()).filter(Boolean)
@@ -238,6 +246,7 @@ export default function NewVehiclePage() {
     SA_ID: 'SA ID / Passport',
     DRIVERS_LICENSE: "Driver's License",
     VEHICLE_REGISTRATION: 'Vehicle License Disk',
+    VEHICLE_PERMIT: 'Vehicle Permit / Declaration',
   };
 
   return (
@@ -283,6 +292,16 @@ export default function NewVehiclePage() {
               onChange={(e) => updateDetail('type', e.target.value)}
               placeholder="Select type..."
             />
+            {details.type === 'OTHER' && (
+              <Input
+                id="customType"
+                label="Describe the vehicle type"
+                value={details.customType}
+                onChange={(e) => updateDetail('customType', e.target.value)}
+                placeholder="e.g. Helicopter, Yacht, Steam Train, Food Truck"
+                required
+              />
+            )}
             {(details.type === 'CAR' || details.type === 'RACING_CAR') && (
               <Select
                 id="driveSide"
@@ -366,7 +385,7 @@ export default function NewVehiclePage() {
             <Button
               onClick={handleDetailsSubmit}
               loading={loading}
-              disabled={!details.type || !details.make || !details.model || !details.color || !details.year || !details.condition || !details.location}
+              disabled={!details.type || !details.make || !details.model || !details.color || !details.year || !details.condition || !details.location || (details.type === 'OTHER' && !details.customType)}
               className="w-full"
             >
               Next: Add Photos
@@ -481,6 +500,11 @@ export default function NewVehiclePage() {
                 return (
                   <div key="vehicle-header">
                     <h3 className="text-sm font-medium text-white mt-2">Vehicle Documents</h3>
+                    {isOtherType && (
+                      <p className="text-xs text-white/50 mt-1 mb-2">
+                        Upload a permit or licence for your vehicle (e.g. aviation licence, boat registration). If no permit exists, upload a signed and dated letter explaining why.
+                      </p>
+                    )}
                     <div className="border border-white/10 rounded-lg p-4 mt-2">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-white">{docLabels[doc.type]}</span>

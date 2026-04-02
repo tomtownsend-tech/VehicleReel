@@ -7,6 +7,7 @@ export const VEHICLE_TYPES = [
   { value: 'SCOOTER', label: 'Scooter' },
   { value: 'MOTORBIKE', label: 'Motorbike' },
   { value: 'RACING_CAR', label: 'Racing Car' },
+  { value: 'OTHER', label: 'Other' },
 ] as const;
 
 export const VEHICLE_CONDITIONS = [
