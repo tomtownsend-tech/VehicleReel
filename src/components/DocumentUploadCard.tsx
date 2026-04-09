@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { FileUp, Check, Loader2 } from 'lucide-react';
+import { FileUp, Check, Loader2, AlertCircle } from 'lucide-react';
 
 interface DocRecord {
   id: string;
@@ -14,10 +14,11 @@ interface DocumentUploadCardProps {
   label: string;
   docs: DocRecord[];
   uploading: string | null;
+  uploadError?: string | null;
   onFileChange: (docType: string, e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function DocumentUploadCard({ type, label, docs, uploading, onFileChange }: DocumentUploadCardProps) {
+export function DocumentUploadCard({ type, label, docs, uploading, uploadError, onFileChange }: DocumentUploadCardProps) {
   const existing = docs.filter((d) => d.type === type);
   const approved = existing.find((d) => d.status === 'APPROVED');
   const pending = existing.find((d) => d.status === 'PENDING_REVIEW');
@@ -39,6 +40,12 @@ export function DocumentUploadCard({ type, label, docs, uploading, onFileChange 
         )}
       </div>
       {flagged && <p className="text-xs text-red-400 mt-1">This document was flagged. Please re-upload.</p>}
+      {uploadError && (
+        <div className="mt-2 flex items-start gap-2 rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2">
+          <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-red-400">{uploadError}</p>
+        </div>
+      )}
       {canUpload && (
         <label className={`mt-3 flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-white/15 rounded-lg cursor-pointer hover:border-white/40 hover:bg-white/5 transition-colors ${uploading === type ? 'opacity-50 pointer-events-none' : ''}`}>
           {uploading === type ? (

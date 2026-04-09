@@ -24,7 +24,7 @@ export default function ArtDepartmentSettingsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [personalDocs, setPersonalDocs] = useState<{ id: string; type: string; status: string }[]>([]);
-  const { uploading: docUploading, handleFileChange: handleDocUpload } = useDocumentUpload((doc) => {
+  const { uploading: docUploading, uploadError: docUploadError, handleFileChange: handleDocUpload } = useDocumentUpload((doc) => {
     setPersonalDocs((prev) => [...prev, doc]);
   });
 
@@ -139,7 +139,7 @@ export default function ArtDepartmentSettingsPage() {
           <p className="text-xs text-white/50 mb-4">Upload your SA ID or Passport to verify your identity.</p>
           <div className="space-y-3">
             {PERSONAL_DOC_TYPES.map(({ type, label }) => (
-              <DocumentUploadCard key={type} type={type} label={label} docs={personalDocs} uploading={docUploading} onFileChange={handleDocUpload} />
+              <DocumentUploadCard key={type} type={type} label={label} docs={personalDocs} uploading={docUploading} uploadError={docUploadError} onFileChange={handleDocUpload} />
             ))}
           </div>
         </CardContent>

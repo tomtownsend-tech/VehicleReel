@@ -37,6 +37,7 @@ enum DocumentStatus {
   APPROVED
   FLAGGED
   EXPIRED
+  ARCHIVED
 }
 
 enum ReviewStatus {

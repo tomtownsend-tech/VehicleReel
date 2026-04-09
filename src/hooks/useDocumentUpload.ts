@@ -10,9 +10,11 @@ interface DocRecord {
 
 export function useDocumentUpload(onSuccess?: (doc: DocRecord) => void) {
   const [uploading, setUploading] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   async function upload(docType: string, file: File, vehicleId?: string): Promise<DocRecord | null> {
     setUploading(docType);
+    setUploadError(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -25,6 +27,12 @@ export function useDocumentUpload(onSuccess?: (doc: DocRecord) => void) {
         onSuccess?.(record);
         return record;
       }
+      const data = await res.json().catch(() => null);
+      const message = data?.error || 'Upload failed. Please try again.';
+      setUploadError(message);
+      return null;
+    } catch {
+      setUploadError('Network error. Please check your connection and try again.');
       return null;
     } finally {
       setUploading(null);
@@ -38,5 +46,9 @@ export function useDocumentUpload(onSuccess?: (doc: DocRecord) => void) {
     e.target.value = '';
   }
 
-  return { uploading, upload, handleFileChange };
+  function clearError() {
+    setUploadError(null);
+  }
+
+  return { uploading, uploadError, upload, handleFileChange, clearError };
 }

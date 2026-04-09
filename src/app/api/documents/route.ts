@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
   const userId = (session.user.role === 'ADMIN' && requestedUserId) ? requestedUserId : session.user.id;
   const vehicleId = searchParams.get('vehicleId');
 
-  const where: Record<string, string> = { userId };
+  const includeArchived = searchParams.get('includeArchived') === 'true';
+  const where: Record<string, unknown> = {
+    userId,
+    ...(!includeArchived ? { status: { not: 'ARCHIVED' } } : {}),
+  };
   if (vehicleId) where.vehicleId = vehicleId;
 
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -97,6 +101,38 @@ export async function POST(request: NextRequest) {
       });
       if (existingInsurance) {
         return NextResponse.json({ error: 'An insurance document is already uploaded for this booking' }, { status: 409 });
+      }
+    }
+
+    // For non-insurance documents, archive any previous FLAGGED uploads of the same type
+    // to prevent duplicate entries when users re-upload after rejection
+    const docType = type as 'SA_ID' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'COMPANY_REGISTRATION' | 'INSURANCE';
+    if (docType !== 'INSURANCE') {
+      await prisma.document.updateMany({
+        where: {
+          userId: session.user.id,
+          type: docType,
+          status: 'FLAGGED',
+          ...(vehicleId ? { vehicleId } : {}),
+        },
+        data: { status: 'ARCHIVED' },
+      });
+
+      // Block upload if there's already a PENDING_REVIEW or APPROVED document of this type
+      const existingActive = await prisma.document.findFirst({
+        where: {
+          userId: session.user.id,
+          type: docType,
+          status: { in: ['PENDING_REVIEW', 'APPROVED'] },
+          ...(vehicleId ? { vehicleId } : {}),
+        },
+      });
+      if (existingActive) {
+        const statusLabel = existingActive.status === 'APPROVED' ? 'already approved' : 'still being reviewed';
+        return NextResponse.json(
+          { error: `This document is ${statusLabel}. No need to re-upload.` },
+          { status: 409 },
+        );
       }
     }
 
