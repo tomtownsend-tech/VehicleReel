@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { safeNotify } from '@/lib/services/notification';
 import { documentStatusEmail } from '@/lib/services/email';
+import { saveRegistrationNumber } from '@/lib/services/document-review';
 
 export async function PATCH(
   request: NextRequest,
@@ -89,6 +90,15 @@ export async function PATCH(
           message: 'Your vehicle listing is now active and searchable by production teams.',
           data: { vehicleId: document.vehicleId },
         });
+      }
+    }
+
+    // Save registration number from licence disc to vehicle record
+    if (document.type === 'VEHICLE_REGISTRATION' && document.vehicleId) {
+      const extracted = document.extractedData as Record<string, unknown> | null;
+      const regNumber = extracted?.registrationNumber as string | undefined;
+      if (regNumber) {
+        await saveRegistrationNumber(document.vehicleId, regNumber);
       }
     }
 

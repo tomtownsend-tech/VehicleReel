@@ -38,6 +38,7 @@ export const NOTIFICATION_CATEGORY_MAP: Record<NotificationType, EmailCategory> 
   USER_BANNED: 'emailListings',
   INVOICE_SENT: 'emailOptionsBookings',
   PAYMENT_REMINDER: 'emailOptionsBookings',
+  DUPLICATE_VEHICLE: 'emailListings',
 };
 
 export const EMAIL_CATEGORY_LABELS: Record<EmailCategory, { label: string; description: string }> = {

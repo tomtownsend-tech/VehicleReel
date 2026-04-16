@@ -164,6 +164,14 @@ export async function reviewDocument(documentId: string) {
       }
     }
 
+    // Save registration number from approved licence disc to the Vehicle record
+    if (newStatus === 'APPROVED' && document.type === 'VEHICLE_REGISTRATION' && document.vehicleId) {
+      const regNumber = reviewResult.extractedFields?.registrationNumber;
+      if (regNumber) {
+        await saveRegistrationNumber(document.vehicleId, regNumber);
+      }
+    }
+
     // Check if all user documents are approved — activate listing/user
     // Skip for insurance docs (booking-specific, not user-verification)
     if (document.type !== 'INSURANCE') {
@@ -197,6 +205,62 @@ export async function reviewDocument(documentId: string) {
     });
 
     return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Save a registration number extracted from a licence disc to the Vehicle record.
+ * Checks for duplicates and notifies admin if another vehicle already uses this reg number.
+ */
+export async function saveRegistrationNumber(vehicleId: string, registrationNumber: string) {
+  const normalized = registrationNumber.trim().toUpperCase().replace(/\s+/g, ' ');
+  if (!normalized) return;
+
+  // Check for existing vehicles with the same registration number (excluding this vehicle)
+  const duplicate = await prisma.vehicle.findFirst({
+    where: {
+      registrationNumber: normalized,
+      id: { not: vehicleId },
+    },
+    include: {
+      owner: { select: { name: true, email: true } },
+    },
+  });
+
+  // Save registration number on the vehicle
+  await prisma.vehicle.update({
+    where: { id: vehicleId },
+    data: { registrationNumber: normalized },
+  });
+
+  // If duplicate found, notify all admin users
+  if (duplicate) {
+    const thisVehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+      include: { owner: { select: { name: true, email: true } } },
+    });
+
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+
+    const thisDesc = thisVehicle ? `${thisVehicle.year} ${thisVehicle.make} ${thisVehicle.model}` : 'Unknown vehicle';
+    const dupDesc = `${duplicate.year} ${duplicate.make} ${duplicate.model}`;
+
+    for (const admin of admins) {
+      await safeNotify({
+        userId: admin.id,
+        type: 'DUPLICATE_VEHICLE',
+        title: 'Duplicate Vehicle Detected',
+        message: `Registration ${normalized} is shared by: ${thisDesc} (${thisVehicle?.owner.name}) and ${dupDesc} (${duplicate.owner.name}). Please review.`,
+        data: {
+          registrationNumber: normalized,
+          vehicleId1: vehicleId,
+          vehicleId2: duplicate.id,
+        },
+      });
+    }
   }
 }
 

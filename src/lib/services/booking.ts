@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { format, subHours, differenceInHours } from 'date-fns';
 import { safeNotify } from './notification';
-import { bookingConfirmedEmail, optionDeclinedEmail, insuranceReminderEmail, bookingCancelledEmail } from './email';
+import { bookingConfirmedEmail, bookingConfirmedAdminEmail, optionDeclinedEmail, insuranceReminderEmail, bookingCancelledEmail, sendEmail } from './email';
 import { generateInvoice } from './invoice';
 
 export async function confirmBooking(optionId: string, productionUserId: string, logistics: 'VEHICLE_COLLECTION' | 'OWNER_DELIVERY') {
@@ -142,6 +142,20 @@ export async function confirmBooking(optionId: string, productionUserId: string,
     data: { bookingId: booking.id },
     emailContent: insuranceReminderEmail(booking.productionUser.name, vehicleName, deadlineDisplay, booking.id),
   });
+
+  // Notify admin via email
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail) {
+    const adminEmailContent = bookingConfirmedAdminEmail(
+      vehicleName, datesDisplay, rateDisplay, logisticsDisplay,
+      vehicle.owner.name, vehicle.owner.email,
+      booking.productionUser.name, booking.productionUser.email,
+      booking.productionUser.companyName,
+    );
+    sendEmail({ to: adminEmail, ...adminEmailContent }).catch((err) =>
+      console.error('Admin booking email failed:', err)
+    );
+  }
 
   // Notify declined overlapping option holders
   for (const opt of overlapping) {

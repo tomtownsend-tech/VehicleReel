@@ -125,6 +125,47 @@ export function bookingConfirmedEmail(userName: string, vehicleName: string, dat
   };
 }
 
+export function bookingConfirmedAdminEmail(
+  vehicleName: string,
+  dates: string,
+  rate: string,
+  logistics: string,
+  ownerName: string,
+  ownerEmail: string,
+  productionName: string,
+  productionEmail: string,
+  companyName: string | null,
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+  return {
+    subject: `New booking confirmed: ${escapeHtml(vehicleName)}`,
+    html: `
+      <h2>Booking Confirmed</h2>
+      <p>A new booking has been confirmed on VehicleReel.</p>
+      <h3>Vehicle</h3>
+      <ul>
+        <li><strong>Vehicle:</strong> ${escapeHtml(vehicleName)}</li>
+        <li><strong>Dates:</strong> ${escapeHtml(dates)}</li>
+        <li><strong>Rate:</strong> ${escapeHtml(rate)}</li>
+        <li><strong>Logistics:</strong> ${escapeHtml(logistics)}</li>
+      </ul>
+      <h3>Owner</h3>
+      <ul>
+        <li><strong>Name:</strong> ${escapeHtml(ownerName)}</li>
+        <li><strong>Email:</strong> ${escapeHtml(ownerEmail)}</li>
+      </ul>
+      <h3>Production</h3>
+      <ul>
+        <li><strong>Name:</strong> ${escapeHtml(productionName)}</li>
+        ${companyName ? `<li><strong>Company:</strong> ${escapeHtml(companyName)}</li>` : ''}
+        <li><strong>Email:</strong> ${escapeHtml(productionEmail)}</li>
+      </ul>
+      <p><a href="${baseUrl}/admin/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Admin</a></p>
+      <p style="margin-top:8px;font-size:12px;color:#6b7280;">VehicleReel Admin Notification</p>
+    `,
+  };
+}
+
 export function bookingCancelledEmail(
   userName: string,
   vehicleName: string,

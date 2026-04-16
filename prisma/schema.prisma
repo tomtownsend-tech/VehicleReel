@@ -141,6 +141,7 @@ enum NotificationType {
   BOOKING_CANCELLED
   INVOICE_SENT
   PAYMENT_REMINDER
+  DUPLICATE_VEHICLE
 }
 
 enum ProjectMemberRole {
@@ -264,11 +265,12 @@ model Vehicle {
   year            Int
   mileage         Int?
   condition       VehicleCondition
-  specialFeatures String[]
-  location        String
-  status          VehicleStatus    @default(PENDING_REVIEW)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  specialFeatures    String[]
+  location           String
+  registrationNumber String?
+  status             VehicleStatus    @default(PENDING_REVIEW)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   photos          VehiclePhoto[]
@@ -278,6 +280,7 @@ model Vehicle {
 
   @@index([ownerId])
   @@index([status])
+  @@index([registrationNumber])
   @@map("vehicles")
 }
 
