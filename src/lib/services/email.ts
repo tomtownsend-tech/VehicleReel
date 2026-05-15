@@ -10,15 +10,17 @@ interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
+  text?: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
   try {
     await resend.emails.send({
       from: `VehicleReel <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
       to,
       subject,
       html,
+      text,
     });
     return { success: true };
   } catch (error) {
@@ -31,13 +33,14 @@ interface SendEmailWithAttachmentParams extends SendEmailParams {
   attachments: { filename: string; content: Buffer }[];
 }
 
-export async function sendEmailWithAttachment({ to, subject, html, attachments }: SendEmailWithAttachmentParams) {
+export async function sendEmailWithAttachment({ to, subject, html, text, attachments }: SendEmailWithAttachmentParams) {
   try {
     await resend.emails.send({
       from: `VehicleReel <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
       to,
       subject,
       html,
+      text,
       attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })),
     });
     return { success: true };
@@ -63,10 +66,24 @@ export function optionPlacedEmail(ownerName: string, vehicleName: string, produc
       <p><a href="${baseUrl}/owner/options" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Review Option</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `New option placed
+
+Hi ${ownerName},
+
+${productionUser} has placed an option on your ${vehicleName}.
+
+Dates: ${dates}
+Rate: ${rate}
+Response deadline: ${deadline}
+
+Review the option: ${baseUrl}/owner/options
+
+Or log in at ${baseUrl}`,
   };
 }
 
 export function optionAcceptedEmail(productionName: string, vehicleName: string, confirmDeadline: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `Option accepted: ${escapeHtml(vehicleName)}`,
     html: `
@@ -76,10 +93,20 @@ export function optionAcceptedEmail(productionName: string, vehicleName: string,
       <p>You have until <strong>${escapeHtml(confirmDeadline)}</strong> to confirm the booking.</p>
       <p>Log in to VehicleReel to confirm.</p>
     `,
+    text: `Option accepted
+
+Hi ${productionName},
+
+The owner has accepted your option on ${vehicleName}.
+
+You have until ${confirmDeadline} to confirm the booking.
+
+Log in to confirm: ${baseUrl}`,
   };
 }
 
 export function optionDeclinedEmail(productionName: string, vehicleName: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `Option declined: ${escapeHtml(vehicleName)}`,
     html: `
@@ -88,6 +115,13 @@ export function optionDeclinedEmail(productionName: string, vehicleName: string)
       <p>The owner has declined your option on <strong>${escapeHtml(vehicleName)}</strong>.</p>
       <p>You can search for other vehicles on VehicleReel.</p>
     `,
+    text: `Option declined
+
+Hi ${productionName},
+
+The owner has declined your option on ${vehicleName}.
+
+You can search for other vehicles at ${baseUrl}.`,
   };
 }
 
@@ -99,6 +133,11 @@ export function optionExpiredEmail(userName: string, vehicleName: string, reason
       <p>Hi ${escapeHtml(userName)},</p>
       <p>An option on <strong>${escapeHtml(vehicleName)}</strong> has expired. ${escapeHtml(reason)}</p>
     `,
+    text: `Option expired
+
+Hi ${userName},
+
+An option on ${vehicleName} has expired. ${reason}`,
   };
 }
 
@@ -122,6 +161,22 @@ export function bookingConfirmedEmail(userName: string, vehicleName: string, dat
       </ul>
       <p>A conversation thread has been opened. Log in to VehicleReel to message.</p>
     `,
+    text: `Booking confirmed
+
+Hi ${userName},
+
+Your booking for ${vehicleName} has been confirmed.
+
+Dates: ${dates}
+Rate: ${rate}
+Logistics: ${logistics}
+
+Contact details
+Name: ${contactName}
+Email: ${contactEmail}${contactPhone ? `
+Phone: ${contactPhone}` : ''}
+
+A conversation thread has been opened. Log in to VehicleReel to message.`,
   };
 }
 
@@ -163,6 +218,24 @@ export function bookingConfirmedAdminEmail(
       <p><a href="${baseUrl}/admin/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Admin</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">VehicleReel Admin Notification</p>
     `,
+    text: `New booking confirmed on VehicleReel
+
+Vehicle
+Vehicle: ${vehicleName}
+Dates: ${dates}
+Rate: ${rate}
+Logistics: ${logistics}
+
+Owner
+Name: ${ownerName}
+Email: ${ownerEmail}
+
+Production
+Name: ${productionName}${companyName ? `
+Company: ${companyName}` : ''}
+Email: ${productionEmail}
+
+View in admin: ${baseUrl}/admin/bookings`,
   };
 }
 
@@ -180,6 +253,8 @@ export function bookingCancelledEmail(
     ? 'No cancellation fee applies.'
     : `A ${feePct}% cancellation fee (R${((rateCents * feePct) / 10000).toFixed(0)}${rateType === 'PER_DAY' ? '/day' : ''}) applies.`;
 
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+
   return {
     subject: `Booking cancelled: ${escapeHtml(vehicleName)}`,
     html: `
@@ -192,12 +267,25 @@ export function bookingCancelledEmail(
       </ul>
       <p>Log in to VehicleReel for more details.</p>
     `,
+    text: `Booking cancelled
+
+Hi ${userName},
+
+The booking for ${vehicleName} (${dates}) has been cancelled by ${cancelledByName}.
+
+Reason: ${reason}
+Fee: ${feeLabel}
+
+Log in for more details: ${baseUrl}`,
   };
 }
 
 export function documentStatusEmail(userName: string, docType: string, status: string) {
   const statusMessage = status === 'APPROVED'
     ? 'has been approved. Your listing is now active!'
+    : 'has been flagged for review. Our team will review it shortly.';
+  const statusText = status === 'APPROVED'
+    ? 'has been approved. Your listing is now active.'
     : 'has been flagged for review. Our team will review it shortly.';
   return {
     subject: `Document ${escapeHtml(status.toLowerCase())}: ${escapeHtml(docType)}`,
@@ -206,6 +294,11 @@ export function documentStatusEmail(userName: string, docType: string, status: s
       <p>Hi ${escapeHtml(userName)},</p>
       <p>Your <strong>${escapeHtml(docType)}</strong> ${statusMessage}</p>
     `,
+    text: `Document ${status === 'APPROVED' ? 'approved' : 'under review'}
+
+Hi ${userName},
+
+Your ${docType} ${statusText}`,
   };
 }
 
@@ -222,6 +315,17 @@ export function documentFlaggedEmail(userName: string, docType: string, reason: 
       <p><a href="${baseUrl}/owner/settings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Document</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `Document rejected
+
+Hi ${userName},
+
+Your ${docType} upload was not accepted.
+
+Reason: ${reason}
+
+Please upload the correct document to continue: ${baseUrl}/owner/settings
+
+Or log in at ${baseUrl}`,
   };
 }
 
@@ -234,6 +338,13 @@ export function documentExpiringEmail(userName: string, docType: string, expiryD
       <p>Your <strong>${escapeHtml(docType)}</strong> expires on <strong>${escapeHtml(expiryDate)}</strong>.</p>
       <p>Please upload a renewed document to keep your listings active.</p>
     `,
+    text: `Document expiring soon
+
+Hi ${userName},
+
+Your ${docType} expires on ${expiryDate}.
+
+Please upload a renewed document to keep your listings active.`,
   };
 }
 
@@ -249,6 +360,17 @@ export function insuranceReminderEmail(productionName: string, vehicleName: stri
       <p><a href="${baseUrl}/production/bookings/${escapeHtml(bookingId)}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Insurance</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `Vehicle insurance required
+
+Hi ${productionName},
+
+Please upload the vehicle insurance certificate for your upcoming booking of ${vehicleName}.
+
+The insurance must be uploaded by ${deadlineDate} (24 hours before the shoot).
+
+Upload here: ${baseUrl}/production/bookings/${bookingId}
+
+Or log in at ${baseUrl}`,
   };
 }
 
@@ -264,6 +386,17 @@ export function insuranceOverdueEmail(productionName: string, vehicleName: strin
       <p><a href="${baseUrl}/production/bookings/${escapeHtml(bookingId)}" style="display:inline-block;background-color:#dc2626;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Now</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `Insurance upload overdue
+
+Hi ${productionName},
+
+The deadline has passed to upload insurance for your booking of ${vehicleName}.
+
+Please upload it as soon as possible so the owner can review it before the shoot.
+
+Upload now: ${baseUrl}/production/bookings/${bookingId}
+
+Or log in at ${baseUrl}`,
   };
 }
 
@@ -296,6 +429,24 @@ export function specialVehicleRequestEmail(
       ${additionalNotes ? `<h3>Additional Notes</h3><p>${escapeHtml(additionalNotes)}</p>` : ''}
       <p style="margin-top:16px;font-size:12px;color:#6b7280;">This request was submitted via the VehicleReel search page.</p>
     `,
+    text: `Special vehicle request
+
+A production user has requested a vehicle that may not be listed on VehicleReel.
+
+Requester
+Name: ${productionName}
+Email: ${productionEmail}${productionPhone ? `
+Phone: ${productionPhone}` : ''}${companyName ? `
+Company: ${companyName}` : ''}
+
+Vehicle details
+Description: ${vehicleDescription}
+Shoot dates: ${shootDates}${additionalNotes ? `
+
+Additional notes
+${additionalNotes}` : ''}
+
+This request was submitted via the VehicleReel search page.`,
   };
 }
 
@@ -310,6 +461,15 @@ export function pendingDocumentReminderEmail(userName: string, missingDocuments:
       <p><a href="${baseUrl}/owner/settings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Upload Documents</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `Document upload reminder
+
+Hi ${userName},
+
+Your VehicleReel account is almost ready. Please upload your ${missingDocuments} to complete verification.
+
+Upload here: ${baseUrl}/owner/settings
+
+Or log in at ${baseUrl}`,
   };
 }
 
@@ -317,6 +477,7 @@ export function setupReminderEmail(userName: string, actionItems: string[], role
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   const dashboardUrl = role === 'PRODUCTION' ? `${baseUrl}/production/settings` : `${baseUrl}/owner/settings`;
   const itemsHtml = actionItems.map((item) => `<li style="margin-bottom:6px;">${escapeHtml(item)}</li>`).join('');
+  const itemsText = actionItems.map((item) => `- ${item}`).join('\n');
 
   const subjects: Record<number, string> = {
     1: 'Finish setting up your VehicleReel profile',
@@ -335,6 +496,14 @@ export function setupReminderEmail(userName: string, actionItems: string[], role
     ? `<p style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;"><a href="${dashboardUrl}#changed-my-mind" style="color:#6b7280;font-size:13px;">I changed my mind &mdash; close my account</a></p>`
     : '';
 
+  const urgencyText = reminderNumber === 5
+    ? 'This is your final reminder. If you no longer wish to use VehicleReel, you can close your account at the link below.\n\n'
+    : '';
+
+  const changedMyMindText = reminderNumber === 5
+    ? `\n\nI changed my mind — close my account: ${dashboardUrl}#changed-my-mind`
+    : '';
+
   return {
     subject,
     html: `
@@ -347,6 +516,17 @@ export function setupReminderEmail(userName: string, actionItems: string[], role
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
       ${changedMyMindLink}
     `,
+    text: `Complete your setup
+
+Hi ${userName},
+
+${urgencyText}Your VehicleReel account still needs a few things before it's fully active. Here's what's outstanding:
+
+${itemsText}
+
+Complete setup: ${dashboardUrl}
+
+Or log in at ${baseUrl}${changedMyMindText}`,
   };
 }
 
@@ -354,12 +534,23 @@ export function emailVerificationEmail(userName: string, verifyUrl: string) {
   return {
     subject: 'Verify your VehicleReel email',
     html: `
-      <h2>Verify Your Email</h2>
       <p>Hi ${escapeHtml(userName)},</p>
-      <p>Welcome to VehicleReel! Please verify your email address by clicking the button below:</p>
-      <p><a href="${verifyUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Verify Email</a></p>
-      <p style="margin-top:8px;font-size:12px;color:#6b7280;">This link expires in 24 hours. If you didn&apos;t create this account, you can safely ignore this email.</p>
+      <p>Thanks for signing up to VehicleReel. To finish creating your account, please confirm your email address by clicking the button below.</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Verify my email</a></p>
+      <p style="margin-top:16px;font-size:14px;color:#374151;">If the button doesn&rsquo;t work, copy and paste this link into your browser:</p>
+      <p style="font-size:13px;color:#374151;word-break:break-all;">${escapeHtml(verifyUrl)}</p>
+      <p style="margin-top:16px;font-size:12px;color:#6b7280;">This link expires in 24 hours. If you didn&rsquo;t create a VehicleReel account, you can ignore this email and nothing further will happen.</p>
+      <p style="font-size:12px;color:#6b7280;">VehicleReel &mdash; vehicle rentals for film and TV production in South Africa.</p>
     `,
+    text: `Hi ${userName},
+
+Thanks for signing up to VehicleReel. To finish creating your account, please confirm your email address by visiting the link below:
+
+${verifyUrl}
+
+This link expires in 24 hours. If you didn't create a VehicleReel account, you can ignore this email and nothing further will happen.
+
+VehicleReel — vehicle rentals for film and TV production in South Africa.`,
   };
 }
 
@@ -367,12 +558,20 @@ export function passwordResetEmail(userName: string, resetUrl: string) {
   return {
     subject: 'Reset your VehicleReel password',
     html: `
-      <h2>Password Reset</h2>
       <p>Hi ${escapeHtml(userName)},</p>
-      <p>We received a request to reset your password. Click the link below to set a new password:</p>
-      <p><a href="${resetUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a></p>
-      <p style="margin-top:8px;font-size:12px;color:#6b7280;">This link expires in 1 hour. If you didn&apos;t request this, you can safely ignore this email.</p>
+      <p>We received a request to reset your VehicleReel password. Click the button below to choose a new one.</p>
+      <p><a href="${resetUrl}" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Reset my password</a></p>
+      <p style="margin-top:16px;font-size:14px;color:#374151;">If the button doesn&rsquo;t work, copy and paste this link into your browser:</p>
+      <p style="font-size:13px;color:#374151;word-break:break-all;">${escapeHtml(resetUrl)}</p>
+      <p style="margin-top:16px;font-size:12px;color:#6b7280;">This link expires in 1 hour. If you didn&rsquo;t request a password reset, you can ignore this email &mdash; your password will not change.</p>
     `,
+    text: `Hi ${userName},
+
+We received a request to reset your VehicleReel password. Visit the link below to choose a new one:
+
+${resetUrl}
+
+This link expires in 1 hour. If you didn't request a password reset, you can ignore this email — your password will not change.`,
   };
 }
 
@@ -390,17 +589,23 @@ export function welcomeSetupEmail(userName: string, role: string) {
     ART_DEPARTMENT: 'SA ID / Passport',
     OWNER: 'SA ID / Passport and Driver&rsquo;s License',
   };
+  const docsNeededTextMap: Record<string, string> = {
+    PRODUCTION: 'SA ID / Passport and Company Registration',
+    ART_DEPARTMENT: 'SA ID / Passport',
+    OWNER: "SA ID / Passport and Driver's License",
+  };
   const docsNeeded = docsNeededMap[role] || 'SA ID / Passport';
+  const docsNeededText = docsNeededTextMap[role] || 'SA ID / Passport';
 
   const faqSummaries = [
-    { q: 'What documents do I need?', a: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : role === 'ART_DEPARTMENT' ? 'SA ID or Passport.' : 'SA ID + Driver&rsquo;s License, plus a Vehicle License Disk for each vehicle.' },
-    { q: 'How long does verification take?', a: 'Documents are reviewed automatically by AI, usually within minutes.' },
-    { q: 'What vehicle types are supported?', a: 'Cars, Racing Cars, Bikes, Motorbikes, Scooters, Boats, Planes, and Jet Skis.' },
-    { q: 'What is an &ldquo;option&rdquo;?', a: 'A hold request on a vehicle for specific dates &mdash; like &ldquo;first dibs,&rdquo; not yet a confirmed booking.' },
-    { q: 'Can multiple companies option the same vehicle?', a: 'Yes. Options queue up first-come-first-served and auto-promote if one falls through.' },
-    { q: 'Will I get email notifications?', a: 'Yes &mdash; for options, bookings, and documents. You can customise these in Settings.' },
-    { q: 'How are my documents protected?', a: 'Encrypted, access-controlled cloud storage. Only you and authorised admins can view them.' },
-    { q: 'Is VehicleReel POPIA compliant?', a: 'Yes. We only collect what&rsquo;s needed and you can request deletion at any time.' },
+    { q: 'What documents do I need?', a: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : role === 'ART_DEPARTMENT' ? 'SA ID or Passport.' : 'SA ID + Driver&rsquo;s License, plus a Vehicle License Disk for each vehicle.', aText: role === 'PRODUCTION' ? 'SA ID + Company Registration.' : role === 'ART_DEPARTMENT' ? 'SA ID or Passport.' : "SA ID + Driver's License, plus a Vehicle License Disk for each vehicle." },
+    { q: 'How long does verification take?', a: 'Documents are reviewed automatically by AI, usually within minutes.', aText: 'Documents are reviewed automatically by AI, usually within minutes.' },
+    { q: 'What vehicle types are supported?', a: 'Cars, Racing Cars, Bikes, Motorbikes, Scooters, Boats, Planes, and Jet Skis.', aText: 'Cars, Racing Cars, Bikes, Motorbikes, Scooters, Boats, Planes, and Jet Skis.' },
+    { q: 'What is an &ldquo;option&rdquo;?', a: 'A hold request on a vehicle for specific dates &mdash; like &ldquo;first dibs,&rdquo; not yet a confirmed booking.', aText: 'A hold request on a vehicle for specific dates — like "first dibs," not yet a confirmed booking.' },
+    { q: 'Can multiple companies option the same vehicle?', a: 'Yes. Options queue up first-come-first-served and auto-promote if one falls through.', aText: 'Yes. Options queue up first-come-first-served and auto-promote if one falls through.' },
+    { q: 'Will I get email notifications?', a: 'Yes &mdash; for options, bookings, and documents. You can customise these in Settings.', aText: 'Yes — for options, bookings, and documents. You can customise these in Settings.' },
+    { q: 'How are my documents protected?', a: 'Encrypted, access-controlled cloud storage. Only you and authorised admins can view them.', aText: 'Encrypted, access-controlled cloud storage. Only you and authorised admins can view them.' },
+    { q: 'Is VehicleReel POPIA compliant?', a: 'Yes. We only collect what&rsquo;s needed and you can request deletion at any time.', aText: "Yes. We only collect what's needed and you can request deletion at any time." },
   ];
 
   const faqHtml = faqSummaries
@@ -410,6 +615,10 @@ export function welcomeSetupEmail(userName: string, role: string) {
         <td style="padding:8px 12px;color:#4b5563;">${a}</td>
       </tr>`)
     .join('');
+
+  const faqText = faqSummaries
+    .map(({ q, aText }) => `${q.replace(/&ldquo;|&rdquo;/g, '"')}\n${aText}`)
+    .join('\n\n');
 
   return {
     subject: 'Welcome to VehicleReel — Get started in minutes',
@@ -432,10 +641,30 @@ export function welcomeSetupEmail(userName: string, role: string) {
 
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Or log in at ${baseUrl}</p>
     `,
+    text: `Welcome to VehicleReel!
+
+Hi ${userName},
+
+Your email is verified. To complete your account setup and get verified, please upload the following documents:
+
+- ${docsNeededText}
+
+Upload here: ${settingsUrl}
+
+---
+
+Quick answers to common questions:
+
+${faqText}
+
+View all FAQs: ${faqUrl}
+
+Or log in at ${baseUrl}`,
   };
 }
 
 export function messageReceivedEmail(userName: string, senderName: string, vehicleName: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   return {
     subject: `New message about ${escapeHtml(vehicleName)}`,
     html: `
@@ -444,6 +673,13 @@ export function messageReceivedEmail(userName: string, senderName: string, vehic
       <p><strong>${escapeHtml(senderName)}</strong> sent you a message about <strong>${escapeHtml(vehicleName)}</strong>.</p>
       <p>Log in to VehicleReel to reply.</p>
     `,
+    text: `New message
+
+Hi ${userName},
+
+${senderName} sent you a message about ${vehicleName}.
+
+Log in to reply: ${baseUrl}`,
   };
 }
 
@@ -471,6 +707,21 @@ export function invoiceSentEmail(
       <p><a href="${baseUrl}/production/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View Booking</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">Payment is due within 30 days of invoice date.</p>
     `,
+    text: `Invoice ${invoiceNumber}
+
+Hi ${recipientName},
+
+An invoice has been generated for the completed shoot:
+
+Vehicle: ${vehicleDescription}
+Shoot dates: ${shootDates}
+Total due: ${totalFormatted}
+
+The invoice PDF is attached to this email. Please use ${invoiceNumber} as your payment reference.
+
+View booking: ${baseUrl}/production/bookings
+
+Payment is due within 30 days of invoice date.`,
   };
 }
 
@@ -495,5 +746,19 @@ export function paymentReminderEmail(
       <p><a href="${baseUrl}/production/bookings" style="display:inline-block;background-color:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View Booking</a></p>
       <p style="margin-top:8px;font-size:12px;color:#6b7280;">If you have already made payment, please disregard this reminder.</p>
     `,
+    text: `Payment reminder
+
+Hi ${recipientName},
+
+This is a friendly reminder that invoice ${invoiceNumber} is ${daysSinceSent} day${daysSinceSent === 1 ? '' : 's'} outstanding.
+
+Vehicle: ${vehicleDescription}
+Amount due: ${totalFormatted}
+
+Please use ${invoiceNumber} as your payment reference when making payment.
+
+View booking: ${baseUrl}/production/bookings
+
+If you have already made payment, please disregard this reminder.`,
   };
 }

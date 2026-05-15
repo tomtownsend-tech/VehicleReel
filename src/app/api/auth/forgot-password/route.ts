@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
   // Send email
   const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
-  const { subject, html } = passwordResetEmail(user.name, resetUrl);
-  await sendEmail({ to: email, subject, html });
+  const { subject, html, text } = passwordResetEmail(user.name, resetUrl);
+  await sendEmail({ to: email, subject, html, text });
 
   return NextResponse.json({ success: true });
 }

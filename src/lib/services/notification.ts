@@ -9,7 +9,7 @@ interface CreateNotificationParams {
   title: string;
   message: string;
   data?: Record<string, unknown>;
-  emailContent?: { subject: string; html: string };
+  emailContent?: { subject: string; html: string; text?: string };
 }
 
 export async function safeNotify(params: CreateNotificationParams) {
@@ -59,19 +59,29 @@ async function createNotification({
   const categoryEnabled = categoryField ? user?.[categoryField] !== false : true;
 
   if (user?.emailNotifications && categoryEnabled && user.role !== 'ADMIN') {
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
+    const greetingName = user.name || 'there';
     const email = emailContent || {
       subject: `VehicleReel: ${title}`,
       html: `
         <h2>${title}</h2>
-        <p>Hi ${user.name || 'there'},</p>
+        <p>Hi ${greetingName},</p>
         <p>${message}</p>
-        <p style="margin-top:16px;font-size:12px;color:#6b7280;">Log in to <a href="${process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za'}">VehicleReel</a> for more details.</p>
+        <p style="margin-top:16px;font-size:12px;color:#6b7280;">Log in to <a href="${baseUrl}">VehicleReel</a> for more details.</p>
       `,
+      text: `${title}
+
+Hi ${greetingName},
+
+${message}
+
+Log in for more details: ${baseUrl}`,
     };
     await sendEmail({
       to: user.email,
       subject: email.subject,
       html: email.html,
+      text: email.text,
     });
   }
 

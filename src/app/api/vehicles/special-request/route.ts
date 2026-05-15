@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       to: ADMIN_EMAIL,
       subject: emailContent.subject,
       html: emailContent.html,
+      text: emailContent.text,
     });
   } catch (e) {
     console.error('Failed to send special request email:', e);

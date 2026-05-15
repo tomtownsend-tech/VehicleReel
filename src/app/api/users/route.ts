@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXTAUTH_URL || 'https://vehiclereel.co.za';
     const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
-    const { subject, html } = emailVerificationEmail(user.name, verifyUrl);
-    await sendEmail({ to: user.email, subject, html });
+    const { subject, html, text } = emailVerificationEmail(user.name, verifyUrl);
+    await sendEmail({ to: user.email, subject, html, text });
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
