@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         email: true,
         role: true,
         status: true,
+        emailVerified: true,
         createdAt: true,
         _count: { select: { vehicles: true, optionsAsProduction: true } },
       },
@@ -46,8 +47,36 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
   const { userId, action } = body;
 
-  if (!userId || !['BAN', 'UNBAN', 'SET_COORDINATOR', 'UNSET_COORDINATOR'].includes(action)) {
+  if (!userId || !['BAN', 'UNBAN', 'SET_COORDINATOR', 'UNSET_COORDINATOR', 'VERIFY_EMAIL'].includes(action)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
+  // Admin manual email-verification override (for users whose ISP blocks transactional email)
+  if (action === 'VERIFY_EMAIL') {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, emailVerified: true },
+    });
+    if (!target) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    if (target.emailVerified) {
+      return NextResponse.json({ error: 'Email already verified' }, { status: 400 });
+    }
+    const [updated] = await prisma.$transaction([
+      prisma.user.update({ where: { id: userId }, data: { emailVerified: true } }),
+      prisma.emailVerificationToken.deleteMany({ where: { email: target.email } }),
+      prisma.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: 'USER_VERIFY_EMAIL',
+          entityType: 'USER',
+          entityId: userId,
+          details: { targetUser: target.email, reason: 'Admin manual override' },
+        },
+      }),
+    ]);
+    return NextResponse.json(updated);
   }
 
   // Handle coordinator role changes

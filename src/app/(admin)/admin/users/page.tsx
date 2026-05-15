@@ -12,6 +12,7 @@ interface UserItem {
   email: string;
   role: string;
   status: string;
+  emailVerified: boolean;
   createdAt: string;
   _count: { vehicles: number; optionsAsProduction: number };
 }
@@ -53,7 +54,14 @@ export default function AdminUsersPage() {
     loadReminderPreview();
   }, [loadReminderPreview]);
 
-  async function handleAction(userId: string, action: 'BAN' | 'UNBAN' | 'SET_COORDINATOR' | 'UNSET_COORDINATOR') {
+  async function handleAction(userId: string, action: 'BAN' | 'UNBAN' | 'SET_COORDINATOR' | 'UNSET_COORDINATOR' | 'VERIFY_EMAIL') {
+    if (action === 'VERIFY_EMAIL') {
+      const target = users.find((u) => u.id === userId);
+      const confirmed = window.confirm(
+        `Manually mark ${target?.email || 'this user'} as email-verified? Use this only if you've confirmed their identity another way (e.g. their ISP blocked the verification email).`
+      );
+      if (!confirmed) return;
+    }
     const res = await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -61,7 +69,13 @@ export default function AdminUsersPage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: updated.status, role: updated.role } : u)));
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? { ...u, status: updated.status, role: updated.role, emailVerified: updated.emailVerified ?? u.emailVerified }
+            : u
+        )
+      );
     }
   }
 
@@ -149,10 +163,13 @@ export default function AdminUsersPage() {
             <CardContent className="py-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <span className="font-medium text-white">{user.name}</span>
                     <Badge variant={statusVariant[user.status] || 'default'}>{user.status}</Badge>
                     <Badge variant="default">{user.role}</Badge>
+                    {!user.emailVerified && (
+                      <Badge variant="warning">Email Unverified</Badge>
+                    )}
                   </div>
                   <p className="text-sm text-white/50 mt-0.5">{user.email}</p>
                   <p className="text-xs text-white/40 mt-0.5">
@@ -169,6 +186,11 @@ export default function AdminUsersPage() {
                       disabled={sendingTo === user.id}
                     >
                       {sendingTo === user.id ? 'Sending...' : 'Nudge'}
+                    </Button>
+                  )}
+                  {!user.emailVerified && user.role !== 'ADMIN' && (
+                    <Button size="sm" variant="outline" onClick={() => handleAction(user.id, 'VERIFY_EMAIL')}>
+                      Verify Email
                     </Button>
                   )}
                   {user.status === 'PENDING_VERIFICATION' && (
